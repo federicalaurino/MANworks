@@ -55,17 +55,17 @@ $ export LD_LIBRARY_PATH=/home/...path/to.../getfem/lib
 
 ======================
 
-1. Installation
+### Installation
 Build the whole project with:
 ``` 
 $ make
 ``` 
-1.1. It first build the (static) library "libproblem3d1d" by calling
+1. It first build the (static) library "libproblem3d1d" by calling
 the Makefile in include/:
 ``` 
 $ make -C include/
 ``` 
-1.2. Then, it calls the inner makefiles provided for all examples.
+2. Then, it calls the inner makefiles provided for all examples.
 
 It is also possible to build a single example, e.g. "1_uncoupled", with:
 ``` 
@@ -101,7 +101,7 @@ $ make CXXFLAGS+=-DSOMETHING OPTFLAGS=-g
 
 ======================
 
-2. Documentation
+### Documentation
 The documentation is produced by doxygen. The file Doxyfile contains 
 the common doxygen configuration for all examples.
 Build the code documentation with:
@@ -178,7 +178,10 @@ BEWARE: All paths in file param must be ABSOLUTE
 
 ##  DEV ENVIRONMENT
 OS         : Ubuntu 14.04 LTS 64-bit
+
 Processor  : Intel® Core™ i5-2410M CPU @ 2.30GHz × 4 
+
 Compiler   : g++-4.8
+
 GetFEM lib : 5.0
 
