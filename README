@@ -45,6 +45,9 @@ Version >= 4.2 is preferible
 You must modify the path to the GetFEM library in config.mk:
 GETFEM_PREFIX=/home/.../path/to/.../getfem
 
+Alternatively, at MOX cluster use the module.sh file:
+$ source module.sh
+
 BEWARE: 
 Recall to add the library path to LD_LIBRARY_PATH. Example:
 $ export LD_LIBRARY_PATH=/home/...path/to.../getfem/lib
