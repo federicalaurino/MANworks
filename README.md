@@ -11,27 +11,27 @@
 ## How to install and run the program
 -------------------------------------------------------
 ## THE PACKAGE
-- doc/     : Code documentation
+- `doc/`     : Code documentation
 
-- include/ : General include files
+- `include/` : General include files
 
-- lib/     : Main library (to be generated)
+- `lib/`     : Main library (to be generated)
 
-- src/     : Example sources
-  - 1_uncoupled/    : solve the uncoupled 1d and 3d problems
-  - 2_singlebranch/ : solve the coupling with single-vessel network
-  - 3_Ybifurcation/ : solve the problem with Y-shaped network
-  - 4_primalmixed/  : compare the output of primal and mixed solvers
-  - 5_CFS/          : simulate the flow of CSF in the brain
+- `src/`     : Example sources
+  - `1_uncoupled/`    : solve the uncoupled 1d and 3d problems
+  - `2_singlebranch/` : solve the coupling with single-vessel network
+  - `3_Ybifurcation/` : solve the problem with Y-shaped network
+  - `4_primalmixed/`  : compare the output of primal and mixed solvers
+  - `5_CFS/`          : simulate the flow of CSF in the brain
 
-- config.mk: Specify the variable GETFEM_PREFIX for GetFEM++ library
+- `config.mk`: Specify the variable GETFEM_PREFIX for GetFEM++ library
 
-- Doxyfile : Instruction to build the code documentation
+- `Doxyfile` : Instruction to build the code documentation
 
-- Makefile : Instruction to install the project (see INSTALLATION)
+- `Makefile` : Instruction to install the project (see INSTALLATION)
 
 ## INSTALLATION
-0. Prerequisites
+### Prerequisites
 
 You need the open source finite element library "GetFEM++"
 
@@ -39,19 +39,21 @@ See <http://download.gna.org/getfem/html/homepage>
 
 Version >= 4.2 is preferible
 
-You must modify the path to the GetFEM library in config.mk:
+You must modify the path to the GetFEM library in `config.mk`:
 ``` 
 GETFEM_PREFIX=/home/.../path/to/.../getfem
 ``` 
 
-Alternatively, at MOX cluster use the module.sh file:
+Alternatively, at MOX cluster use the `module.sh` file:
 ``` 
 $ source module.sh
 ``` 
 
 BEWARE: 
 Recall to add the library path to LD_LIBRARY_PATH. Example:
+```
 $ export LD_LIBRARY_PATH=/home/...path/to.../getfem/lib
+```
 
 ======================
 
@@ -61,7 +63,7 @@ Build the whole project with:
 $ make
 ``` 
 1. It first build the (static) library "libproblem3d1d" by calling
-the Makefile in include/:
+the Makefile in `include/`:
 ``` 
 $ make -C include/
 ``` 
