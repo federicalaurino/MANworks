@@ -62,12 +62,12 @@ Build the whole project with:
 ``` 
 $ make
 ``` 
-1. It first build the (static) library "libproblem3d1d" by calling
+It first build the (static) library "libproblem3d1d" by calling
 the Makefile in `include/`:
 ``` 
 $ make -C include/
 ``` 
-2. Then, it calls the inner makefiles provided for all examples.
+Then, it calls the inner makefiles provided for all examples.
 
 It is also possible to build a single example, e.g. "1_uncoupled", with:
 ``` 
