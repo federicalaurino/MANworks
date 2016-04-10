@@ -1,20 +1,16 @@
-# ====================================================================
-#   "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
-#      Course on Advanced Programming for Scientific Computing
-#                     Politecnico di Milano
-#                         A.Y. 2014-2015
-#
-#                    Copyright D. Notaro 2015
-# ====================================================================
-#   FILE        : README
-#   DESCRIPTION : Instructions to install and run the program
-#   AUTHOR      : Domenico Notaro <domenico.not@gmail.com>
-#   DATE        : February 2016
-# ====================================================================
+# Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems
+#### *Politecnico di Milano* (ITALY)
 
-# ====================== #
-#      THE PACKAGE       #
-# ====================== #
+**Author** : Domenico Notaro 
+
+**Mailto** : <domenico.not@gmail.com>
+
+**Date**   : March 2016
+
+-------------------------------------------------------
+## How to install and run the program
+-------------------------------------------------------
+## THE PACKAGE
 - doc/     : Code documentation
 
 - include/ : General include files
@@ -34,9 +30,7 @@
 
 - Makefile : Instruction to install the project (see INSTALLATION)
 
-# ====================== #
-#      INSTALLATION      #
-# ====================== #
+## INSTALLATION
 0. Prerequisites
 You need the open source finite element library "GetFEM++"
 See <http://download.gna.org/getfem/html/homepage>
@@ -52,7 +46,7 @@ BEWARE:
 Recall to add the library path to LD_LIBRARY_PATH. Example:
 $ export LD_LIBRARY_PATH=/home/...path/to.../getfem/lib
 
-# ====================== #
+======================
 
 1. Installation
 Build the whole project with:
@@ -81,7 +75,7 @@ Recall that any macro may be overrlued by specifying it when calling
 make. Example: 
 $ make CXXFLAGS+=-DSOMETHING OPTFLAGS=-g
 
-# ====================== #
+======================
 
 2. Documentation
 The documentation is produced by doxygen. The file Doxyfile contains 
@@ -93,9 +87,7 @@ the .tex files to produce a portable file ($ pdflatex doc/latex/refman.tex).
 You can visualize the documentation with
 $ evince doc/latex/refman.pdf
 
-# ====================== #
-#      MAKE OPTIONS      #
-# ====================== #
+## MAKE OPTIONS
 All examples are provided with a Makefile which accepts the following
 options:
 -  all       : makes the example
@@ -108,9 +100,7 @@ In addition the external Makefile (./Makefile) has the following options:
 -  pdf       : produces a guide in portable format
 - library    : build the library from files in include/
 
-# ====================== #
-#      RUN EXAMPLES      #
-# ====================== #
+## RUN EXAMPLES
 To run a specif example, go to the related subdirectory
 $ cd src/3_Yshaped
 Build the program
@@ -147,9 +137,7 @@ Each program contains the file input.param that specifies
   
 BEWARE: All paths in file param must be ABSOLUTE
 
-# ====================== #
-#     DEV ENVIRONMENT    #
-# ====================== #
+##  DEV ENVIRONMENT
 OS         : Ubuntu 14.04 LTS 64-bit
 Processor  : Intel® Core™ i5-2410M CPU @ 2.30GHz × 4 
 Compiler   : g++-4.8
