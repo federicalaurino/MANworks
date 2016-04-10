@@ -32,15 +32,22 @@
 
 ## INSTALLATION
 0. Prerequisites
+
 You need the open source finite element library "GetFEM++"
+
 See <http://download.gna.org/getfem/html/homepage>
+
 Version >= 4.2 is preferible
 
 You must modify the path to the GetFEM library in config.mk:
+``` 
 GETFEM_PREFIX=/home/.../path/to/.../getfem
+``` 
 
 Alternatively, at MOX cluster use the module.sh file:
+``` 
 $ source module.sh
+``` 
 
 BEWARE: 
 Recall to add the library path to LD_LIBRARY_PATH. Example:
@@ -50,30 +57,47 @@ $ export LD_LIBRARY_PATH=/home/...path/to.../getfem/lib
 
 1. Installation
 Build the whole project with:
+``` 
 $ make
+``` 
 1.1. It first build the (static) library "libproblem3d1d" by calling
 the Makefile in include/:
+``` 
 $ make -C include/
+``` 
 1.2. Then, it calls the inner makefiles provided for all examples.
 
 It is also possible to build a single example, e.g. "1_uncoupled", with:
+``` 
 $ make library
+
 $ make -C src/1_uncoupled
+``` 
 
 BEWARE: 
 If you want non-optimized program type:
+``` 
 $ make DEBUG=yes 
+``` 
 By defaul DEBUG=no.
 
 The following macro are defined and exported
+``` 
 CPPFLAGS=-I../../include -I$(GETFEM_PREFIX)/include
+
 CXXFLAGS=-std=c++11 -D=M3D1D_VERBOSE_
+
 OPTFLAGS=-O3 -DNDEBUG -march=native
+
 LDFLAGS=-L$(GETFEM_PREFIX)/lib
+
 LIBRARIES=-lgetfem
+``` 
 Recall that any macro may be overrlued by specifying it when calling 
 make. Example: 
+``` 
 $ make CXXFLAGS+=-DSOMETHING OPTFLAGS=-g
+``` 
 
 ======================
 
@@ -81,11 +105,15 @@ $ make CXXFLAGS+=-DSOMETHING OPTFLAGS=-g
 The documentation is produced by doxygen. The file Doxyfile contains 
 the common doxygen configuration for all examples.
 Build the code documentation with:
+``` 
 $ make pdf
+``` 
 It first fills doc/ with code documentation ($ make doc) and then compile
 the .tex files to produce a portable file ($ pdflatex doc/latex/refman.tex).
 You can visualize the documentation with
+``` 
 $ evince doc/latex/refman.pdf
+``` 
 
 ## MAKE OPTIONS
 All examples are provided with a Makefile which accepts the following
@@ -102,11 +130,17 @@ In addition the external Makefile (./Makefile) has the following options:
 
 ## RUN EXAMPLES
 To run a specif example, go to the related subdirectory
+``` 
 $ cd src/3_Yshaped
+``` 
 Build the program
+``` 
 $ make
+``` 
 Execute the program with specific input
+``` 
 $ ./M3D1D input.param
+``` 
 Each program contains the file input.param that specifies 
 
 - Some flags to identify the particular example
@@ -128,10 +162,15 @@ Each program contains the file input.param that specifies
 - Boundary conditions. You can choose an arbitrary combination of
   Dirichlet-type conditions on pt and/or Robin-type conditions
   on the flux, namely:
+
   % Faces:   x=0  x=L  y=0  y=L  z=0  z=L
+
   % BC labels (DIR / MIX)
+
   BClabel = 'DIR  DIR  DIR  DIR  DIR  DIR'
+
   % BC values
+
   BCvalue = '0.0  0.0  0.0  0.0  0.0  0.0'
   
   
