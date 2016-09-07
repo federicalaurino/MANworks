@@ -21,7 +21,7 @@ TEST_RHS   = 1;
 % Flag to export results
 VTK_EXPORT = 1;
 % Output directory
-OUTPUT     = 'vtk/';
+OUTPUT     = './vtk/';
 %===================================
 %  MESH
 %===================================
@@ -35,7 +35,7 @@ NOISED_T   = '0';
 % Path to import the 3d mesh
 MESH_FILET = ' '; 
 % Path to import the 1d list of points
-MESH_FILEV = '/home/nico/workspace/pacs/model3d1d/src/1_uncoupled/segment.pts';  
+MESH_FILEV = '/home/pacs_student/Desktop/project/project_notaro/src/1_uncoupled/segment.pts'; %'/home/nico/workspace/pacs/model3d1d/src/1_uncoupled/segment.pts';  
 %===================================
 %  GETFEM DESCRIPTORS
 %===================================

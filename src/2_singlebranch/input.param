@@ -33,7 +33,7 @@ NOISED_T   = '0';
 % Path to import the 3d mesh
 MESH_FILET = ' '; 
 % Path to import the 1d list of points
-MESH_FILEV = '/home/nico/workspace/pacs/model3d1d/src/2_singlebranch/segment.pts';  
+MESH_FILEV = '/home/pacs_student/Desktop/project/project/src/2_singlebranch/segment.pts';%'/home/nico/workspace/pacs/model3d1d/src/2_singlebranch/segment.pts';  
 %===================================
 %  GETFEM DESCRIPTORS
 %===================================

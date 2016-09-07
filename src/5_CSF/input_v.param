@@ -33,7 +33,7 @@ NOISED_T   = '0';
 % Path to import the 3d mesh
 MESH_FILET = ' '; 
 % Path to import the 1d list of points
-MESH_FILEV = '/home/nico/workspace/pacs/model3d1d/src/5_CSF/network_v.pts';  
+MESH_FILEV = 'network_v.pts'; %'/home/nico/workspace/pacs/model3d1d/src/5_CSF/network_v.pts';  
 %===================================
 %  GETFEM DESCRIPTORS
 %===================================
