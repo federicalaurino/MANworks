@@ -8,8 +8,11 @@ $ module load lapack/9999
 $ module load openblas/9999
 $ module load scalapack/2
 
+
 # CONFIGURAZIONE
 $ ./configure CXX=/u/geo2/sw/Packages/compilers/gcc+system/4.9/bin/gcc --prefix='/u/laureandi/notaro' --with-pic --enable-shared --enable-superlu --with-blas=/u/geo2/sw/Toolchains/gcc+system/4.9/Packages/libs/openblas/9999/lib/libopenblas.so.0
+
+
 # oppure:
 BLAS_LIBS="-L/u/geo2/sw/Toolchains/gcc+system/4.9/Packages/libs/openblas/9999/ -lblas"
 
@@ -35,4 +38,20 @@ $ make && make install
 $ export LD_LIBRARY_PATH+=:/u/laureandi/notaro/lib/
 $ ./M3D1D input.param
 
+
+
+
+
+# per me: 
+$ ./configure CXX=$mkCxxCompiler --prefix='/opt/getfem/5.0' --with-pic --enable-shared --enable-superlu --with-blas="-L$mkOpenblasLib -lopenblas"
+
+--pdfdir=/home/pacs_student/Desktop/lib/getfem   
+--enable-openmp 
+--enable-qhull
+--enable-mumps
+CXXFLAGS=-std=c++11
+--with-mumps=$mkMumpsLib
+--with-mumps-include-dir
+
+export LD_LIBRARY_PATH+=:/opt/getfem/5.0/lib/
 
