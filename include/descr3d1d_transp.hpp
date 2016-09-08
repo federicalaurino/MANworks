@@ -18,8 +18,8 @@
  
 /** @defgroup input User-defined parameters  */
 
-#ifndef M3D1D_DESCR3D1D_HPP_
-#define M3D1D_DESCR3D1D_HPP_
+#ifndef M3D1D_DESCR3D1D_TRANSP_HPP_
+#define M3D1D_DESCR3D1D_TRANSP_HPP_
 
 #include <string>
 
@@ -36,7 +36,7 @@ struct descr3d1d_transp {
 	std::string FEM_TYPET_C;
 
 	//! Identifier of vessel concentration's FEM type
-	std::string FEM_TYPEV;
+	std::string FEM_TYPEV_C;
 	
 	//! Output directory for transport problem
 	std::string OUTPUT;	
@@ -72,7 +72,7 @@ struct descr3d1d_transp {
 
 	//! Overloading of the output operator
 	friend std::ostream & operator << (
-		std::ostream & out, const descr3d1d & descr
+		std::ostream & out, const descr3d1d_transp & descr
 		)
 	{ 
 		cout << "---- TRANSPORT PROBLEM DESCRIPTORS--------------------------" << endl;

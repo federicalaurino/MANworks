@@ -64,17 +64,18 @@
 class transport3d1d: public problem3d1d {
 
 public:
- //! Initialize the problem
 
-	 
+	//! Initialize the problem
 	void init (int argc, char *argv[]);
-	//! Assemble the problem
-
 	
+	//! Assemble the problem
 	void assembly (void);
-	//! Solve the problem
 
+	//! Solve the problem
 	bool solve (void);
+	
+	//! Export the solution
+	void export_vtk (const string & suff = "");
 
 protected:
 	 
@@ -84,7 +85,8 @@ protected:
 	//! Physical parameters (dimensionless)
 	param3d1d_transp param_transp;
 	//! Number of degrees of freedom
-	dof3d1d dof;
+	dof3d1d_transp dof;
+		
 		
 	//! Monolithic matrix for the coupled problem
 	sparse_matrix_type AM_transp;
@@ -92,6 +94,21 @@ protected:
 	vector_type        UM_transp;
 	//! Monolithic right hand side for the coupled problem
 	vector_type        FM_transp;
+	
+	
+	
+
+	// Aux methods for init
+	//! Import algorithm specifications
+	void import_data(void);
+	//! Import mesh for tissue (3D) and vessel (1D)  
+	//void build_mesh(void); 
+	//! Set finite elements methods and integration methods 
+	void set_im_and_fem(void);
+	//! Build problem parameters
+	void build_param(void);
+	
+	
 	
 }; //end of class trasport3d1d
 

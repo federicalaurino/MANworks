@@ -55,17 +55,25 @@ int main(int argc, char *argv[])
 		std::cout << "  Pv average            = " << p.mean_pv()   << std::endl;
 		std::cout << "  Network-to-Tissue TFR = " << p.flow_rate() << std::endl;
 		std::cout << "-------------------------------------------" << std::endl; 	
-	}
-
-	GMM_STANDARD_CATCH_ERROR;
 		
-	
+		
 		//transport problem: concentration
 		
 		//initialize
 		p.init(argc, argv);
 		//assemble
 		p.assembly();
+		//solve
+		p.solve();
+		//export
+		p.export_vtk();
+		
+		}
+
+	GMM_STANDARD_CATCH_ERROR;
+		
+	
+
 		
 		
 	return 0; 

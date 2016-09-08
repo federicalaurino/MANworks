@@ -13,8 +13,8 @@
   @date   January 2016.
   @brief  Definition of the aux class for the number of degrees of freedom.
  */
-#ifndef M3D1D_DOF3D1D_HPP_
-#define M3D1D_DOF3D1D_HPP_
+#ifndef M3D1D_DOF3D1D_TRANSP_HPP_
+#define M3D1D_DOF3D1D_TRANSP_HPP_
 
 namespace getfem {
 
@@ -82,7 +82,7 @@ struct dof3d1d_transp {
 
 	//! Overloading of the output operator
 	friend std::ostream & operator << (
-			std::ostream & out, const dof3d1d & dof
+			std::ostream & out, const dof3d1d_transp & dof
 			)
 	{ 
 		out << "--- DEGREES OF FREEDOM --- " << endl;

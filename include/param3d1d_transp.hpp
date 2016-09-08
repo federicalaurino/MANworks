@@ -25,8 +25,8 @@
 	\ingroup input
  */
  
-#ifndef M3D1D_PARAM3D1D_HPP_
-#define M3D1D_PARAM3D1D_HPP_
+#ifndef M3D1D_PARAM3D1D_TRANSP_HPP_
+#define M3D1D_PARAM3D1D_TRANSP_HPP_
 
 #include <mesh1d.hpp>    // import_network_radius
 #include <utilities.hpp> // compute_radius
@@ -171,7 +171,7 @@ struct param3d1d_transp {
 	vector_type & Q (void) { return Q_; }
 	//! Overloading of the output operator
 	friend std::ostream & operator << (
-		std::ostream & out, const param3d1d & param
+		std::ostream & out, const param3d1d_transp & param
 		)
 	{ 
 		out << "--- PHYSICAL PARAMS ------" << endl;
