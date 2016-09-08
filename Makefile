@@ -20,6 +20,7 @@ all: library
 	$(MAKE) -C src/3_Ybifurcation
 	$(MAKE) -C src/4_primalmixed
 	$(MAKE) -C src/5_CSF
+	$(MAKE) -C src/6_uncoupled_transport
 
 library: 
 	$(MAKE) -C include
@@ -39,6 +40,7 @@ clean:
 	$(MAKE) -C src/3_Ybifurcation clean
 	$(MAKE) -C src/4_primalmixed clean
 	$(MAKE) -C src/5_CSF clean
+	$(MAKE) -C src/6_uncoupled_transport clean
 
 distclean: clean
 	$(RM) -r doc/*
@@ -48,3 +50,4 @@ distclean: clean
 	$(MAKE) -C src/3_Ybifurcation distclean
 	$(MAKE) -C src/4_primalmixed distclean
 	$(MAKE) -C src/5_CSF distclean
+	$(MAKE) -C src/6_uncoupled_transport distclean
