@@ -49,6 +49,11 @@
 #include <dof3d1d.hpp>
 #include <descr3d1d.hpp>
 #include <param3d1d.hpp>
+
+#include <dof3d1d_transp.hpp>
+#include <descr3d1d_transp.hpp>
+#include <param3d1d_transp.hpp>
+
 //#include <defines.hpp>>
 #include <problem3d1d.hpp>
 
@@ -60,32 +65,33 @@ class transport3d1d: public problem3d1d {
 
 public:
  //! Initialize the problem
-	/*!
-		1. Read the .param filename from standard input
-		2. Import problem descriptors (file paths, GetFEM types, ...)
-		3. Import mesh for tissue (3D) and vessel network (1D)
-		4. Set finite elements and integration methods
-		5. Build problem parameters
-		6. Build the list of tissue boundary data
-		7. Build the list of vessel boundary (and junction) data
-	 */
+
+	 
 	void init (int argc, char *argv[]);
 	//! Assemble the problem
-	/*!
-		1. Initialize problem matrices and vectors
-		2. Build the monolithic matrix AM
-		3. Build the monolithic rhs FM
-	 */
+
+	
 	void assembly (void);
 	//! Solve the problem
-	/*!
-		Solve the monolithic system AM*UM=FM (direct or iterative)
-	 */
+
 	bool solve (void);
 
-	 protected:
+protected:
 	 
-	 vector_type CM;
+	 
+	//! Algorithm description strings (mesh files, FEM types, solver info, ...) 
+	descr3d1d_transp descr_transp;
+	//! Physical parameters (dimensionless)
+	param3d1d_transp param_transp;
+	//! Number of degrees of freedom
+	dof3d1d dof;
+		
+	//! Monolithic matrix for the coupled problem
+	sparse_matrix_type AM_transp;
+	//! Monolithic array of unknowns for the coupled problem
+	vector_type        UM_transp;
+	//! Monolithic right hand side for the coupled problem
+	vector_type        FM_transp;
 	
 }; //end of class trasport3d1d
 
