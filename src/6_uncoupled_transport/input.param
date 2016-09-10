@@ -47,10 +47,12 @@ MESH_TYPEV  = 'GT_PK(1,1)';
 FEM_TYPET   = 'FEM_RT0(3)';
 FEM_TYPET_P = 'FEM_PK_DISCONTINUOUS(3,0)';
 FEM_TYPET_DATA = 'FEM_PK(3,0)';
+FEM_TYPET_C = 'FEM_PK_DISCONTINUOUS(3,0)';
 % GetFem type for the 1D Finite Element Methods
 FEM_TYPEV   = 'FEM_PK(1,1)';  
 FEM_TYPEV_P = 'FEM_PK(1,0)';  
 FEM_TYPEV_DATA = 'FEM_PK(1,0)';  
+FEM_TYPEV_C = 'FEM_PK(1,0)';  
 % GetFem type for the 3D Integration Method
 IM_TYPET    = 'IM_TETRAHEDRON(6)'; 
 % GetFem type for the 1D Integration Method
