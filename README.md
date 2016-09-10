@@ -1,11 +1,21 @@
 # Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems
 #### *Politecnico di Milano* (ITALY)
 
+**Author** : Stefano Brambilla 
+
+**Mailto** : <s.brambilla93@gmail.com>
+
+**Date**   : September 2016
+
+
+Previous project
 **Author** : Domenico Notaro 
 
 **Mailto** : <domenico.not@gmail.com>
 
 **Date**   : March 2016
+
+**Github Page** : https://github.com/domeniconotaro/PACS
 
 -------------------------------------------------------
 ## How to install and run the program
