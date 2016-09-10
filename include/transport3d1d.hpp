@@ -16,7 +16,7 @@
  
 #ifndef M3D1D_TRANSPORT3D1D_HPP_
 #define M3D1D_TRANSPORT3D1D_HPP_
- 
+
 // GetFem++ libraries
 #include <getfem/getfem_assembling.h> 
 #include <getfem/getfem_import.h>
@@ -64,7 +64,12 @@
 class transport3d1d: public problem3d1d {
 
 public:
-
+	transport3d1d(void) : 
+		/*problem3d1d.mimt(mesht),  problem3d1d::mimv(meshv),
+		problem3d1d::mf_Pt(mesht), problem3d1d::mf_coeft(mesht), problem3d1d::mf_Ut(mesht),
+		problem3d1d::mf_Pv(meshv), problem3d1d::mf_coefv(meshv),*/
+		mf_Ct(mesht), mf_Cv(meshv)
+	{} 
 	//! Initialize the problem
 	void init (int argc, char *argv[]);
 	
@@ -85,8 +90,12 @@ protected:
 	//! Physical parameters (dimensionless)
 	param3d1d_transp param_transp;
 	//! Number of degrees of freedom
-	dof3d1d_transp dof;
+	dof3d1d_transp dof_transp;
 		
+	//! Finite Element Method for the tissue pressure @f$p_v@f$
+	mesh_fem mf_Ct; 
+	//! Finite Element Method for the vessel pressure @f$p_v@f$
+	mesh_fem mf_Cv; 
 		
 	//! Monolithic matrix for the coupled problem
 	sparse_matrix_type AM_transp;
