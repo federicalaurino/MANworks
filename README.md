@@ -8,7 +8,8 @@
 **Date**   : September 2016
 
 
-Previous project
+#### *Previous project*
+
 **Author** : Domenico Notaro 
 
 **Mailto** : <domenico.not@gmail.com>
