@@ -21,20 +21,13 @@ namespace getfem {
 //! Class to store the number of degrees of freedom of used FEMs
 struct dof3d1d_transp {
 
-	//! Number of dof of the interstitial velocity FEM mf_Ut
-	size_type Ut_;
-	//! Number of dof of the interstitial pressure FEM mf_Pt
-	size_type Pt_;
-	//! Number of dof of the interstitial coefficients FEM mf_coeft
-	size_type ct_;
-	//! Number of dof of the vessel network velocity
-	//! It is the sum of local vessel branch dof
-	size_type Uv_;
-	//! Number of dof of the vessel pressure FEM mf_Pv
-	size_type Pv_;
-	//! Number of dof of the vessel network coefficients FEM mf_coefv
-	//! It is NOT the sum of local vessel branch dof
-	size_type cv_;
+
+	//! Number of dof of the interstitial concentration FEM mf_Pt
+	size_type Ct_;
+
+	//! Number of dof of the vessel concentration FEM mf_Pv
+	size_type Cv_;
+
 	//! Total number of dof of the tissue problem
 	size_type tissue_;
 	//! Total number of dof of the vessel problem
@@ -44,41 +37,31 @@ struct dof3d1d_transp {
 	
 	//! Compute the number of dof of given FEM
 	void set (
-			const getfem::mesh_fem & mf_Ut, const getfem::mesh_fem & mf_Pt,
-			const std::vector<getfem::mesh_fem> & mf_Uv, const getfem::mesh_fem & mf_Pv,
-			const getfem::mesh_fem & mf_coeft, const getfem::mesh_fem & mf_coefv
+			const getfem::mesh_fem & mf_Ct,	const getfem::mesh_fem & mf_Cv
+
 			)
 	{
-		Ut_ = mf_Ut.nb_dof(); 
-		Pt_ = mf_Pt.nb_dof();
-		ct_ = mf_coeft.nb_dof();
-		Uv_ = 0;
-		for (size_type i = 0; i<mf_Uv.size(); ++i) Uv_ += mf_Uv[i].nb_dof();
-		Pv_ = mf_Pv.nb_dof();
-		cv_ = mf_coefv.nb_dof();
+		Ct_ = mf_Ct.nb_dof();
+		Cv_ = mf_Cv.nb_dof();
+;
 		
-		tissue_ = Pt_ + Ut_; 
-		vessel_ = Pv_ + Uv_;
-		tot_    = tissue_ + vessel_;
+		tissue_ = Ct_; 
+		vessel_ = Cv_ ;
+		tot_    = tissue_+ vessel_;
 	}
-	//! Accessor to the number of dof of mf_Ut
-	inline size_type Ut (void) { return Ut_; } const
-	//! Accessor to the number of dof of mf_Pt
-	inline size_type Pt (void) { return Pt_; } const
-	//! Accessor to the number of dof of mf_Uv
-	inline size_type Uv (void) { return Uv_; } const
-	//! Accessor to the number of dof of mf_Pv
-	inline size_type Pv (void) { return Pv_; } const
-	//! Accessor to the number of dof of mf_coeft
-	inline size_type coeft (void) { return ct_; } const
-	//! Accessor to the number of dof of mf_coefv
-	inline size_type coefv (void) { return cv_; } const
+
+	//! Accessor to the number of dof of mf_Ct
+	inline size_type Ct (void) { return Ct_; } const
+
+	//! Accessor to the number of dof of mf_Cv
+	inline size_type Cv (void) { return Cv_; } const
+
 	//! Accessor to the number of dof of tissue problem
-	inline size_type tissue (void) { return tissue_; } const
+	inline size_type tissue_transp (void) { return tissue_; } const
 	//! Accessor to the number of dof of vessel problem
-	inline size_type vessel (void) { return vessel_; } const
+	inline size_type vessel_transp (void) { return vessel_; } const
 	//! Accessor to the number of dof of coupled problem
-	inline size_type tot (void) { return tot_; } const
+	inline size_type tot_transp (void) { return tot_; } const
 
 	//! Overloading of the output operator
 	friend std::ostream & operator << (
@@ -86,12 +69,8 @@ struct dof3d1d_transp {
 			)
 	{ 
 		out << "--- DEGREES OF FREEDOM --- " << endl;
-		out << "  nb_dof_Pt     : " 		 << dof.Pt_  << endl;
-		out << "  nb_dof_Ut     : " 		 << dof.Ut_  << endl;
-		out << "  nb_dof_coeft  : " 		 << dof.ct_  << endl;
-		out << "  nb_dof_Pv     : " 		 << dof.Pv_  << endl;
-		out << "  nb_dof_Uv     : " 		 << dof.Uv_  << endl;
-		out << "  nb_dof_coefv  : " 		 << dof.cv_  << endl;
+		out << "  nb_dof_Ct     : " 		 << dof.Ct_  << endl;
+		out << "  nb_dof_Cv     : " 		 << dof.Cv_  << endl;
 		out << "  nb_dof_tot    : " 		 << dof.tot_ << endl;
 		out << "-------------------------- " << endl;
 		return out;            

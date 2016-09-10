@@ -53,7 +53,7 @@ struct descr3d1d_transp {
 	//! File .param
 	ftool::md_param FILE_;
 	//! Import algorithm specifications from file .param
-	void import(ftool::md_param & fname) 
+	void import_transp(ftool::md_param & fname) 
 	{
 		FILE_ = fname;
 		
