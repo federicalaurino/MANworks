@@ -81,6 +81,7 @@ U  = 166E-06;
 d  = 240E-06;
 % average radius of the capillary vessels []
 RADIUS = 5E-06;
+
 %===================================
 %  BOUNDARY CONDITIONS
 %===================================
