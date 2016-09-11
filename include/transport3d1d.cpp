@@ -117,6 +117,15 @@
 	void transport3d1d::build_param(void)
 	{
 	std::cout<<"init part 3: build dimensionless parameters!" <<std::endl;
+	
+	#ifdef M3D1D_VERBOSE_
+	cout << "Building parameters for tissue and vessel problems ..." << endl;
+	#endif
+	param_transp.build(PARAM, mf_coeft, mf_coefv);
+	#ifdef M3D1D_VERBOSE_
+	cout << param_transp ;
+	#endif
+	cout<<param_transp;
 	};
   
   

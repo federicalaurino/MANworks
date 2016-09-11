@@ -3,14 +3,14 @@
     "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
         Course on Advanced Programming for Scientific Computing
                       Politecnico di Milano
-                          A.Y. 2014-2015
+                          A.Y. 2016-2017
                   
-                Copyright (C) 2015 Domenico Notaro
+                Copyright (C) 2016 Stefano Brambilla
 ======================================================================*/
 /*! 
-  @file   dof3d1d.hpp
-  @author Domenico Notaro <domenico.not@gmail.com>
-  @date   January 2016.
+  @file   transport3d1d.cpp
+  @author Stefano Brambilla <s.brambilla93@gmail.com>
+  @date   September 2016.
   @brief  Definition of the aux class for the number of degrees of freedom.
  */
 #ifndef M3D1D_DOF3D1D_TRANSP_HPP_

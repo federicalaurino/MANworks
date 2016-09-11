@@ -96,6 +96,9 @@ protected:
 	mesh_fem mf_Ct; 
 	//! Finite Element Method for the vessel pressure @f$p_v@f$
 	mesh_fem mf_Cv; 
+	
+////	//eventualmente i fem dei coefficienti Lp_lf e m se variano dentro la mesh
+	
 		
 	//! Monolithic matrix for the coupled problem
 	sparse_matrix_type AM_transp;
@@ -105,6 +108,8 @@ protected:
 	vector_type        FM_transp;
 	
 	
+////	//T totale, deltaT, T iniziale, T stop
+	//matrice con le soluzioni della concentrazione ad ogni t per ogni colonna
 	
 
 	// Aux methods for init
