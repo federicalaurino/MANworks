@@ -121,6 +121,10 @@ protected:
 	void set_im_and_fem(void);
 	//! Build problem parameters
 	void build_param(void);
+	//! Build the monolithic matrix AM_transp by blocks
+	void assembly_mat(void);
+	//! Build the monolithic rhs FM_transp by blocks
+	void assembly_rhs(void);
 	
 	
 	
