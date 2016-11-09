@@ -57,11 +57,11 @@ struct dof3d1d_transp {
 	inline size_type Cv (void) { return Cv_; } const
 
 	//! Accessor to the number of dof of tissue problem
-	inline size_type tissue_transp (void) { return tissue_; } const
+	inline size_type tissue (void) { return tissue_; } const
 	//! Accessor to the number of dof of vessel problem
-	inline size_type vessel_transp (void) { return vessel_; } const
+	inline size_type vessel (void) { return vessel_; } const
 	//! Accessor to the number of dof of coupled problem
-	inline size_type tot_transp (void) { return tot_; } const
+	inline size_type tot (void) { return tot_; } const
 
 	//! Overloading of the output operator
 	friend std::ostream & operator << (
