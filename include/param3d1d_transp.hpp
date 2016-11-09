@@ -52,6 +52,12 @@ struct param3d1d_transp {
 	vector_type Y_;
 	//lymphatic drainage
 	vector_type Q_pl_;
+	
+	//time parameters 
+	// simulation time length
+	scalar_type T_;
+	// time step
+	scalar_type dt_;
 
 	// Utils
 	//! File .param
@@ -94,6 +100,9 @@ struct param3d1d_transp {
 			 Dalpha_.assign(dof_datat,  Dalphaval);
 			 Y_.assign(dof_datav,  Yval);
 			 Q_pl_.assign(dof_datav,  Q_plval);
+
+			T_   = FILE_.real_value("T","Simulation time length [s]");
+			dt_   = FILE_.real_value("dt","Time step [s]");				
 		} 
 		else {
 			// Import dimensional params from FILE_
@@ -110,7 +119,9 @@ struct param3d1d_transp {
 			Perm_ = FILE_.real_value("Perm","Permeability of the capillary walls [m/s]");
 			Lp_LF_ = FILE_.real_value("Lp_LF","hydraulic conductivity of the lymphatic wall [s * m^2/kg]");
 			SV_ = FILE_.real_value("SV","surface area of lymphatic vessels per unit volume of tissue [1/m]");
-						
+
+			T_   = FILE_.real_value("T","Simulation time length [s]");
+			dt_   = FILE_.real_value("dt","Time step [s]");						
 			// Compute the dimenless params
 			At_.assign(dof_datat, Dt_/d_/U_);
 			Av_.assign(dof_datav, Dv_/d_/U_);
@@ -149,6 +160,10 @@ struct param3d1d_transp {
 	inline scalar_type Dalpha  (size_type i) { return Dalpha_[i];  } const
 	//! Get the leakage of the capillary bed at a given dof
 	inline scalar_type Y  (size_type i) { return Y_[i];  } const
+	//! Get the simulation time length
+	inline scalar_type T  () { return T_;  } const
+	//! Get the time step
+	inline scalar_type dt  () { return dt_;  } const
 	//! Get the radius at a given mesh_region
 	//scalar_type R  (const getfem::mesh_im & mim, const size_type rg) { 
 	//	return compute_radius(mim, mf_datav_, R_, rg);  
@@ -168,6 +183,8 @@ struct param3d1d_transp {
 		out << "  Y      : "                << param.Y_[0] << endl; 
 		out << "  Q_pl : "                << param.Q_pl_[0] << endl; 
 		out << "  D_alpha : "                << param.Dalpha_[0] << endl; 
+		out << "  T : "                << param.T_ << endl; 
+		out << "  dt : "                << param.dt_ << endl; 
 		out << "--------------------------" << endl;
 
 		return out;            
