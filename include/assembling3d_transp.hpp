@@ -36,27 +36,21 @@ namespace getfem {
 template<typename MAT>
 void 
 asm_tissue_darcy_transp
-	(MAT & M, MAT & D,
+	(MAT & M, MAT & D,MAT & T,
 	 const mesh_im & mim,
-	 const mesh_fem & mf_u,
-	 const mesh_fem & mf_p,
+	 const mesh_fem & mf_c,
 	 const mesh_region & rg = mesh_region::all_convexes()
 	 ) 		
 {
-	GMM_ASSERT1(mf_p.get_qdim() == 1, 
+	GMM_ASSERT1(mf_c.get_qdim() == 1, 
 		"invalid data mesh fem for pressure (Qdim=1 required)");
-	GMM_ASSERT1(mf_u.get_qdim() > 1, 
-		"invalid data mesh fem for velocity (Qdim>1 required)");
-	// Build the mass matrix Mtt
-	getfem::asm_mass_matrix(M, mim, mf_u, rg);
+	// Build the mass matrix Mt (consumption)
+	getfem::asm_mass_matrix(M, mim, mf_c, rg);
+	// Build the mass matrix Tt for time derivative 
+	getfem::asm_mass_matrix(T, mim, mf_c, rg);
 	// Build the divergence matrix Dtt
-	generic_assembly 
-	assem("M$1(#2,#1)+=comp(Base(#2).vGrad(#1))(:,:,i,i);");
-	assem.push_mi(mim);
-	assem.push_mf(mf_u);
-	assem.push_mf(mf_p);
-	assem.push_mat(D);
-	assem.assembly(rg);
+	getfem::asm_stiffness_matrix_for_homogeneous_laplacian(D,mim,mf_c,rg);
+	
 }
 
 /*! Build the mixed boundary conditions for Darcy's problem

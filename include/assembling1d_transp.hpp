@@ -44,22 +44,22 @@ namespace getfem {
 template<typename MAT, typename VEC>
 void 
 asm_network_poiseuille_transp
-	(MAT & M, MAT & D,
+	(MAT & D, MAT & T, 
 	 const mesh_im & mim,
-	 const mesh_fem & mf_u,
-	 const mesh_fem & mf_p,
-	 const mesh_fem & mf_data,
-	 const VEC & coef,
+	 const mesh_fem & mf_c,
 	 const VEC & lambdax, const VEC & lambday, const VEC & lambdaz,
 	 const mesh_region & rg = mesh_region::all_convexes()
 	 ) 		
 {
-	GMM_ASSERT1(mf_p.get_qdim() == 1 && mf_u.get_qdim() == 1,
+	GMM_ASSERT1(mf_c.get_qdim() == 1 ,
 		"invalid data mesh fem (Qdim=1 required)");
-	// Build the local mass matrix Mvvi
-	getfem::asm_mass_matrix_param(M, mim, mf_u, mf_data, coef, rg);
-	// Build the local divergence matrix Dvvi
-	generic_assembly 
+	//build mass matrix Tv for time derivative
+	getfem::asm_mass_matrix(T, mim, mf_c, rg);
+	// Build the diffusion matrix Dv
+	getfem::asm_stiffness_matrix_for_homogeneous_laplacian(D,mim,mf_c,rg);
+		// Build the local divergence matrix Dvvi
+	
+	/*generic_assembly 
 	assem("l1=data$1(#3); l2=data$2(#3); l3=data$3(#3);"
 		  "t=comp(Base(#2).Grad(#1).Base(#3));"
 		  "M$1(#2,#1)+=t(:,:,1,i).l1(i)+t(:,:,2,i).l2(i)+t(:,:,3,i).l3(i);");
@@ -72,6 +72,7 @@ asm_network_poiseuille_transp
 	assem.push_data(lambdaz);
 	assem.push_mat(D);
 	assem.assembly(rg);
+	*/
 }
 
 
