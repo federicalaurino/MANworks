@@ -80,7 +80,7 @@ public:
 	bool solve (void);
 	
 	//! Export the solution
-	void export_vtk (const string & suff = "");
+	void export_vtk (const string & time_suff = "", const string & suff = "");
 
 protected:
 	 

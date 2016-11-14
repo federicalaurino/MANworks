@@ -136,14 +136,18 @@ transport3d1d::assembly_mat(void)
 	sparse_matrix_type Dt(dof_transp.Ct(), dofv.Ct());
 	//Transport matrix for interstitial problem
 	sparse_matrix_type Bt(dof_transp.Ct(), dofv.Ct());
-	
-	// Mass matrix for the interstitial problem
-	sparse_matrix_type Mv(dof_transp.Cv(), dof_transp.Cv());
-	// Diffusion matrix for the interstitial problem
+	// Mass(time derivative)  matrix for the interstitial problem
+	sparse_matrix_type Tt(dof_transp.Ct(), dof_transp.Ct());
+		
+	// Mass matrix for the network problem
+	sparse_matrix_type Mv(dof_transp.Cv(), dof_transp.Cv()); //useless
+	// Diffusion matrix for the network problem
 	sparse_matrix_type Dv(dof_transp.Cv(), dofv.Cv());
-	//Transport matrix for interstitial problem
+	//Transport matrix for network problem
 	sparse_matrix_type Bv(dof_transp.Cv(), dofv.Cv());
-	/*
+	// Mass (time derivative)  matrix for the network problem
+	sparse_matrix_type Tv(dof_transp.Cv(), dof_transp.Cv());
+		/*
 	// Junction compatibility matrix for the network problem
 	sparse_matrix_type Jvv(dof.Pv(), dof.Uv());
 	// Tissue-to-tissue exchange matrix
@@ -163,10 +167,13 @@ transport3d1d::assembly_mat(void)
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Mt and Dt ..." << endl;
 	#endif
-	asm_tissue_darcy_transp(Mt, Dt, mimt, mf_Ut, mf_Pt);
-	gmm::scale(Mtt, (1.0/param.dt()+param.Dalpha(0)); // dt and Dalpha scalar
+	asm_tissue_darcy_transp(Mt, Dt, Tt, mimt, mf_Ct);
+	gmm::scale(Mt, (1.0/param.Dalpha(0)); // Dalpha scalar
+	gmm::scale(Tt, (1.0/param.dt()); // dt time step
+	
+	
 	// Copy Mtt
-	gmm::add(Mtt, 
+	gmm::add(Mt, 
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
@@ -192,6 +199,7 @@ transport3d1d::assembly_mat(void)
 	asm_tangent_versor(ifs, lambdax, lambday, lambdaz);
 	ifs.close();
 
+/*
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Mvv and Dvv ..." << endl;
 	#endif
@@ -233,9 +241,22 @@ transport3d1d::assembly_mat(void)
 				gmm::sub_interval(dof.Ut()+dof.Pt()+shift,     mf_Uvi[i].nb_dof()))); 
 		gmm::clear(Mvvi); 
 		gmm::clear(Dvvi);
-		
+	*/	
 	} /* end of branches loop */
 	
+	// Build Mvvi and Dvvi
+		asm_network_poiseuille(Tv, Dv, 
+			mimv,mf_Cv, lambdax_K, lambday_K, lambdaz_K, meshv.region(i));
+		gmm::scale(Tv, (1.0/param.dt());
+		// Copy Mvvi and Dvvi
+		gmm::add(Tv, 
+			gmm::sub_matrix(AM_transp, 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.tot()), 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.tot()))); 
+		gmm::add(Dv, 
+			gmm::sub_matrix(AM_transp, 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.tot()), 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.tot())));
 	/*
 if (nb_junctions > 0){
 	#ifdef M3D1D_VERBOSE_
@@ -302,6 +323,9 @@ void
 transport3d1d::assembly_rhs(void)
 {
  cout<<"assembling rhs vector..."<< endl; 
+ 
+ for(int i = 0; i<dof_transp.tot(); i++)
+ FM_transp(i)= 0.005* (i/i+10);
 	/*
 	#ifdef M3D1D_VERBOSE_
 	cout << "Assembling the monolithic rhs FM ... " << endl;
@@ -372,7 +396,11 @@ transport3d1d::assembly_rhs(void)
 	
 	//scalar_type nn_timestep = ceil(param_transp.T() / param_transp.dt());
 	
+	double time_count = 0;
+	string time_suff = "";
+	ostringstream convert;
 	for(int t=0; t<=param_transp.T() ; t = t + param_transp.dt()){
+	time_count++; 
 	
 	if ( descr.SOLVE_METHOD == "SuperLU" ) { // direct solver //
 		#ifdef M3D1D_VERBOSE_
@@ -438,7 +466,15 @@ transport3d1d::assembly_rhs(void)
 			cerr << "  ... reached the maximum number of iterations!" << endl;
 
 	}
-	export_vtk()
+	
+	convert << time_count;
+	time_suff = convert.str();
+	export_vtk(time_suff);
+	gmm::clear(FM_transp);
+	gmm::add(UM_transp, FM_transp);
+	gmm::clear(UM_transp);
+	
+	
 	} //end of cycle over time 
 	
 	cout << "... time to solve : " << gmm::uclock_sec() - time << " seconds\n";
@@ -480,7 +516,7 @@ transport3d1d::assembly_rhs(void)
  }; // end of solve
 	
 	
- void transport3d1d::export_vtk (const string & suff)
+ void transport3d1d::export_vtk (const string & time_suff , const string & suff)
  {
   std::cout<<"export transport problem"<<std::endl<<std::endl;
   
@@ -492,44 +528,38 @@ transport3d1d::assembly_rhs(void)
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Saving the results from the monolithic unknown vector ... " << endl;
 	#endif
-	// Array of unknown dof of the interstitial velocity
-	vector_type Ut(dof.Ut()); 
-	// Array of unknown dof of the interstitial pressure
-	vector_type Pt(dof.Pt()); 
-	// Array of unknown dof of the network velocity
-	vector_type Uv(dof.Uv()); 
-	// Array of unknown dof of the network pressure
-	vector_type Pv(dof.Pv()); 
-	gmm::copy(gmm::sub_vector(UM, 
-		gmm::sub_interval(0, dof.Ut())), Ut);
-	gmm::copy(gmm::sub_vector(UM, 
-		gmm::sub_interval(dof.Ut(), dof.Pt())), Pt);
-	gmm::copy(gmm::sub_vector(UM, 
-		gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv())), Uv);
-	gmm::copy(gmm::sub_vector(UM, 
-		gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv())), Pv);
 
+	// Array of unknown dof of the interstitial concentration
+	vector_type Ct(dof_transp.Ct());  
+	// Array of unknown dof of the network concentration
+	vector_type Cv(dof_transp.Cv()); 
+	gmm::copy(gmm::sub_vector(UM_transp, 
+		gmm::sub_interval(0, dof_transp.Ct())), Ct);
+	gmm::copy(gmm::sub_vector(UM_transp, 
+		gmm::sub_interval(dof_transp.Ct(), dof_transp.tot())), Cv);
+
+/*
 	#ifdef M3D1D_VERBOSE_
 	// Save vessel solution for test-cases
-	if (nb_branches==1){
-		std::ofstream outUv("Uv.txt");
-		outUv << gmm::col_vector(Uv);
-		outUv.close();
+	if (nb_branches==1){;
 		std::ofstream outPv("Pv.txt");
 		outPv << gmm::col_vector(Pv);
 		outPv.close();
 	}
+	
 	#endif
+	
+*/
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Exporting Ut ..." << endl;
 	#endif
-	pfem pf_Ut = fem_descriptor(descr.FEM_TYPET);
-	if(pf_Ut->is_lagrange()==0){ 
+//	pfem pf_Ut = fem_descriptor(descr.FEM_TYPET);
+//	if(pf_Ut->is_lagrange()==0){ 
 		/*
 			There is no built-in export for non-lagrangian FEM.
 			If this is the case, we need to project before exporting.
 		 */
-		#ifdef M3D1D_VERBOSE_
+/*		#ifdef M3D1D_VERBOSE_
 		cout << "    Projecting Ut on P1 ..." << endl;
 		#endif
 		mesh_fem mf_P1(mesht);
@@ -557,15 +587,16 @@ transport3d1d::assembly_rhs(void)
 		exp_Ut.write_mesh();
 		exp_Ut.write_point_data(mf_Ut, Ut, "Ut");	 
 	}
+*/	
 	#ifdef M3D1D_VERBOSE_
-	cout << "  Exporting Pt ..." << endl;
+	cout << "  Exporting Ct ..." << endl;
 	#endif
-	vtk_export exp_Pt(descr.OUTPUT+"Pt.vtk");
-	exp_Pt.exporting(mf_Pt);
+	vtk_export exp_Ct(descr_transp.OUTPUT+"Ct"+suff+"_"+time_suff+".vtk");
+	exp_Pt.exporting(mf_Ct);
 	exp_Pt.write_mesh();
-	exp_Pt.write_point_data(mf_Pt, Pt, "Pt");
+	exp_Pt.write_point_data(mf_Ct, Ct, "Ct");
 
-	#ifdef M3D1D_VERBOSE_
+/*	#ifdef M3D1D_VERBOSE_
 	cout << "  Exporting Uv ..." << endl;
 	#endif
 	size_type start = 0;
@@ -579,14 +610,14 @@ transport3d1d::assembly_rhs(void)
 		exp_Uv.write_point_data(mf_Uvi[i], 
 			gmm::sub_vector(Uv, gmm::sub_interval(start, length)), "Uv"); 
 	}
-
+*/
 	#ifdef M3D1D_VERBOSE_
-	cout << "  Exporting Pv ..." << endl;
+	cout << "  Exporting Cv ..." << endl;
 	#endif
-	vtk_export exp_Pv(descr.OUTPUT+"Pv"+suff+".vtk");
-	exp_Pv.exporting(mf_Pv);
+	vtk_export exp_Cv(descr_transp.OUTPUT+"Cv"+suff+"_"+time_suff+".vtk");
+	exp_Pv.exporting(mf_Cv);
 	exp_Pv.write_mesh();
-	exp_Pv.write_point_data(mf_Pv, Pv, "Pv");
+	exp_Pv.write_point_data(mf_Cv, Cv, "Cv");
 
 	#ifdef M3D1D_VERBOSE_
 	cout << "... export done, visualize the data file with (for example) Paraview " << endl; 
