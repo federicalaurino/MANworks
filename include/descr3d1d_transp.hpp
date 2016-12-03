@@ -31,13 +31,12 @@ namespace getfem {
  */
 struct descr3d1d_transp {
 
-	
+	//! Absolute path to the vessel mesh file
+	std::string MESH_FILEV;
 	//! Identifier of tissue concentration's FEM type
 	std::string FEM_TYPET_C;
-
 	//! Identifier of vessel concentration's FEM type
 	std::string FEM_TYPEV_C;
-	
 	//! Output directory for transport problem
 	std::string OUTPUT;	
 	// Solver information
@@ -57,6 +56,7 @@ struct descr3d1d_transp {
 	{
 		FILE_ = fname;
 		
+		MESH_FILEV  = FILE_.string_value("MESH_FILEV_TRANSP","1D points file for transport problem");
 		FEM_TYPET_C   = FILE_.string_value("FEM_TYPET_C","FEM 3D tissue - concentration");
 		
 		FEM_TYPEV_C   = FILE_.string_value("FEM_TYPEV_C","FEM 1D vessel - concentration");

@@ -15,8 +15,8 @@
  */
 /** @defgroup asm Assembly routines */
 
-#ifndef M3D1D_ASSEMBLING_1D_HPP_
-#define M3D1D_ASSEMBLING_1D_HPP_
+#ifndef M3D1D_ASSEMBLING_1D_TRANSP_HPP_
+#define M3D1D_ASSEMBLING_1D_TRANSP_HPP_
 #include <defines.hpp>
 #include <node.hpp>
 #include <utilities.hpp>
@@ -41,13 +41,13 @@ namespace getfem {
 
 	@ingroup asm
  */ 
-template<typename MAT, typename VEC>
+template<typename MAT>
 void 
 asm_network_poiseuille_transp
 	(MAT & D, MAT & T, 
 	 const mesh_im & mim,
 	 const mesh_fem & mf_c,
-	 const VEC & lambdax, const VEC & lambday, const VEC & lambdaz,
+	 //const VEC & lambdax, const VEC & lambday, const VEC & lambdaz,
 	 const mesh_region & rg = mesh_region::all_convexes()
 	 ) 		
 {

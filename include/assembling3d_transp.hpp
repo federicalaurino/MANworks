@@ -13,8 +13,8 @@
   @date   September 2016.
   @brief  Miscelleanous assembly routines for the 3D transport problem.
  */
-#ifndef M3D1D_ASSEMBLING_3D_HPP_
-#define M3D1D_ASSEMBLING_3D_HPP_
+#ifndef M3D1D_ASSEMBLING_3D_TRANSP_HPP_
+#define M3D1D_ASSEMBLING_3D_TRANSP_HPP_
 #include <defines.hpp>
 #include <utilities.hpp>
 

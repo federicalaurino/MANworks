@@ -23,7 +23,7 @@ EXPORT_PARAM = 0;
 % Flag to export results
 VTK_EXPORT = 1;
 % Output directory
-OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk/';%'./vtk/';
+OUTPUT     = './vtk/';%'/home/pacs_student/Desktop/pacs_shared/vtk/';
 %===================================
 %  MESH
 %===================================
@@ -38,6 +38,7 @@ NOISED_T   = '0';
 MESH_FILET = ' '; 
 % Path to import the 1d list of points
 MESH_FILEV = '/home/pacs_student/Desktop/MANworks/src/6_uncoupled_transport/segment.pts'; %'/home/nico/workspace/pacs/model3d1d/src/1_uncoupled/segment.pts';  
+MESH_FILEV_TRANSP = '/home/pacs_student/Desktop/MANworks/src/6_uncoupled_transport/segment.pts';
 %===================================
 %  GETFEM DESCRIPTORS
 %===================================

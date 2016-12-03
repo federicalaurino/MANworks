@@ -16,6 +16,7 @@
  
 #ifndef M3D1D_TRANSPORT3D1D_HPP_
 #define M3D1D_TRANSPORT3D1D_HPP_
+#define M3D1D_VERBOSE_
 
 // GetFem++ libraries
 #include <getfem/getfem_assembling.h> 
@@ -42,6 +43,7 @@
 #include <mesh3d.hpp>       
 #include <mesh1d.hpp>
 #include <utilities.hpp>
+
 #include <assembling1d.hpp>          
 #include <assembling3d.hpp>        
 #include <assembling3d1d.hpp>
@@ -50,9 +52,13 @@
 #include <descr3d1d.hpp>
 #include <param3d1d.hpp>
 
+#include <assembling1d_transp.hpp>          
+#include <assembling3d_transp.hpp>        
+#include <assembling3d1d_transp.hpp>
 #include <dof3d1d_transp.hpp>
 #include <descr3d1d_transp.hpp>
 #include <param3d1d_transp.hpp>
+
 
 //#include <defines.hpp>>
 #include <problem3d1d.hpp>
@@ -80,11 +86,18 @@ public:
 	bool solve (void);
 	
 	//! Export the solution
-	void export_vtk (const string & time_suff = "", const string & suff = "");
+	void export_vtk (const string & suff = ""); //const string & time_suff = "", 
 
 protected:
 	 
-	 
+	//! Mesh for the vessel network for transport problem @f$\Lambda_(transp)@f$ (1D)
+	mesh meshv_transp;
+	
+	//! Finite Element Method for the tissue pressure @f$p_v@f$
+	mesh_fem mf_Ct; 
+	//! Finite Element Method for the vessel pressure @f$p_v@f$
+	mesh_fem mf_Cv; 
+	
 	//! Algorithm description strings (mesh files, FEM types, solver info, ...) 
 	descr3d1d_transp descr_transp;
 	//! Physical parameters (dimensionless)
@@ -92,13 +105,12 @@ protected:
 	//! Number of degrees of freedom
 	dof3d1d_transp dof_transp;
 		
-	//! Finite Element Method for the tissue pressure @f$p_v@f$
-	mesh_fem mf_Ct; 
-	//! Finite Element Method for the vessel pressure @f$p_v@f$
-	mesh_fem mf_Cv; 
+
 	
 ////	//eventualmente i fem dei coefficienti Lp_lf e m se variano dentro la mesh
 	
+	//! List of BC nodes of the network
+	vector< node > BCv_transp;	
 		
 	//! Monolithic matrix for the coupled problem
 	sparse_matrix_type AM_transp;
@@ -116,7 +128,7 @@ protected:
 	//! Import algorithm specifications
 	void import_data(void);
 	//! Import mesh for tissue (3D) and vessel (1D)  
-	//void build_mesh(void); 
+	void build_mesh(void); 
 	//! Set finite elements methods and integration methods 
 	void set_im_and_fem(void);
 	//! Build problem parameters
