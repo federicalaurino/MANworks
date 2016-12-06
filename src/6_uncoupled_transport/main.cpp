@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 		// Solve the problem
 		if (!p.problem3d1d::solve()) GMM_ASSERT1(false, "solve procedure has failed");
 		// Save results in .vtk format
-		
+		p.problem3d1d::export_vtk();
 		// Display some global results: mean pressures, total flow rate
 		std::cout << "--- FINAL RESULTS -------------------------" << std::endl; 
 		std::cout << "  Pt average            = " << p.mean_pt()   << std::endl;
@@ -62,29 +62,28 @@ int main(int argc, char *argv[])
 		  
 		//transport problem: concentration 
 		
-		//initialize
+		//initialize 
 		p.init(argc, argv);
-		//assemble 
+		//assemble  
 		p.assembly(); 
 		//solve  
 		p.solve(); 
 		//export  
-		//p.problem3d1d::export_vtk();
 		p.export_vtk(); 
-		    
+		      
 		
-		}
- 
-	GMM_STANDARD_CATCH_ERROR;  
+		} 
+   
+	GMM_STANDARD_CATCH_ERROR;   
 		
-	
-
-		 
-		 
-	return 0;  
-	
-} /* end of main program */
-
- 
-
+	 
+  
+		  
+		   
+	return 0;    
+	  
+} /* end of main program */  
+   
+   
+  
 

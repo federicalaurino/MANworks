@@ -23,7 +23,7 @@ EXPORT_PARAM = 0;
 % Flag to export results
 VTK_EXPORT = 1;
 % Output directory
-OUTPUT     = './vtk/';%'/home/pacs_student/Desktop/pacs_shared/vtk/';
+OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk/';
 %===================================
 %  MESH
 %===================================
@@ -60,6 +60,8 @@ FEM_TYPEV_C = 'FEM_PK(1,0)';
 IM_TYPET    = 'IM_TETRAHEDRON(6)'; 
 % GetFem type for the 1D Integration Method
 IM_TYPEV    = 'IM_GAUSS1D(6)'; 
+% GetFem type for the 1D Integration Method
+IM_TYPEV_TRANSP    = 'IM_GAUSS1D(6)'; 
 % Solver for the monolithic 3D/1D linear system
 % direct:    'SuperLU'
 % iterative: 'CG','BiCGstab','GMRES','QMR','LSCG'
