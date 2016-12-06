@@ -71,10 +71,10 @@ class transport3d1d: public problem3d1d {
 
 public:
 	transport3d1d(void) : 
-		/*problem3d1d.mimt(mesht),  problem3d1d::mimv(meshv),
+		/*problem3d1d::mimt(mesht),  problem3d1d::mimv(meshv),
 		problem3d1d::mf_Pt(mesht), problem3d1d::mf_coeft(mesht), problem3d1d::mf_Ut(mesht),
 		problem3d1d::mf_Pv(meshv), problem3d1d::mf_coefv(meshv),*/
-		mf_Ct(mesht), mf_Cv(meshv)
+		mf_Ct(mesht), mf_Cv(meshv_transp), mimv_transp(meshv_transp)
 	{} 
 	//! Initialize the problem
 	void init (int argc, char *argv[]);
@@ -86,8 +86,9 @@ public:
 	bool solve (void);
 	
 	//! Export the solution
-	void export_vtk (const string & suff = ""); //const string & time_suff = "", 
+	void export_vtk (const string & time_suff = "",const string & suff = ""); 
 
+	void test(void);
 protected:
 	 
 	//! Mesh for the vessel network for transport problem @f$\Lambda_(transp)@f$ (1D)
@@ -97,6 +98,8 @@ protected:
 	mesh_fem mf_Ct; 
 	//! Finite Element Method for the vessel pressure @f$p_v@f$
 	mesh_fem mf_Cv; 
+	//! Integration Method for the vessel pressure @f$p_v@f$
+	mesh_im mimv_transp; 	
 	
 	//! Algorithm description strings (mesh files, FEM types, solver info, ...) 
 	descr3d1d_transp descr_transp;
@@ -138,6 +141,7 @@ protected:
 	//! Build the monolithic rhs FM_transp by blocks
 	void assembly_rhs(void);
 	
+
 	
 	
 }; //end of class trasport3d1d

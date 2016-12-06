@@ -39,7 +39,7 @@
 	#ifdef M3D1D_VERBOSE_
 	cout << "Importing descriptors for tissue and vessel problems ..." << endl;
 	#endif
-	descr_transp.import_transp(PARAM);
+	descr_transp.import(PARAM);
 	#ifdef M3D1D_VERBOSE_
 	cout << descr_transp;
 	#endif
@@ -78,7 +78,8 @@
 	cout << "Setting FEMs for tissue and vessel problems ..." << endl;
 	#endif
 	
-
+	pintegration_method pim_v = int_method_descriptor(descr_transp.IM_TYPEV);
+	mimv_transp.set_integration_method(meshv_transp.convex_index(), pim_v);
 		
 	pfem pf_Ct = fem_descriptor(descr_transp.FEM_TYPET_C);
 	pfem pf_Cv = fem_descriptor(descr_transp.FEM_TYPEV_C);
@@ -263,7 +264,7 @@ transport3d1d::assembly_mat(void)
 	 /* end of branches loop */
 	
 	// Build Mvvi and Dvvi
-		asm_network_poiseuille_transp(Dv, Tv, mimv,mf_Cv);
+		asm_network_poiseuille_transp(Dv, Tv, mimv_transp,mf_Cv);
 		gmm::scale(Tv, (1.0/param_transp.dt()));
 		// Copy Mvvi and Dvvi
 		gmm::add(Tv, 
@@ -428,20 +429,16 @@ transport3d1d::assembly_rhs(void)
 	gmm::csc_matrix<scalar_type> A_transp;
 	gmm::clean(AM_transp, 1E-12);
 	gmm::copy(AM_transp, A_transp);
-	gmm::clear(AM_transp); // to be postponed for preconditioner
+	//gmm::clear(AM_transp); // to be postponed for preconditioner
 	double time = gmm::uclock_sec();	
 	
 	//scalar_type nn_timestep = ceil(param_transp.T() / param_transp.dt());
 	
 	double time_count = 0;
-	string time_suff = "";
-	std::ostringstream convert;
-	for(int t=0; t<=param_transp.T() ; t = t + param_transp.dt()){
+	for(int t=0;t<=param_transp.T() ; t = t + param_transp.dt()){ //t<=param_transp.T() ; t = t + param_transp.dt(
 	time_count++; 
 	std::cout<<"iteration number:"<<time_count<<std::endl;
 	
-	gmm::add(UM_transp, FM_transp);
-	gmm::clear(UM_transp);
 	
 	if ( descr_transp.SOLVE_METHOD == "SuperLU" ) { // direct solver //
 		#ifdef M3D1D_VERBOSE_
@@ -509,11 +506,15 @@ transport3d1d::assembly_rhs(void)
 	}
 	
 	std::cout<<"solved! going to export..."<<std::endl;
+	string time_suff = "";
+	std::ostringstream convert;
 	convert << time_count;
 	time_suff = convert.str();
-	//export_vtk();
+	export_vtk(time_suff);
 	std::cout<<"exported! now new iteration..."<<std::endl;
 	gmm::clear(FM_transp);
+	gmm::copy(UM_transp, FM_transp);
+	gmm::clear(UM_transp);
 	
 	} //end of cycle over time 
 	
@@ -556,7 +557,7 @@ transport3d1d::assembly_rhs(void)
  }; // end of solve
 	
 	
- void transport3d1d::export_vtk (const string & suff)
+ void transport3d1d::export_vtk (const string & time_suff,const string & suff)
  {
   std::cout<<"export transport problem"<<std::endl<<std::endl;
   if (PARAM.int_value("VTK_EXPORT"))
@@ -569,42 +570,23 @@ transport3d1d::assembly_rhs(void)
 	#endif
 	// Array of unknown dof of the interstitial velocity
 	vector_type Ct(dof_transp.Ct()); 
-cout << "  1... " << endl;
+
 	// Array of unknown dof of the network velocity
 	vector_type Cv(dof_transp.Cv()); 
- cout << "  2 ... " << endl;
+
 	gmm::copy(gmm::sub_vector(UM_transp, 
 		gmm::sub_interval(0, dof_transp.Ct())), Ct);
-cout << "  3 ... " << endl;
 	gmm::copy(gmm::sub_vector(UM_transp, 
-		gmm::sub_interval(dof_transp.Ct(), dof_transp.tot())), Cv);
+		gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())), Cv);
 
+	
 
-	#ifdef M3D1D_VERBOSE_
-	// Save vessel solution for test-cases
-	if (nb_branches==1){
-		std::ofstream outCv("Cv00.txt");
-		cout << "  4 ... " << endl;
-		outCv << gmm::col_vector(Cv);
-		cout << "  5 ... " << endl;
-		outCv.close();
-
-	}
-	#endif
-	cout << "  6 ... " << endl;
-	
-	
-	
-	cout << "  7 ... " << endl;
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Exporting Ct ..." << endl;
 	#endif
-	vtk_export exp_Ct("./vtk/vtk/Ct.vtk");
-	cout << "  8 ... " << endl;
+	vtk_export exp_Ct(descr_transp.OUTPUT+"Ct"+suff+"_t"+time_suff+".vtk");
 	exp_Ct.exporting(mf_Ct);
-	cout << "  9 ... " << endl;
 	exp_Ct.write_mesh();
-	cout << "  10 ... " << endl;
 	exp_Ct.write_point_data(mf_Ct, Ct, "Ct");
 
 
@@ -612,8 +594,7 @@ cout << "  3 ... " << endl;
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Exporting Cv ..." << endl;
 	#endif
-	vtk_export exp_Cv(descr.OUTPUT+"Cv"+suff+".vtk");
-	cout << "  11 ... " << endl;
+	vtk_export exp_Cv(descr_transp.OUTPUT+"Cv"+suff+"_t"+time_suff+".vtk");
 	exp_Cv.exporting(mf_Cv);
 	exp_Cv.write_mesh();
 	exp_Cv.write_point_data(mf_Cv, Cv, "Cv");
@@ -625,5 +606,145 @@ cout << "  3 ... " << endl;
  }; // end of export
   
   
+	void transport3d1d::test(void){
+/*	cout << "test export"<<endl;
+	cout << "ut"<<endl;
+	vtk_export exp_Ut("./vtk/vtk/Ut000.vtk");
+	cout << "export ut mesh"<<endl;
+	exp_Ut.exporting(mf_Ut);*/
+	
+	cout << "ct"<<endl;
+	vtk_export exp_Ct(descr_transp.OUTPUT+"Ct00.vtk"); 
+	cout << "export ct mesh"<<endl;
+	exp_Ct.exporting(mf_Ct);
+	
+vector_type Ct(dof_transp.Ct());
+
+	 cout<<"assembling ct vector..."<< endl; 
+ 
+ /*for(int i = 0; i<dof_transp.Ct(); i++)
+ Ct[i]= i;*/
+ 	gmm::copy(gmm::sub_vector(UM_transp, 
+		gmm::sub_interval(0, dof_transp.Ct())), Ct);
+ 
+ 	 cout<<"write mesh ct..."<< endl; 
+ 	exp_Ct.write_mesh();
+
+		 cout<<"write data ct..."<< endl; 
+	
+	exp_Ct.write_point_data(mf_Ct, Ct, "Ct");
+	
+	
+	
+		cout << "cv"<<endl;
+	vtk_export exp_Cv(descr_transp.OUTPUT+"Cv00.vtk"); 
+	cout << "export cv mesh"<<endl;
+	exp_Cv.exporting(mf_Cv);
+	
+vector_type Cv(dof_transp.Cv());
+
+	 cout<<"assembling cv vector..."<< endl; 
+ 
+ for(int i = 0; i<dof_transp.Cv(); i++)
+ Cv[i]= i;
+ 	gmm::copy(gmm::sub_vector(UM_transp, 
+		gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv() )), Cv);
+
+ 	 cout<<"write mesh cv..."<< endl; 
+ 	exp_Cv.write_mesh();
+	exp_Cv.write_point_data(mf_Cv, Cv, "Cv");
+
+std::ofstream outCC("./vtk/CC.txt");
+		cout << "  4 ... " << endl;
+		outCC << gmm::col_vector(UM_transp);
+		cout << "  5 ... " << endl;
+		outCC.close();
+//gmm::copy(gmm::sub_vector(UM_transp, 
+//		gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv() + dof_transp.Ct())), Cv);
+	/*	
+			 cout<<"write data W..."<< endl; 
+		
+	vector_type W(dof_transp.Cv()+dof_transp.Ct()+5);	 
+	 gmm::copy(gmm::sub_vector(W, 
+		gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv() + dof_transp.Ct())), Cv);
+	
+	 cout<<"write data Y..."<< endl; 
+		 
+	vector_type Y(dof_transp.tot());	 
+	 gmm::copy(gmm::sub_vector(Y, 
+		gmm::sub_interval(dof_transp.Ct()+1,dof_transp.Cv() + dof_transp.Ct())), Cv);		
+		
+		 cout<<"write data X..."<< endl; 
+			*/ 
+	/*vector_type X(dof_transp.Cv()+dof_transp.Ct());	 
+	 gmm::copy(gmm::sub_vector(X, 
+		gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv() + dof_transp.Ct())), Cv);*/
+
+	/*
+		// Array of unknown dof of the interstitial velocity
+		 cout<<"write data 1..."<< endl; 
+	vector_type UM(dof.tot());  cout<<"write data 2..."<< endl; 
+	vector_type Ut(dof.Ut());  cout<<"write data 3..."<< endl; 
+	// Array of unknown dof of the interstitial pressure
+	vector_type Pt(dof.Pt());  cout<<"write data 4..."<< endl; 
+	// Array of unknown dof of the network velocity
+	vector_type Uv(dof.Uv());  cout<<"write data 5..."<< endl; 
+	// Array of unknown dof of the network pressure
+	vector_type Pv(dof.Pv());  cout<<"write data 6..."<< endl; 
+	gmm::copy(gmm::sub_vector(UM, 
+		gmm::sub_interval(0, dof.Ut())), Ut); cout<<"write data 7..."<< endl; 
+	gmm::copy(gmm::sub_vector(UM, 
+		gmm::sub_interval(dof.Ut(), dof.Pt())), Pt); cout<<"write data8..."<< endl; 
+	gmm::copy(gmm::sub_vector(UM, 
+		gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv())), Uv); cout<<"write data 9..."<< endl; 
+	gmm::copy(gmm::sub_vector(UM, 
+		gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv())), Pv); cout<<"write data 0..."<< endl; 
+
+	*/
+	
+	/*
+	
+		cout << "cv"<<endl;
+	vtk_export exp_Cv1(descr_transp.OUTPUT+"Cv01.vtk"); 
+	cout << "export cv mesh"<<endl;
+	exp_Cv1.exporting(mf_Cv);
+	
+vector_type Cv1(dof_transp.Cv()-1);
+
+	 cout<<"assembling cv vector..."<< endl; 
+ 
+ for(int i = 0; i<dof_transp.Cv()-1; i++)
+ Cv1[i]= i;
+ 	   gmm::copy(gmm::sub_vector(UM_transp, 
+		gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv() + dof_transp.Ct()-1)), Cv1);
+
+ 	 cout<<"write mesh cv..."<< endl; 
+ 	//exp_Cv1.write_mesh();
+	//exp_Cv1.write_point_data(mf_Cv, Cv1, "Cv");
+ cout<<"ok!!!"<< endl; 
+ 		*/
+	/*
+	
+		cout << "cv"<<endl;
+	vtk_export exp_Cv2(descr_transp.OUTPUT+"Cv02.vtk"); 
+	cout << "export cv mesh"<<endl;
+	exp_Cv2.exporting(mf_Cv);
+	
+vector_type Cv2(dof_transp.Cv());
+
+	 cout<<"assembling cv vector..."<< endl; 
+ 
+ for(int i = 0; i<dof_transp.Cv(); i++)
+ Cv2[i]= i;
+ 	   gmm::copy(gmm::sub_vector(UM_transp, 
+		gmm::sub_interval(dof_transp.Ct()+1,dof_transp.Cv() + dof_transp.Ct()+1)), Cv);
+
+ 	 cout<<"write mesh cv..."<< endl; 
+ 	exp_Cv2.write_mesh();
+	exp_Cv2.write_point_data(mf_Cv, Cv2, "Cv");
+	
+	
+	*/
+	};//end of test
  
  } // end of namespace

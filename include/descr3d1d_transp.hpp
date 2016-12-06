@@ -37,6 +37,8 @@ struct descr3d1d_transp {
 	std::string FEM_TYPET_C;
 	//! Identifier of vessel concentration's FEM type
 	std::string FEM_TYPEV_C;
+	//! Identifier of vessel integration method type
+	std::string IM_TYPEV;
 	//! Output directory for transport problem
 	std::string OUTPUT;	
 	// Solver information
@@ -52,7 +54,7 @@ struct descr3d1d_transp {
 	//! File .param
 	ftool::md_param FILE_;
 	//! Import algorithm specifications from file .param
-	void import_transp(ftool::md_param & fname) 
+	void import(ftool::md_param & fname) 
 	{
 		FILE_ = fname;
 		
@@ -60,7 +62,7 @@ struct descr3d1d_transp {
 		FEM_TYPET_C   = FILE_.string_value("FEM_TYPET_C","FEM 3D tissue - concentration");
 		
 		FEM_TYPEV_C   = FILE_.string_value("FEM_TYPEV_C","FEM 1D vessel - concentration");
-		
+		IM_TYPEV 	= FILE_.string_value("IM_TYPEV_TRANSP","Name of integration method");
 		SOLVE_METHOD = FILE_.string_value("SOLVE_METHOD", "Monolithic Solver"); 
 		if (SOLVE_METHOD != "SuperLU") { // iterative solver
 			MAXITER  = FILE_.int_value("MAXITER", "Max number of sub-iterations");
