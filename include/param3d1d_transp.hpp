@@ -99,12 +99,12 @@ struct param3d1d_transp {
 			 Av_.assign(dof_datav,  Avval);
 			 Dalpha_.assign(dof_datat,  Dalphaval);
 			 Y_.assign(dof_datav,  Yval);
-			 Q_pl_.assign(dof_datav,  Q_plval);
+			 Q_pl_.assign(dof_datat,  Q_plval);
 
 			T_   = FILE_.real_value("T","Simulation time length [s]");
 			dt_   = FILE_.real_value("dt","Time step [s]");				
 		} 
-		else {
+		else { 
 			// Import dimensional params from FILE_
 			scalar_type P_  = FILE_.real_value("P", "average interstitial pressure [Pa]"); 
 			scalar_type U_  = FILE_.real_value("U", "characteristic flow speed in the capillary bed [m/s]"); 
@@ -127,7 +127,7 @@ struct param3d1d_transp {
 			Av_.assign(dof_datav, Dv_/d_/U_);
 			Dalpha_.assign(dof_datat, m_/U_*d_);
 			Y_.assign(dof_datav, Perm_/U_);
-			Q_pl_.assign(dof_datav,Lp_LF_*SV_*P_*d_/U_);
+			Q_pl_.assign(dof_datat,Lp_LF_*SV_*P_*d_/U_);
 						
 		}
 		// Check values
@@ -171,7 +171,13 @@ struct param3d1d_transp {
 	//! Get the radius
 	//vector_type & R (void) { return R_; }
 	//! Get the vessel wall permeabilities
-	//vector_type & Q (void) { return Q_; }
+	vector_type & Q_pl (void) { return Q_pl_; }
+	//! Get the Dahmkholer number 
+	vector_type & Dalpha (void) { return Dalpha_; }
+	//! Get the tissue diffusivity 
+	vector_type & At (void) { return At_; }
+	//! Get the vessel diffusivity 
+	vector_type & Av (void) { return Av_; }
 	//! Overloading of the output operator
 	friend std::ostream & operator << (
 		std::ostream & out, const param3d1d_transp & param
