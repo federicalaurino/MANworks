@@ -59,6 +59,7 @@
 	cout << "Importing the 1D mesh for the vessel (transport problem)... "   << endl;
 	#endif
 	std::ifstream ifs(descr_transp.MESH_FILEV);
+	mesh meshv_transp;
 	GMM_ASSERT1(ifs.good(), "impossible to read from file " << descr_transp.MESH_FILEV);
 	import_pts_file(ifs, meshv_transp, BCv_transp, nb_vertices, descr.MESH_TYPEV);
 	ifs.close();
@@ -78,9 +79,7 @@
 	cout << "Setting FEMs for tissue and vessel problems ..." << endl;
 	#endif
 	
-	pintegration_method pim_v = int_method_descriptor(descr_transp.IM_TYPEV);
-	mimv_transp.set_integration_method(meshv_transp.convex_index(), pim_v);
-		
+	
 	pfem pf_Ct = fem_descriptor(descr_transp.FEM_TYPET_C);
 	pfem pf_Cv = fem_descriptor(descr_transp.FEM_TYPEV_C);
 
@@ -95,7 +94,7 @@
 	cout << "Setting IMs and FEMs for vessel branches ..." << endl;
 	#endif
 
-	mf_Cv.set_finite_element(meshv_transp.convex_index(), pf_Cv);
+	mf_Cv.set_finite_element(meshv.convex_index(), pf_Cv);
 
 	
 	#ifdef M3D1D_VERBOSE_
@@ -150,62 +149,71 @@ transport3d1d::assembly_mat(void)
 	cout << "Assembling the monolithic matrix AM ..." << endl;
 	#endif
 	// Mass matrix for the interstitial problem
-	sparse_matrix_type Mt(dof_transp.Ct(), dof_transp.Ct());
+	sparse_matrix_type Mt(dof_transp.Ct(), dof_transp.Ct()); gmm::clear(Mt);
 	// Diffusion matrix for the interstitial problem
-	sparse_matrix_type Dt(dof_transp.Ct(), dof_transp.Ct());
+	sparse_matrix_type Dt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Dt);
 	//Transport matrix for interstitial problem
-	sparse_matrix_type Bt(dof_transp.Ct(), dof_transp.Ct());
+	sparse_matrix_type Bt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Bt);
 	// Mass(time derivative)  matrix for the interstitial problem
-	sparse_matrix_type Tt(dof_transp.Ct(), dof_transp.Ct());
+	sparse_matrix_type Tt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Tt);
 		
 	// Mass matrix for the network problem
-	sparse_matrix_type Mv(dof_transp.Cv(), dof_transp.Cv()); //useless
+	sparse_matrix_type Mv(dof_transp.Cv(), dof_transp.Cv()); gmm::clear(Mv);
 	// Diffusion matrix for the network problem
-	sparse_matrix_type Dv(dof_transp.Cv(), dof_transp.Cv());
+	sparse_matrix_type Dv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Dv);
 	//Transport matrix for network problem
-	sparse_matrix_type Bv(dof_transp.Cv(), dof_transp.Cv());
+	sparse_matrix_type Bv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Bv);
 	// Mass (time derivative)  matrix for the network problem
-	sparse_matrix_type Tv(dof_transp.Cv(), dof_transp.Cv());
-		/*
+	sparse_matrix_type Tv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Tv);
+		
 	// Junction compatibility matrix for the network problem
-	sparse_matrix_type Jvv(dof.Pv(), dof.Uv());
+	//sparse_matrix_type Jvv(dof.Pv(), dof.Uv());
 	// Tissue-to-tissue exchange matrix
-	sparse_matrix_type Btt(dof.Pt(), dof.Pt());
+	sparse_matrix_type Btt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Btt);
 	// Vessel-to-tissue exchange matrix
-	sparse_matrix_type Btv(dof.Pt(), dof.Pv());
+	sparse_matrix_type Btv(dof_transp.Ct(), dof_transp.Cv());gmm::clear(Btv);
 	// Tissue-to-vessel exchange matrix
-	sparse_matrix_type Bvt(dof.Pv(), dof.Pt());
+	sparse_matrix_type Bvt(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Bvt);
 	// Vessel-to-vessel exchange matrix
-	sparse_matrix_type Bvv(dof.Pv(), dof.Pv());
+	sparse_matrix_type Bvv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Bvv);
 	// Aux tissue-to-vessel averaging matrix
-	sparse_matrix_type Mbar(dof.Pv(), dof.Pt());
+	sparse_matrix_type Mbar(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Mbar);
 	// Aux tissue-to-vessel interpolation matrix
-	sparse_matrix_type Mlin(dof.Pv(), dof.Pt());
-	*/
+	sparse_matrix_type Mlin(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Mlin);
+	
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Mt and Dt ..." << endl;
 	#endif
-	asm_tissue_darcy_transp(Mt, Dt, Tt, mimt, mf_Ct);
-	gmm::scale(Mt, (1.0/param_transp.Dalpha(0))); // Dalpha scalar
+	vector_type mass_coeff(dof.coeft()); gmm::clear(mass_coeff);
+	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(dof.Ut(), dof.Pt())) ,  mass_coeff);
+	gmm::scale (param_transp.Q_pl(), mass_coeff);
+	gmm::add(param_transp.Dalpha(), mass_coeff);
+	asm_tissue_darcy_transp(Mt, Dt, Tt, mimt, mf_Ct, mf_coeft, mass_coeff, param_transp.At() );
 	gmm::scale(Tt, (1.0/param_transp.dt())); // dt time step
 	
 	
-	// Copy Mtt
+	// Copy Mt
 	gmm::add(Mt, 
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
-	// Copy -Dtt^T
-	/*gmm::add(gmm::scaled(gmm::transposed(Dtt), -1.0),  
+	// Copy Tt
+	gmm::add(Tt, 
 			  gmm::sub_matrix(AM_transp, 
-					gmm::sub_interval(0, dof.Ut()),
-					gmm::sub_interval(dof.Ut(), dof.Pt()))); */
+					gmm::sub_interval(0, dof_transp.Ct()), 
+					gmm::sub_interval(0, dof_transp.Ct()))); 
+
+
 	// Copy Dt
 	gmm::add(Dt,
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
+			
+			
+					
+ 			
 
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling the tangent versor ..." << endl;
@@ -264,18 +272,47 @@ transport3d1d::assembly_mat(void)
 	 /* end of branches loop */
 	
 	// Build Mvvi and Dvvi
-		asm_network_poiseuille_transp(Dv, Tv, mimv_transp,mf_Cv);
+		asm_network_poiseuille_transp(Dv, Tv, mimv,mf_Cv);
 		gmm::scale(Tv, (1.0/param_transp.dt()));
 		// Copy Mvvi and Dvvi
 		gmm::add(Tv, 
 			gmm::sub_matrix(AM_transp, 
-				gmm::sub_interval(dof_transp.Ct(), dof_transp.tot()), 
-				gmm::sub_interval(dof_transp.Ct(), dof_transp.tot()))); 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 		gmm::add(Dv, 
 			gmm::sub_matrix(AM_transp, 
-				gmm::sub_interval(dof_transp.Ct(), dof_transp.tot()), 
-				gmm::sub_interval(dof_transp.Ct(), dof_transp.tot())));
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+				
 		
+	//ADVECTION			
+	bool ADVECTION = PARAM.int_value("ADVECTION");
+	if(ADVECTION ==1){
+	// advection tissue term: 				
+	vector_type Ut(dof.Ut()); gmm::clear(Ut);
+	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())) ,  Ut);
+	asm_advection_matrix(Bt, mimt, mf_Ct, mf_Ut,Ut);
+	gmm::add(Bt,
+			  gmm::sub_matrix(AM_transp, 
+					gmm::sub_interval(0, dof_transp.Ct()), 
+					gmm::sub_interval(0, dof_transp.Ct()))); 
+					
+	/*
+	// advection vessel term: 				
+	vector_type Uv(dof.Uv()); gmm::clear(Uv);
+	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Uv())) ,  Uv);
+	asm_advection_matrix(Bv, mimv, mf_Cv, mf_Uv,Uv);
+	gmm::add(Bv,
+			  gmm::sub_matrix(AM_transp, 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+	*/
+	}
+	else{
+	cout<<"---NO ADVECTION TERM ---"<<endl;
+	}
+				
+						
 //AGGIUNGO UN PO DI COSE A CASO PER ESSERE SICURO CHE LA MATRICE NON È SINGOLARE
 cout << " create identity matrix ..." << endl;
 sparse_matrix_type identity(1,1);
@@ -291,7 +328,7 @@ for (int i=0; i<dof_transp.tot(); i++)
 gmm::add(identity, 
 			gmm::sub_matrix(AM_transp, 
 				gmm::sub_interval(0,1 ), 
-				gmm::sub_interval(i, i+1)));
+				gmm::sub_interval(i, 1)));
 
 	/*
 if (nb_junctions > 0){
@@ -315,44 +352,51 @@ if (nb_junctions > 0){
 			 gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv()),
 			 gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv())));
 }
+*/
+
+
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling aux exchange matrices Mbar and Mlin ..." << endl;
 	#endif
 	asm_exchange_aux_mat(Mbar, Mlin, 
-			mimv, mf_Pt, mf_Pv, param.R(), descr.NInt);
+			mimv, mf_Ct, mf_Cv, param.R(), descr.NInt);
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling exchange matrices ..." << endl;
 	#endif
 	bool NEWFORM = PARAM.int_value("NEW_FORMULATION");
-	asm_exchange_mat(Btt, Btv, Bvt, Bvv,
-			mimv, mf_Pv, mf_coefv, Mbar, Mlin, param.Q(), NEWFORM);
+	vector_type coeff(dof.Pv());
+	
+	asm_exchange_mat_transp(Btt, Btv, Bvt, Bvv,
+			mimv, mf_Cv, mf_coefv, Mbar, Mlin, param.Q(), NEWFORM);
 
 	// Copying Btt
 	gmm::add(Btt, 
-			  gmm::sub_matrix(AM, 
-					gmm::sub_interval(dof.Ut(), dof.Pt()), 
-					gmm::sub_interval(dof.Ut(), dof.Pt()))); 
+			  gmm::sub_matrix(AM_transp, 
+					gmm::sub_interval(0, dof_transp.Ct()), 
+					gmm::sub_interval(0, dof_transp.Ct()))); 
 	// Copying -Btv
-	gmm::add(gmm::scaled(Btv, -1),
-	 		  gmm::sub_matrix(AM, 
-					gmm::sub_interval(dof.Ut(), dof.Pt()),
-					gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv()))); 
+	gmm::add(Btv,
+	 		  gmm::sub_matrix(AM_transp, 
+					gmm::sub_interval(0, dof_transp.Ct()),
+					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 	// Copying -Bvt
-	gmm::add(gmm::scaled(Bvt,-1), 
-			  gmm::sub_matrix(AM, 
-			  		gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv()	, dof.Pv()),
-					gmm::sub_interval(dof.Ut(), dof.Pt()))); 
+	gmm::add(Bvt, 
+			  gmm::sub_matrix(AM_transp, 
+			  		gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()),
+					gmm::sub_interval(0, dof_transp.Ct()))); 
 	// Copying Bvv
 	gmm::add(Bvv, 
-			  gmm::sub_matrix(AM, 
-					gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv()), 
-					gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv()))); */
+			  gmm::sub_matrix(AM_transp, 
+					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
+					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 
 	// De-allocate memory
 	gmm::clear(Mt);  gmm::clear(Dt); 
 	gmm::clear(Mv); gmm::clear(Dv);
 	gmm::clear(Bt);  gmm::clear(Bv);
-
+	gmm::clear(Mbar);  gmm::clear(Mlin);
+	gmm::clear(Btt);  gmm::clear(Btv);
+	gmm::clear(Bvt);  gmm::clear(Bvv);
 }
 
 void 
@@ -361,7 +405,7 @@ transport3d1d::assembly_rhs(void)
  cout<<"assembling rhs vector..."<< endl; 
  
  for(int i = 0; i<dof_transp.tot(); i++)
- FM_transp[i]= 0.0005* i;
+ FM_transp[i]= 0.0005* i/(i+3);
  
  cout<<"assembled rhs vector..."<< endl; 
 	/*
@@ -384,7 +428,7 @@ transport3d1d::assembly_rhs(void)
 	cout << "  Building tissue boundary term ..." << endl;
 	#endif
 	vector_type beta(dof.coeft(), 1.0/bcoef);
-	vector_type P0(dof.coeft(), p0coef);
+	vector_type P0(dof.coeft(), p0coef); 
 	
 	if (PARAM.int_value("TEST_RHS")) {
 		#ifdef M3D1D_VERBOSE_

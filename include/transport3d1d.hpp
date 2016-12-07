@@ -51,6 +51,7 @@
 #include <dof3d1d.hpp>
 #include <descr3d1d.hpp>
 #include <param3d1d.hpp>
+#include <utilities_transp.hpp>
 
 #include <assembling1d_transp.hpp>          
 #include <assembling3d_transp.hpp>        
@@ -74,7 +75,7 @@ public:
 		/*problem3d1d::mimt(mesht),  problem3d1d::mimv(meshv),
 		problem3d1d::mf_Pt(mesht), problem3d1d::mf_coeft(mesht), problem3d1d::mf_Ut(mesht),
 		problem3d1d::mf_Pv(meshv), problem3d1d::mf_coefv(meshv),*/
-		mf_Ct(mesht), mf_Cv(meshv_transp), mimv_transp(meshv_transp)
+		mf_Ct(mesht), mf_Cv(meshv) //, mimv_transp(meshv_transp)
 	{} 
 	//! Initialize the problem
 	void init (int argc, char *argv[]);
@@ -92,14 +93,14 @@ public:
 protected:
 	 
 	//! Mesh for the vessel network for transport problem @f$\Lambda_(transp)@f$ (1D)
-	mesh meshv_transp;
+	//mesh meshv_transp;
 	
 	//! Finite Element Method for the tissue pressure @f$p_v@f$
 	mesh_fem mf_Ct; 
 	//! Finite Element Method for the vessel pressure @f$p_v@f$
 	mesh_fem mf_Cv; 
 	//! Integration Method for the vessel pressure @f$p_v@f$
-	mesh_im mimv_transp; 	
+	//mesh_im mimv_transp; 	
 	
 	//! Algorithm description strings (mesh files, FEM types, solver info, ...) 
 	descr3d1d_transp descr_transp;
