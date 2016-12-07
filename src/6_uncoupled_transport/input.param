@@ -22,6 +22,8 @@ TEST_RHS   = 1;
 EXPORT_PARAM = 0; 
 % Flag to export results
 VTK_EXPORT = 1;
+%Flag to add advection terms
+ADVECTION=0;
 % Output directory
 OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk/';
 %===================================
@@ -97,6 +99,10 @@ U  = 166E-06;
 d  = 240E-06;
 % average radius of the capillary vessels []
 RADIUS = 5E-06;
+% Viscosity of the blood [kg/ms]
+mu_V = 0.001; 	
+% Viscosity of the interstitial fluid [kg/ms]
+mu_T = 0.001; 
 %Diffusivity in the tissue [m^2/s]  
 Dt = 1.35E-09;
 %Diffusivity in the vessels [m^2/s] 

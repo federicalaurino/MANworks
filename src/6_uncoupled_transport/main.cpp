@@ -9,16 +9,16 @@
 ======================================================================*/
 /*! 
   @file   main.cpp
-  @author Domenico Notaro <domenico.not@gmail.com>
+  @author Domenico Notaro <domenico.not@gmail.com> 
   @date   April 2015. 
-  @brief  Main program for test simulations.  
+  @brief  Main program for test simulations.   
   @details
     We solve the coupled 3D/1D problem of fluid exchange between a 1D 
     network \Lambda and the 3D interstitial tissue \Omega
     
     *****************************************
       Benchmark : uncoupled 3D/1D problems
-      Mixed finite elements approximation
+      Mixed finite elements approximation 
       Monolithic resolution by SuperLU 3.0
     *****************************************
     
@@ -69,20 +69,20 @@ int main(int argc, char *argv[])
 		//solve  
 		p.solve(); 
 		//export  
-		p.export_vtk(); 
+		p.export_vtk();  
 		      
 		
 		} 
-   
-	GMM_STANDARD_CATCH_ERROR;   
+    
+	GMM_STANDARD_CATCH_ERROR;    
 		
-	 
-  
-		  
+	  
+   
+		   
 		   
 	return 0;    
-	  
-} /* end of main program */  
+	   
+} /* end of main program */   
    
    
   
