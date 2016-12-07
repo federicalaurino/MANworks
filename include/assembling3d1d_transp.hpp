@@ -168,6 +168,16 @@ asm_exchange_mat_transp
 } /* end of build_exchange_matrices */
 
 
+/*
+Build the vector of coefficient which multiplies the exchange matrixes 
+
+*/
+template<typename VEC>
+void 
+asm_exchange_coef_transp(const  VEC & Q){
+
+}; /* end of asm_exchange_coef_transp */
+
 } /* end of namespace */
 
 
