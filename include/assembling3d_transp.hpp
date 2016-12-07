@@ -33,25 +33,47 @@ namespace getfem {
 
 	@ingroup asm
  */ 
-template<typename MAT>
+template<typename MAT, typename VEC>
 void 
 asm_tissue_darcy_transp
 	(MAT & M, MAT & D,MAT & T,
 	 const mesh_im & mim,
 	 const mesh_fem & mf_c,
+	 const mesh_fem & mf_coef,
+	 const VEC & mass_data,
+	 const VEC & diff_data,
 	 const mesh_region & rg = mesh_region::all_convexes()
 	 ) 		
 {
 	GMM_ASSERT1(mf_c.get_qdim() == 1, 
 		"invalid data mesh fem for pressure (Qdim=1 required)");
 	// Build the mass matrix Mt (consumption)
-	getfem::asm_mass_matrix(M, mim, mf_c, rg);
+	getfem::asm_mass_matrix_param(M, mim, mf_c, mf_coef, mass_data, rg);
 	// Build the mass matrix Tt for time derivative 
 	getfem::asm_mass_matrix(T, mim, mf_c, rg);
 	// Build the divergence matrix Dtt
-	getfem::asm_stiffness_matrix_for_homogeneous_laplacian(D,mim,mf_c,rg);
+	getfem::asm_stiffness_matrix_for_laplacian(D,mim,mf_c,mf_coef, diff_data, rg);
 	
-}
+} /* end of asm_tissue_darcy*/
+
+//! Assemble a generic advection matrix 
+  template<typename MAT, typename VECT>
+  void asm_advection_matrix(MAT &M, const getfem::mesh_im &mim,
+			    const getfem::mesh_fem &mf,
+                            const getfem::mesh_fem &mfvel,
+                            const VECT &vel) {
+    getfem::generic_assembly
+      assem("vel=data(#2);"
+            "M$1(#1,#1) += comp(Base(#1).Grad(#1).vBase(#2))"
+            "(:, :,i, k,i).vel(k);");
+    assem.push_mi(mim);
+    assem.push_mf(mf);
+    assem.push_mf(mfvel);
+    assem.push_data(vel);
+    assem.push_mat(M);
+    assem.assembly();
+  }  /* end of asm_advection_matrix*/
+
 
 /*! Build the mixed boundary conditions for Darcy's problem
     @f$ M = \int_{\Gamma_u} \frac{1}{\beta}\,(u.n)(v.n)~d\sigma
