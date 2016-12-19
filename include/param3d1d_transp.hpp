@@ -178,6 +178,8 @@ struct param3d1d_transp {
 	vector_type & At (void) { return At_; }
 	//! Get the vessel diffusivity 
 	vector_type & Av (void) { return Av_; }
+	//! Get the leakage of the capillary bed
+	vector_type & Y  (void) { return Y_;  } const
 	//! Overloading of the output operator
 	friend std::ostream & operator << (
 		std::ostream & out, const param3d1d_transp & param
