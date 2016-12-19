@@ -9,25 +9,25 @@
 ======================================================================*/
 /*! 
   @file   main.cpp
-  @author Domenico Notaro <domenico.not@gmail.com> 
+  @author Domenico Notaro <domenico.not@gmail.com>   
   @date   April 2015. 
   @brief  Main program for test simulations.   
   @details
-    We solve the coupled 3D/1D problem of fluid exchange between a 1D 
+    We solve the coupled 3D/1D problem of fluid exchange between a 1D  
     network \Lambda and the 3D interstitial tissue \Omega
-    
+         
     *****************************************
-      Benchmark : uncoupled 3D/1D problems
-      Mixed finite elements approximation 
-      Monolithic resolution by SuperLU 3.0
+      Benchmark : uncoupled 3D/1D problems  
+      Mixed finite elements approximation  
+      Monolithic resolution by SuperLU 3.0 
     *****************************************
-    
+     
 	See Section "Code verification: test-cases" 
- */
+ */  
  	
  	#define M3D1D_VERBOSE_
 #include <iostream>
-#include <problem3d1d.hpp> 
+#include <problem3d1d.hpp>  
 #include <transport3d1d.hpp> 
 
 
@@ -39,16 +39,16 @@ int main(int argc, char *argv[])
 	FE_ENABLE_EXCEPT;        // Enable floating point exception for Nan.
 
 	try {   
-		// Declare a new problem
-		getfem::transport3d1d p;
-		
+		// Declare a new problem 
+		getfem::transport3d1d p; 
+		 
 		/// fluid problem: velocity field and pressure
 		
 		// Initialize the problem
 		p.problem3d1d::init(argc, argv);
 		// Build the monolithic system
 		p.problem3d1d::assembly();
-		// Solve the problem
+		// Solve the problem 
 		if (!p.problem3d1d::solve()) GMM_ASSERT1(false, "solve procedure has failed");
 		// Save results in .vtk format
 		p.problem3d1d::export_vtk();
@@ -59,25 +59,28 @@ int main(int argc, char *argv[])
 		std::cout << "  Network-to-Tissue TFR = " << p.flow_rate() << std::endl;
 		std::cout << "-------------------------------------------" << std::endl; 	
 		
-		  
-		//transport problem: concentration 
+		    
+		//transport problem: concentration  
 		
 		//initialize 
 		p.init(argc, argv);
-		//assemble  
-		p.assembly(); 
-		//solve  
-		p.solve(); 
-		//export  
-		p.export_vtk();  
-		      
-		
-		} 
-    
+		//assemble      
+		p.assembly();   
+		//solve   
+		p.solve();  
+		//export   
+		p.export_vtk();    
+		   
+		//test
+		p.test(); 	//test per la mesh 3d
+		//p.test2(); 	//test per la mesh 1d        
+		   	
+		}  
+      
 	GMM_STANDARD_CATCH_ERROR;    
-		
-	  
-   
+		 
+	   
+    
 		   
 		   
 	return 0;    
