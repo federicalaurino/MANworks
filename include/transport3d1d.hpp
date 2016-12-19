@@ -29,6 +29,7 @@
 #include <getfem/getfem_partial_mesh_fem.h>
 #include <getfem/getfem_interpolated_fem.h>
 #include <gmm/gmm.h>
+#include <gmm/gmm_matrix.h>
 #include <gmm/gmm_inoutput.h>
 #include <gmm/gmm_iter_solvers.h>
 // Standard libraries
@@ -68,7 +69,7 @@
  namespace getfem {
 
 //!	Main class defining the coupled 3D/1D transport problem.
-class transport3d1d: public problem3d1d {
+class transport3d1d: public problem3d1d { 
 
 public:
 	transport3d1d(void) : 
@@ -90,6 +91,7 @@ public:
 	void export_vtk (const string & time_suff = "",const string & suff = ""); 
 
 	void test(void);
+	void test2(void);
 protected:
 	 
 	//! Mesh for the vessel network for transport problem @f$\Lambda_(transp)@f$ (1D)
@@ -115,6 +117,9 @@ protected:
 	
 	//! List of BC nodes of the network
 	vector< node > BCv_transp;	
+	//! List of BC nodes of the tissue
+	vector< node > BCt_transp;
+
 		
 	//! Monolithic matrix for the coupled problem
 	sparse_matrix_type AM_transp;
@@ -137,6 +142,18 @@ protected:
 	void set_im_and_fem(void);
 	//! Build problem parameters
 	void build_param(void);
+	//! Build the list of tissue boundary data 
+	/*!	Face numbering:
+		  0 : {x = 0 }  "back"
+		  1 : {x = Lx}  "front"
+		  2 : {y = 0 }  "left"
+		  3 : {y = Ly}  "right"
+		  4 : {z = 0 }  "bottom"
+		  5 : {z = Lz}  "top"
+	 */
+	void build_tissue_boundary(void);
+	//! Build the list of vessel boundary (and junctions) data 
+	void build_vessel_boundary(void);
 	//! Build the monolithic matrix AM_transp by blocks
 	void assembly_mat(void);
 	//! Build the monolithic rhs FM_transp by blocks
