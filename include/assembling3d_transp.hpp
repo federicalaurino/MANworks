@@ -36,7 +36,7 @@ namespace getfem {
 template<typename MAT, typename VEC>
 void 
 asm_tissue_darcy_transp
-	(MAT & M, MAT & D,MAT & T,
+	(MAT & R, MAT & D,MAT & M,
 	 const mesh_im & mim,
 	 const mesh_fem & mf_c,
 	 const mesh_fem & mf_coef,
@@ -48,11 +48,19 @@ asm_tissue_darcy_transp
 	GMM_ASSERT1(mf_c.get_qdim() == 1, 
 		"invalid data mesh fem for pressure (Qdim=1 required)");
 	// Build the mass matrix Mt (consumption)
-	getfem::asm_mass_matrix_param(M, mim, mf_c, mf_coef, mass_data, rg);
+	getfem::asm_mass_matrix_param(R, mim, mf_c, mf_coef, mass_data, rg);
 	// Build the mass matrix Tt for time derivative 
-	getfem::asm_mass_matrix(T, mim, mf_c, rg);
+	getfem::asm_mass_matrix(M, mim, mf_c, rg);
 	// Build the divergence matrix Dtt
-	getfem::asm_stiffness_matrix_for_laplacian(D,mim,mf_c,mf_coef, diff_data, rg);
+	//getfem::asm_stiffness_matrix_for_homogeneous_laplacian(D,mim,mf_c, rg); //_componentwise
+	
+	getfem::generic_assembly
+	  assem("M$1(#1,#1) += sym(comp(vGrad(#1).vGrad(#1)) (:, i,k, : ,i,k) )");
+	  assem.push_mi(mim);
+	  assem.push_mf(mf_c);
+	  assem.push_mat(D);
+	  assem.assembly();
+	
 	
 } /* end of asm_tissue_darcy*/
 
@@ -95,53 +103,34 @@ asm_tissue_darcy_transp
 template<typename MAT, typename VEC>
 void
 asm_tissue_bc_transp
-	(MAT & M, VEC & F,
+	(MAT & M,
 	 const mesh_im & mim,
-	 const mesh_fem & mf_u,
+	 const mesh_fem & mf_c,
 	 const mesh_fem & mf_data,
 	 const std::vector<getfem::node> & BC,
-	 const VEC & P0,
 	 const VEC & coef
 	 )
 {
-	GMM_ASSERT1(mf_u.get_qdim()>1,  "invalid data mesh fem (Qdim>1 required)");
+	GMM_ASSERT1(mf_c.get_qdim()==1,  "invalid data mesh fem (Qdim=1 required)");
 	GMM_ASSERT1(mf_data.get_qdim()==1, "invalid data mesh fem (Qdim=1 required)");
 
 	std::vector<scalar_type> G(mf_data.nb_dof());
 	std::vector<scalar_type> ones(mf_data.nb_dof(), 1.0);
 
 	// Define assembly for velocity bc (\Gamma_u)
-	generic_assembly 
-	assemU("g=data$1(#2);" "c=data$2(#2);" 
-		   "V$1(#1)+=-g(i).comp(Base(#2).vBase(#1).Normal())(i,:,k,k);"
-		   "M$1(#1,#1)+=c(i).comp(Base(#2).vBase(#1).Normal().vBase(#1).Normal())(i,:,j,j,:,k,k);");
-	assemU.push_mi(mim);
-	assemU.push_mf(mf_u);
-	assemU.push_mf(mf_data);
-	assemU.push_data(P0);
-	assemU.push_data(coef);
-	assemU.push_vec(F);
-	assemU.push_mat(M);
-	// Define assembly for pressure bc (\Gamma_p)
-	generic_assembly 
-	assemP("p=data$1(#2);" 
-		   "V$1(#1)+=-p(i).comp(Base(#2).vBase(#1).Normal())(i,:,k,k);");
-	assemP.push_mi(mim);
-	assemP.push_mf(mf_u);
-	assemP.push_mf(mf_data);
-	assemP.push_data(G);
-	assemP.push_vec(F);
+
 
 	for (size_type f=0; f < BC.size(); ++f) {
 
-		GMM_ASSERT1(mf_u.linked_mesh().has_region(f), 
+		GMM_ASSERT1(mf_c.linked_mesh().has_region(f), 
 				"missed mesh region" << f);
-		if (BC[f].label=="DIR") { // Dirichlet BC
-			gmm::copy(gmm::scaled(ones, BC[f].value), G);	
-			assemP.assembly(mf_u.linked_mesh().region(BC[f].rg));
+		if (BC[f].label=="MIX") { // Robin BC
+			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, coef,mf_c.linked_mesh().region(BC[f].rg) );
 		} 
-		else if (BC[f].label=="MIX") { // Robin BC
-			assemU.assembly(mf_u.linked_mesh().region(BC[f].rg));
+		else if (BC[f].label=="DIR") { // Robin BC
+			//assemU.assembly(mf_u.linked_mesh().region(BC[f].rg));
+			//homogeneus dirichlet
+			
 		}
 		else if (BC[f].label=="INT") { // Internal Node
 			DAL_WARNING1("internal node passed as boundary.");
@@ -155,6 +144,28 @@ asm_tissue_bc_transp
 	}
 
 } /* end of asm_tissue_bc */
+
+// assemble source term from time derivative
+template<typename VEC>
+void
+asm_time_rhs_transp
+	(VEC & F,
+	 const mesh_im & mim,
+	 const mesh_fem & mf_c,
+	 const mesh_fem & mf_data,
+	 const VEC & coef
+	 )
+{
+getfem::generic_assembly assem;
+assem.push_mi(mim);
+assem.push_mf(mf_c);
+assem.push_mf(mf_data);
+assem.push_data(coef);
+assem.push_vec(F);
+assem.set("Z=data(#2);"
+"V(#1)+=comp(Base(#1).Base(#2))(:,j).Z(j);");
+assem.assembly();
+}
 
 } /* end of namespace */
 
