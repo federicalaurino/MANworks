@@ -499,14 +499,16 @@ transport3d1d::assembly_mat(void)
 	
 	
 	// Copy Rt //MATRICE DI REAZIONE PER IL CONSUMO DI OSSIGENO, MOMENTANEAMENTE TOLTA
-	/*gmm::add(Rt, 
+		bool REACTION = PARAM.int_value("REACTION");
+	if(REACTION ==1){
+	gmm::add(Rt, 
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
-	*/
+	}
 	
 	// Copy Tt //PASSO TEMPORALE
-	
+	if(descr_transp.STATIONARY ==0)
 	gmm::add(Mt,  
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
@@ -525,10 +527,11 @@ transport3d1d::assembly_mat(void)
 	#endif
 	
 	// Build Mvvi and Dvvi
-		asm_network_poiseuille_transp(Dv, Mv, mimv,mf_Cv);
+		asm_network_poiseuille_transp(Dv, Mv, mimv,mf_Cv, mf_coefv, param_transp.Av());
 		gmm::scale(Mv, (1.0/param_transp.dt()));
 		
 		// mass matrix for TIME STEP for vessel
+		if(descr_transp.STATIONARY ==0)
 		gmm::add(Mv, 
 			gmm::sub_matrix(AM_transp, 
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
@@ -550,7 +553,6 @@ transport3d1d::assembly_mat(void)
 	cout << "  Assembling Bt and Bv ..." << endl;
 	#endif		
 	bool ADVECTION = PARAM.int_value("ADVECTION");
-	ADVECTION=0; //momentaneamente non mettiamolo il trasporto
 	if(ADVECTION ==1){
 	// advection tissue term: 				
 	vector_type Ut(dof.Ut()); gmm::clear(Ut);
@@ -599,7 +601,7 @@ transport3d1d::assembly_mat(void)
 	cout << "  Assembling exchange matrices ..." << endl;
 	#endif
 	bool NEWFORM = PARAM.int_value("NEW_FORMULATION");
-	NEWFORM=false;
+	NEWFORM=true;
 	vector_type coeff(dof.Pv());
 	
 	asm_exchange_mat_transp(Btt, Btv, Bvt, Bvv,
@@ -666,13 +668,7 @@ transport3d1d::assembly_rhs(void)
 
 	// Coefficients for tissue BCs
 	scalar_type bcoef  = PARAM.real_value("BETA_transp", "Coefficient for mixed BC for transport problem");
-	scalar_type penalty  = PARAM.real_value("PENALTY", "Penalty coefficient for Dirichlet BC");
-	if (penalty==0) penalty =1E-30;
-	penalty=1./penalty;
 
-	//Al momento le condizioni al contorno di dirichlet in inflow sono fatte con un metodo di penalizzazione:
-	//NON CORRETTO, induce errore non accettabile; sistemare con rilavemento.
-	//vedi in file d'esempio laplacian.cc la funzione asm_dirichlet_condition 
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Building tissue boundary term ..." << endl;
@@ -702,10 +698,10 @@ transport3d1d::assembly_rhs(void)
 	cout << "  Building vessel boundary term ..." << endl;
 	#endif
 		sparse_matrix_type Mvv(dof_transp.Cv(), dof_transp.Cv());
-		
 		vector_type Fv(dof_transp.Cv());
 
-		asm_network_bc_transp(Mvv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp, param_transp.Av(), penalty );
+
+		asm_network_bc_transp(Mvv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp );
 		gmm::add(Mvv, 
 			gmm::sub_matrix(AM_transp,
 				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
@@ -730,19 +726,20 @@ transport3d1d::assembly_rhs(void)
 	gmm::clean(AM_transp, 1E-12);
 	gmm::copy(AM_transp, A_transp);
 	
-	
 	vector_type F_transp(gmm::vect_size(FM_transp));
 	gmm::clean(FM_transp, 1E-12);
 	gmm::copy(FM_transp, F_transp);
 	
 	//gmm::clear(AM_transp); // to be postponed for preconditioner
-	double time = gmm::uclock_sec();	
-	
+	double time = gmm::uclock_sec();		
 	gmm::MatrixMarket_IO::write("Atransp.mm",A_transp);	
+	
+	
 	double time_count = 0;
-	for(double t=0;t<=param_transp.T() ; t = t + param_transp.dt()){ 
+	for(double t=0;t<=param_transp.T()*(!descr_transp.STATIONARY) ; t = t + param_transp.dt() + (param_transp.dt()==0) ){ 
 	time_count++; 
 	std::cout<<"iteration number:"<<time_count<<std::endl;
+	std::cout<<"time = "<<t<<" s"<<std::endl;	
 	
 	
 	if ( descr_transp.SOLVE_METHOD == "SuperLU" ) { // direct solver //
@@ -832,7 +829,7 @@ transport3d1d::assembly_rhs(void)
 	//vector_type Cv(dof_transp.Cv());
 	//gmm::add(gmm::sub_vector(UM_transp, gmm::sub_interval(0, dof_transp.Ct())), Ct);
 	//gmm::add(gmm::sub_vector(UM_transp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())), Cv);
-	asm_source_term(TFt,mimt, mf_Ct, mf_Ct,gmm::sub_vector(UM_transp, gmm::sub_interval(0, dof_transp.Ct()))); // tentativo con generic_assembly: lo trovi in assembling3d_transp, la funzione è asm_time_rhs_transp
+	asm_source_term(TFt,mimt, mf_Ct, mf_Ct,gmm::sub_vector(UM_transp, gmm::sub_interval(0, dof_transp.Ct()))); // tentativo con generic_assembly: lo trovi in 										assembling3d_transp, la funzione è asm_time_rhs_transp
 	asm_source_term(TFv,mimv, mf_Cv, mf_Cv,gmm::sub_vector(UM_transp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
 	gmm::scale(TFt, (1.0/param_transp.dt())); // dt time step
 	gmm::scale(TFv, (1.0/param_transp.dt())); // dt time step
@@ -867,6 +864,7 @@ transport3d1d::assembly_rhs(void)
 	// Array of unknown dof of the network velocity
 	vector_type Cv(dof_transp.Cv()); 
 
+	//Copy solution
 	gmm::copy(gmm::sub_vector(UM_transp, 
 		gmm::sub_interval(0, dof_transp.Ct())), Ct);
 	gmm::copy(gmm::sub_vector(UM_transp, 
@@ -908,6 +906,7 @@ transport3d1d::assembly_rhs(void)
 //At è la matrice di stiffness per il laplaciano
 //Btt e Btv sono le matrici di accoppiamento tra le mesh 3d - 1d
 
+	
 	//definizioni di matrici e vettori
 	vector_type Ct(dof_transp.Ct()); gmm::clear(Ct);
 	sparse_matrix_type At(dof_transp.Ct(), dof_transp.Ct());gmm::clear(At);
@@ -945,21 +944,101 @@ transport3d1d::assembly_rhs(void)
 	gmm::csc_matrix<scalar_type> A;
 	gmm::clean(At, 1E-12); 
 	gmm::copy(At, A);
+	
+	gmm::MatrixMarket_IO::write("At.mm",At);
+	gmm::MatrixMarket_IO::write("Btt.mm",Btt);
+	gmm::MatrixMarket_IO::write("Btv.mm",Btv);
+	gmm::MatrixMarket_IO::write("Bvt.mm",Bvt);
+	gmm::MatrixMarket_IO::write("Bvv.mm",Bvv);	
+	std::ofstream outF("F.txt");
+	outF << gmm::col_vector(F);
+	outF.close();	
+	
+	int a;
+	cout<<"type 0 for superLU; 1 for GMRES"<<endl;
+	cin>>a;
+	
+	if(a==0){
+	cout<<"	superLU"<<endl;
 	scalar_type cond;
-	gmm::SuperLU_solve(A, Ct, F, cond);
-	cout << "  Condition number (test diffusion problem): " << cond << endl;
+	gmm::SuperLU_solve(At, Ct, F, cond);
+	cout << "  Condition number (test diffusion problem): " << cond << endl;}
+	else if(a==1){
+	cout<<"	GMRES"<<endl;
+	gmm::iteration iter (0.0000001, 1,40000);
+	//gmm::ilutp_precond<sparse_matrix_type> P(At, 20, 1E-6);
+	gmm::identity_matrix P;
+	gmm::gmres (At, Ct, F, P, 50, iter);
+	
+	}
+
+
 
 	std::ofstream outUU("Ct.txt");
 	outUU << gmm::col_vector(Ct);
 	outUU.close();		
 
-		
 	vtk_export exp_Ct("test_Ct.vtk");
 	exp_Ct.exporting(mf_Ct);
 	exp_Ct.write_mesh();
 	exp_Ct.write_point_data(mf_Ct, Ct, "Ct");
  	
 
+
+
+/*
+proviamo a risolvere il problema di diffusione con i gradi di libertà e la mesh 3d definita per il problema dei fluidi.
+
+
+	//! Monolithic matrix for the coupled problem
+	sparse_matrix_type AM;
+	//! Monolithic array of unknowns for the coupled problem
+	vector_type        UM;
+	//! Monolithic right hand side for the coupled problem
+	vector_type        FM;
+
+	gmm::resize(AM, dof.Pt(), dof.Pt()); gmm::clear(AM);
+	gmm::resize(UM, dof.Pt()); gmm::clear(UM);
+	gmm::resize(FM, dof.Pt()); gmm::clear(FM);
+	
+	#ifdef M3D1D_VERBOSE_
+	cout << "Assembling the monolithic matrix AM ..." << endl;
+	#endif
+	// Mass matrix for the interstitial problem
+	//getfem::asm_mass_matrix(AM, mimt, mf_Pt);
+	  /*getfem::generic_assembly
+	  assem("M$1(#1,#1) += sym(comp(vGrad(#1).vGrad(#1)) (:, i,k, : ,i,k) )");
+	  assem.push_mi(mimt);
+	  assem.push_mf(mf_Pt);
+	  assem.push_mat(AM);
+	  assem.assembly();
+	 getfem::asm_stiffness_matrix_for_homogeneous_laplacian(AM, mimt, mf_Pt);
+	  
+	vector_type F(dof.coeft(), 1.0);
+	getfem::asm_source_term(FM, mimt, mf_Pt, mf_coeft, F);
+	gmm::MatrixMarket_IO::write("A_mass.mm",AM);
+	std::ofstream outFF("Ct.txt");
+	outFF << gmm::col_vector(FM);
+	outFF.close();	
+	
+	gmm::csc_matrix<scalar_type> A;
+	gmm::clean(AM, 1E-12);
+	gmm::copy(AM, A);
+	gmm::clear(AM); // to be postponed for preconditioner
+	double time = gmm::uclock_sec();	
+	
+	// direct solver //
+		#ifdef M3D1D_VERBOSE_
+		cout << "  Applying the SuperLU method ... " << endl;
+		#endif
+		scalar_type cond;
+		gmm::SuperLU_solve(A, UM, FM, cond);
+		cout << "  Condition number : " << cond << endl;
+
+	std::ofstream outU("U_mass.txt");
+	outU << gmm::col_vector(UM);
+	outU.close();	
+	
 	};//end of test
 	
 	
@@ -1012,7 +1091,7 @@ gmm::add(Rg, U);
 	exp_U.write_mesh();
 	exp_U.write_point_data(mf_Cv, U, "test2");
  	
- 	
+ */	
 	
 
 
