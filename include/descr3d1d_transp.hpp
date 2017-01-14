@@ -40,7 +40,9 @@ struct descr3d1d_transp {
 	//! Identifier of vessel integration method type
 	std::string IM_TYPEV;
 	//! Output directory for transport problem
-	std::string OUTPUT;	
+	std::string OUTPUT;
+	//! Flag to make the problem stationary
+	size_type STATIONARY;	
 	// Solver information
 	//! Identifief of the monolithic solver for transport problem
 	std::string SOLVE_METHOD;
@@ -70,6 +72,7 @@ struct descr3d1d_transp {
 		}
 		NInt = size_type(FILE_.int_value("NInt", "Node numbers on the circle for the nonlocal term"));  
 		OUTPUT = FILE_.string_value("OUTPUT","Output Directory");
+		STATIONARY = size_type(FILE_.int_value("STATIONARY", "Flag to make the problem stationary")); 
 	}
 
 	//! Overloading of the output operator
