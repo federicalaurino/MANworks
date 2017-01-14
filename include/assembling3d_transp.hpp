@@ -52,15 +52,15 @@ asm_tissue_darcy_transp
 	// Build the mass matrix Tt for time derivative 
 	getfem::asm_mass_matrix(M, mim, mf_c, rg);
 	// Build the divergence matrix Dtt
-	//getfem::asm_stiffness_matrix_for_homogeneous_laplacian(D,mim,mf_c, rg); //_componentwise
-	
+	getfem::asm_stiffness_matrix_for_laplacian(D,mim,mf_c, mf_coef, diff_data, rg); 
+	/*
 	getfem::generic_assembly
 	  assem("M$1(#1,#1) += sym(comp(vGrad(#1).vGrad(#1)) (:, i,k, : ,i,k) )");
 	  assem.push_mi(mim);
 	  assem.push_mf(mf_c);
 	  assem.push_mat(D);
 	  assem.assembly();
-	
+	*/
 	
 } /* end of asm_tissue_darcy*/
 

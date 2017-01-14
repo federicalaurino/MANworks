@@ -41,12 +41,15 @@ namespace getfem {
 
 	@ingroup asm
  */ 
-template<typename MAT>
+template<typename MAT, typename VEC>
 void 
 asm_network_poiseuille_transp
 	(MAT & D, MAT & T, 
 	 const mesh_im & mim,
 	 const mesh_fem & mf_c,
+	 const mesh_fem & mf_data,
+	 VEC & diff,
+	 
 	 //const VEC & lambdax, const VEC & lambday, const VEC & lambdaz,
 	 const mesh_region & rg = mesh_region::all_convexes()
 	 ) 		
@@ -56,15 +59,15 @@ asm_network_poiseuille_transp
 	//build mass matrix Tv for time derivative
 	getfem::asm_mass_matrix(T, mim, mf_c, rg);
 	// Build the diffusion matrix Dv
-	//getfem::asm_stiffness_matrix_for_homogeneous_laplacian(D,mim,mf_c,rg);
+	getfem::asm_stiffness_matrix_for_laplacian(D,mim,mf_c,mf_data, diff, rg);
 		// Build the local divergence matrix Dvvi
-	
+	/*
 	getfem::generic_assembly
 	  diff("M$1(#1,#1) += sym(comp(vGrad(#1).vGrad(#1)) (:, i,k, : ,i,k) )");
 	  diff.push_mi(mim);
 	  diff.push_mf(mf_c);
 	  diff.push_mat(D);
-	  diff.assembly();
+	  diff.assembly();*/
 	  
 	/*generic_assembly 
 	assem("l1=data$1(#3); l2=data$2(#3); l3=data$3(#3);"
@@ -106,9 +109,7 @@ asm_network_bc_transp
 	 const mesh_im & mim,
 	 const mesh_fem & mf_c,
 	 const mesh_fem & mf_data,
-	 const std::vector<getfem::node> & BC,
-	 const VEC & Av,
-	 const scalar_type EPSILON
+	 const std::vector<getfem::node> & BC
 	 ) 
 { 
 	// Aux data
@@ -124,23 +125,15 @@ asm_network_bc_transp
 
 		if (BC[bc].label=="DIR") { // Dirichlet BC
 			// Add cv_in contribution to Fv, and add a penalty as a mass matrix
-	cout<<"dir"<<bc<<endl;
-			VEC Av_temp(gmm::vect_size(Av));
-			gmm::copy(Av, Av_temp); 
-			//mass term
-				cout<<"dir scale"<<bc<<endl;
-			gmm::scale(Av_temp,EPSILON);
-			cout<<"dir mass"<<bc<<endl;
-			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, Av_temp, mf_c.linked_mesh().region(BC[bc].rg));
-			//source term
-			cout<<"dir scale2"<<bc<<endl;
-			gmm::scale(Av_temp, BC[bc].value);
-			cout<<"dir source"<<bc<<endl;
-			getfem::asm_source_term(F, 
-				mim, mf_c, mf_data,Av_temp , mf_c.linked_mesh().region(BC[bc].rg));
-
-				
-				
+			cout<<"dir"<<bc<<endl;
+			VEC BC_temp(gmm::vect_size(ones));
+			gmm::copy(ones, BC_temp); 
+			//bc dir term
+			cout<<"dir scale"<<bc<<endl;
+			gmm::scale(BC_temp,BC[bc].value);
+			cout<<"dir assemble"<<bc<<endl;
+			getfem::assembling_Dirichlet_condition(M, F, mf_c, BC[bc].rg, BC_temp);
+			gmm::clear(BC_temp);				
 		} 
 		else if (BC[bc].label=="MIX") { // Robin BC
 			cout<<"mix"<<bc<<endl;
