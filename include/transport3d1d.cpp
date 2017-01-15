@@ -26,6 +26,7 @@
  build_mesh();
  set_im_and_fem();
  build_param();
+ build_vessel_boundary();
  
  }; // end of init
 
@@ -59,13 +60,26 @@
 	cout << "Importing the 1D mesh for the vessel (transport problem)... "   << endl;
 	#endif
 	std::ifstream ifs(descr_transp.MESH_FILEV);
-	mesh meshv_transp;
+	meshv.clear();
+//	mesh meshv_transp;
+//	vector_size_type nb_vertices_transp;
 	GMM_ASSERT1(ifs.good(), "impossible to read from file " << descr_transp.MESH_FILEV);
-	import_pts_file(ifs, meshv_transp, BCv_transp, nb_vertices, descr.MESH_TYPEV);
+	import_pts_file(ifs, meshv, BCv_transp, nb_vertices, descr.MESH_TYPEV);
+	nb_branches = nb_vertices.size();
 	ifs.close();
 	
-	
-
+	/*
+	cout<<"BC per il problema di trasporto"<<endl;
+	for (size_type bc=0; bc < BCv_transp.size(); bc++) {
+	cout<<"bc:"<<bc<<endl;
+	cout <<BCv_transp[bc]<<endl; 
+	}
+	cout<<"BC per il problema di stokes"<<endl;
+	for (size_type bc=0; bc < BCv.size(); bc++) {
+	cout<<"bc:"<<bc<<endl;
+	cout <<BCv[bc]<<endl;
+	}
+	*/
 	
 	};
 	//! Set finite elements methods and integration methods 
@@ -105,6 +119,51 @@
 	cout << std::scientific << dof_transp;
 	#endif
 	
+
+//HO DOVUTO CANCELLARE MESHV!!!!!!!!!!!!!!
+// quindi metodi fem e di integrazione definiti sulla rete non valgono più! 
+// li devo caricare di nuovo!
+mimv.clear();
+mf_Uvi.clear();
+mf_Pv.clear();
+mf_coefv.clear();
+
+
+#ifdef M3D1D_VERBOSE_
+	cout << "Setting IMs for tissue and vessel problems ..." << endl;
+	#endif
+	pintegration_method pim_v = int_method_descriptor(descr.IM_TYPEV);
+	mimv.set_integration_method(meshv.convex_index(), pim_v);
+	
+	#ifdef M3D1D_VERBOSE_
+	cout << "Setting FEMs for tissue and vessel problems ..." << endl;
+	#endif
+	bgeot::pgeometric_trans pgt_v = bgeot::geometric_trans_descriptor(descr.MESH_TYPEV);
+	pfem pf_Uv = fem_descriptor(descr.FEM_TYPEV);
+	pfem pf_Pv = fem_descriptor(descr.FEM_TYPEV_P);
+	pfem pf_coefv = fem_descriptor(descr.FEM_TYPEV_DATA);
+
+	#ifdef M3D1D_VERBOSE_
+	cout << "Setting IMs and FEMs for vessel branches ..." << endl;
+	#endif
+	mf_Uvi.reserve(nb_branches);
+	mf_coefvi.reserve(nb_branches);
+	for(size_type i=0; i<nb_branches; ++i){
+		
+		mesh_fem mf_tmp(meshv);
+		mf_tmp.set_finite_element(meshv.region(i).index(), pf_coefv);
+		mf_coefvi.emplace_back(mf_tmp);
+		mf_tmp.clear();
+		
+		mf_tmp.set_finite_element(meshv.region(i).index(), pf_Uv);
+		mf_Uvi.emplace_back(mf_tmp);
+		mf_tmp.clear();
+	}
+	mf_Pv.set_finite_element(meshv.convex_index(), pf_Pv);
+	mf_coefv.set_finite_element(meshv.convex_index(), pf_coefv);
+	
+
+
 
 	};
 	
@@ -196,12 +255,12 @@ try {
 			// Store the current index and then update it
 			size_type bc = 0; 
 			bool found = false;
-			while (!found && (bc<BCv.size())) {
-				found = (i0 == BCv[bc].idx);
+			while (!found && (bc<BCv_transp.size())) {
+				found = (i0 == BCv_transp[bc].idx);
 				if (!found) bc++;
 			}
 			GMM_ASSERT1(found=true, "Miss a boundary node in BCv list!");
-			BCv[bc].rg = fer; 
+			BCv_transp[bc].rg = fer; 
 			fer++;
 			// Store the containing branch index
 			size_type branch = 0; 
@@ -211,7 +270,7 @@ try {
 				if (!contained) branch++;
 			}
 			GMM_ASSERT1(contained=true, "No branch region contains node i0!");
-			BCv[bc].branches.emplace_back(branch); 
+			BCv_transp[bc].branches.emplace_back(branch); 
 		}
 		else if (meshv.convex_to_point(i0).size()==2){ /* trivial inflow junction */
 			// DO NOTHING
@@ -257,8 +316,8 @@ try {
 		if (meshv.convex_to_point(i1).size()==1){ 
 			size_type bc = 0; 
 			bool found = false;
-			while (!found && (bc<BCv.size())) {
-				found = (i1 == BCv[bc].idx);
+			while (!found && (bc<BCv_transp.size())) {
+				found = (i1 == BCv_transp[bc].idx);
 				if (!found) bc++;
 			}
 			if (found){ /* outlow extremum */
@@ -269,8 +328,8 @@ try {
 					"Overload in meshv region assembling!");
 				meshv.region(fer).add(cv, 0);
 				// Store the current index and then update it
-				BCv[bc].value *= -1.0;
-				BCv[bc].rg = fer; 
+				BCv_transp[bc].value *= -1.0;
+				BCv_transp[bc].rg = fer; 
 				fer++;
 				// Store the containing branch index
 				size_type branch = 0; 
@@ -280,7 +339,7 @@ try {
 					if (!contained) branch++;
 				}
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
-				BCv[bc].branches.emplace_back(branch); 
+				BCv_transp[bc].branches.emplace_back(branch); 
 			}
 			else { /* interior -> Mixed point */
 				// "MIX" label via post-processing
@@ -288,7 +347,7 @@ try {
 				GMM_ASSERT1(meshv.has_region(fer)==0, 
 					"Overload in meshv region assembling!");
 				meshv.region(fer).add(cv, 0);
-				BCv.emplace_back("MIX", 0.0, i1, fer);
+				BCv_transp.emplace_back("MIX", 0.0, i1, fer);
 				fer++;
 				// Store the containing branch index
 				size_type branch = 0; 
@@ -298,7 +357,7 @@ try {
 					if (!contained) branch++;
 				}
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
-				BCv.back().branches.emplace_back(branch); 
+				BCv_transp.back().branches.emplace_back(branch); 
 			}
 		}
 		else if (meshv.convex_to_point(i1).size()==2){ /* trivial outflow junction */
@@ -403,10 +462,10 @@ try {
 	cout << "  Branches:   " << nb_branches << endl
 		 << "  Vertices:   " << nn.size()+1 << endl;
 	cout << "  Extrema:    " << extrema << endl;	  
-	for (size_type i=0; i<BCv.size(); ++i)
-		cout << "    -  label=" << BCv[i].label 
-			 << ", value=" << BCv[i].value << ", ind=" << BCv[i].idx 
-			 << ", rg=" << BCv[i].rg << ", branches=" << BCv[i].branches << endl; 
+	for (size_type i=0; i<BCv_transp.size(); ++i)
+		cout << "    -  label=" << BCv_transp[i].label 
+			 << ", value=" << BCv_transp[i].value << ", ind=" << BCv_transp[i].idx 
+			 << ", rg=" << BCv_transp[i].rg << ", branches=" << BCv_transp[i].branches << endl; 
 	cout << "  Junctions: " << junctions << endl;
 	for (size_type i=0; i<Jv.size(); ++i)
 		cout << "    -  label=" << Jv[i].label 
@@ -417,6 +476,7 @@ try {
 
 } 
 GMM_STANDARD_CATCH_ERROR; // catches standard errors
+
 
 } /* end of build_vessel_boundary */
 
@@ -494,12 +554,12 @@ transport3d1d::assembly_mat(void)
 	asm_tissue_darcy_transp(Rt, Dt, Mt, mimt, mf_Ct, mf_coeft, mass_coeff, param_transp.At() ); //vedi file assembling3d_transp.hpp
 	gmm::scale(Mt, (1.0/param_transp.dt())); // dt time step
 	
-	gmm::MatrixMarket_IO::write("Dt.mm",Dt);
-	gmm::MatrixMarket_IO::write("Mt.mm",Mt);
+	//gmm::MatrixMarket_IO::write("Dt.mm",Dt);
+	//gmm::MatrixMarket_IO::write("Mt.mm",Mt);
 	
 	
 	// Copy Rt //MATRICE DI REAZIONE PER IL CONSUMO DI OSSIGENO, MOMENTANEAMENTE TOLTA
-		bool REACTION = PARAM.int_value("REACTION");
+		bool REACTION = PARAM.int_value("REACTION", "flag for reaction term");
 	if(REACTION ==1){
 	gmm::add(Rt, 
 			  gmm::sub_matrix(AM_transp, 
@@ -543,8 +603,8 @@ transport3d1d::assembly_mat(void)
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
 				
-	gmm::MatrixMarket_IO::write("Dv.mm",Dv);
-	gmm::MatrixMarket_IO::write("Mv.mm",Mv);
+	//gmm::MatrixMarket_IO::write("Dv.mm",Dv);
+	//gmm::MatrixMarket_IO::write("Mv.mm",Mv);
 		
 		
 		
@@ -552,7 +612,7 @@ transport3d1d::assembly_mat(void)
 		#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Bt and Bv ..." << endl;
 	#endif		
-	bool ADVECTION = PARAM.int_value("ADVECTION");
+	bool ADVECTION = PARAM.int_value("ADVECTION", "flag for advection term");
 	if(ADVECTION ==1){
 	// advection tissue term: 				
 	vector_type Ut(dof.Ut()); gmm::clear(Ut);
@@ -600,8 +660,7 @@ transport3d1d::assembly_mat(void)
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling exchange matrices ..." << endl;
 	#endif
-	bool NEWFORM = PARAM.int_value("NEW_FORMULATION");
-	NEWFORM=true;
+	bool NEWFORM = PARAM.int_value("NEW_FORMULATION", "flag for the new formulation");
 	vector_type coeff(dof.Pv());
 	
 	asm_exchange_mat_transp(Btt, Btv, Bvt, Bvv,
@@ -628,10 +687,10 @@ transport3d1d::assembly_mat(void)
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 
-	gmm::MatrixMarket_IO::write("Btt.mm",Btt);
-	gmm::MatrixMarket_IO::write("Btv.mm",Btv);
-	gmm::MatrixMarket_IO::write("Bvt.mm",Bvt);
-	gmm::MatrixMarket_IO::write("Bvv.mm",Bvv);
+	//gmm::MatrixMarket_IO::write("Btt.mm",Btt);
+	//gmm::MatrixMarket_IO::write("Btv.mm",Btv);
+	//gmm::MatrixMarket_IO::write("Bvt.mm",Bvt);
+	//gmm::MatrixMarket_IO::write("Bvv.mm",Bvv);
 	
 	
 	// De-allocate memory
@@ -732,7 +791,7 @@ transport3d1d::assembly_rhs(void)
 	
 	//gmm::clear(AM_transp); // to be postponed for preconditioner
 	double time = gmm::uclock_sec();		
-	gmm::MatrixMarket_IO::write("Atransp.mm",A_transp);	
+	//gmm::MatrixMarket_IO::write("Atransp.mm",A_transp);	
 	
 	
 	double time_count = 0;
@@ -840,7 +899,7 @@ transport3d1d::assembly_rhs(void)
 	
 	} //end of cycle over time 
 	
-	cout << "... time to solve : " << gmm::uclock_sec() - time << " seconds\n";
+	cout << endl<<"... time to solve : " << gmm::uclock_sec() - time << " seconds\n";
 
 	return true;
  }; // end of solve
@@ -848,7 +907,6 @@ transport3d1d::assembly_rhs(void)
 	
  void transport3d1d::export_vtk (const string & time_suff,const string & suff)
  {
-  std::cout<<"export transport problem"<<std::endl<<std::endl;
   if (PARAM.int_value("VTK_EXPORT"))
   {
 	#ifdef M3D1D_VERBOSE_
