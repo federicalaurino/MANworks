@@ -34,7 +34,10 @@
   - `3_Ybifurcation/` : solve the problem with Y-shaped network
   - `4_primalmixed/`  : compare the output of primal and mixed solvers
   - `5_CFS/`          : simulate the flow of CSF in the brain
-
+  - `6_singlebranch_transport/`: solve the coupled diffusion problem on a single-vessel network
+  - `7_Ybifurcation_transport/`: solve the coupled diffusion problem on a single-vessel network
+  - `8_network_transport/`: solve the coupled diffusion problem on a single-vessel network
+  
 - `config.mk`: Specify the variable GETFEM_PREFIX for GetFEM++ library
 
 - `Doxyfile` : Instruction to build the code documentation
@@ -92,7 +95,7 @@ If you want non-optimized program type:
 ``` 
 $ make DEBUG=yes 
 ``` 
-By defaul DEBUG=no.
+By default DEBUG=no.
 
 The following macro are defined and exported
 ``` 
