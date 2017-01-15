@@ -115,9 +115,7 @@ asm_network_bc_transp
 	// Aux data
 	std::vector<scalar_type> ones(mf_data.nb_dof(), 1.0);
 
-	for (size_type bc=0; bc < BC.size(); bc++) {
-	cout<<"bc:"<<bc<<endl;
-	cout <<BC[bc]<<endl; 
+	for (size_type bc=0; bc < BC.size(); bc++) { 
 
 		//size_type i = abs(BC[bc].branches[0]);
 		//size_type start = i*mf_u[i].nb_dof();
@@ -125,18 +123,15 @@ asm_network_bc_transp
 
 		if (BC[bc].label=="DIR") { // Dirichlet BC
 			// Add cv_in contribution to Fv, and add a penalty as a mass matrix
-			cout<<"dir"<<bc<<endl;
 			VEC BC_temp(gmm::vect_size(ones));
 			gmm::copy(ones, BC_temp); 
 			//bc dir term
-			cout<<"dir scale"<<bc<<endl;
 			gmm::scale(BC_temp,BC[bc].value);
-			cout<<"dir assemble"<<bc<<endl;
 			getfem::assembling_Dirichlet_condition(M, F, mf_c, BC[bc].rg, BC_temp);
 			gmm::clear(BC_temp);				
 		} 
 		else if (BC[bc].label=="MIX") { // Robin BC
-			cout<<"mix"<<bc<<endl;
+			
 			// Add correction to Mvv
 			/*MAT Mi(mf_u[i].nb_dof(), mf_u[i].nb_dof());
 			getfem::asm_mass_matrix(Mi,
