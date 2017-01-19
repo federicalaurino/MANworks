@@ -549,7 +549,7 @@ transport3d1d::assembly_mat(void)
 	vector_type mass_coeff(dof.coeft()); gmm::clear(mass_coeff);
 	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(dof.Ut(), dof.Pt())) ,  mass_coeff);
 	gmm::scale (param_transp.Q_pl(), mass_coeff);
-	gmm::add(param_transp.Dalpha(), mass_coeff);
+	gmm::add(param_transp.Dalpha(), mass_coeff); 
 	
 	asm_tissue_darcy_transp(Rt, Dt, Mt, mimt, mf_Ct, mf_coeft, mass_coeff, param_transp.At() ); //vedi file assembling3d_transp.hpp
 	gmm::scale(Mt, (1.0/param_transp.dt())); // dt time step
@@ -564,9 +564,9 @@ transport3d1d::assembly_mat(void)
 	gmm::add(Rt, 
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
-					gmm::sub_interval(0, dof_transp.Ct()))); 
+				 	gmm::sub_interval(0, dof_transp.Ct()))); 
 	}
-	
+	 
 	// Copy Tt //PASSO TEMPORALE
 	if(descr_transp.STATIONARY ==0)
 	gmm::add(Mt,  
@@ -576,12 +576,14 @@ transport3d1d::assembly_mat(void)
 
 
 	// Copy Dt //DIFFUSIONE
+	bool DIFFUSION_T = PARAM.int_value("DIFFUSION_T", "flag for diffusion term in tissue");
+	if(DIFFUSION_T ==1){	
 	gmm::add(Dt,
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
 			 
-			
+		}	
 		#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Mv and Dv ..." << endl;
 	#endif
@@ -598,11 +600,13 @@ transport3d1d::assembly_mat(void)
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 		
 		// diffusion matrix for vessels
-		gmm::add(Dv, 
+	bool DIFFUSION_V = PARAM.int_value("DIFFUSION_V", "flag for diffusion term in vessel");
+	if(DIFFUSION_V ==1){	
+			gmm::add(Dv, 
 			gmm::sub_matrix(AM_transp, 
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
-				
+	}			
 	//gmm::MatrixMarket_IO::write("Dv.mm",Dv);
 	//gmm::MatrixMarket_IO::write("Mv.mm",Mv);
 		
@@ -612,38 +616,71 @@ transport3d1d::assembly_mat(void)
 		#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Bt and Bv ..." << endl;
 	#endif		
-	bool ADVECTION = PARAM.int_value("ADVECTION", "flag for advection term");
-	if(ADVECTION ==1){
+	bool ADVECTION_T = PARAM.int_value("ADVECTION_T", "flag for advection term in tissue");
+	if(ADVECTION_T ==1){
 	// advection tissue term: 				
 	vector_type Ut(dof.Ut()); gmm::clear(Ut);
 	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())) ,  Ut);
-	asm_advection_matrix(Bt, mimt, mf_Ct, mf_Ut,Ut);
-	gmm::add(Bt,
+	asm_advection_tissue(Bt, mimt, mf_Ct, mf_Ut,Ut);
+	gmm::add(gmm::scaled(Bt, -1.0),
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
 			
 		
-					
+	gmm::MatrixMarket_IO::write("Bt.mm",Bt);
+	}				
 	/* assembla il termine di trasporto per le rete: 
 	    sarà necessario combinare in qualche modo gli mf_Uvi con mf_Cv 
 	    (magari costruendo anche per il trasporto un vettore mf_Cvi di fem_methods
-	    
-	// advection vessel term: 				
-	vector_type Uv(dof.Uv()); gmm::clear(Uv);
-	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Uv())) ,  Uv);
-	asm_advection_matrix(Bv, mimv, mf_Cv, mf_Uv,Uv);
-	gmm::add(Bv,
+	        
+	*/    
+	// advection vessel term: 		
+	bool ADVECTION_V = PARAM.int_value("ADVECTION_V", "flag for advection term in vessels");
+	if(ADVECTION_V ==1){
+	
+	//contatore per la posizione iniziale del ramo
+	size_type shift = 0;
+	
+	//costruisci i versori tangenti lambda
+	vector_type lambdax; // tangent versor: x component
+	vector_type lambday; // tangent versor: y component
+	vector_type lambdaz; // tangent versor: z component
+	std::ifstream ifs(descr.MESH_FILEV);
+	GMM_ASSERT1(ifs.good(), "impossible to read from file " << descr.MESH_FILEV);
+	asm_tangent_versor(ifs, lambdax, lambday, lambdaz);
+	ifs.close();
+	
+	//comincia ciclo su tutti i rami
+	for (size_type i=0; i<nb_branches; ++i){
+	
+	//posizionati all'inizio del ramo
+	if(i>0) shift += mf_Uvi[i-1].nb_dof();
+	//ottieni nel vettore Uvi le velocità del ramo i
+ 	vector_type Uvi( mf_Uvi[i].nb_dof()); gmm::clear(Uvi);
+	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(dof.Ut()+dof.Pt()+shift, mf_Uvi[i].nb_dof())) ,  Uvi);
+	//ottieni i versori tangenti corrispondenti al ramo
+	vector_type lambdax_K, lambday_K, lambdaz_K;
+	for(size_type j=0; j<mf_coefvi[i].nb_dof(); j++){
+			lambdax_K.emplace_back(lambdax[i]);
+			lambday_K.emplace_back(lambday[i]);
+			lambdaz_K.emplace_back(lambdaz[i]);
+	}
+	
+	//costruisci la matrice del termine di trasporto
+	asm_advection_network(Bv, mimv, mf_Cv, mf_coefvi[i], mf_Uvi[i], Uvi, lambdax_K, lambday_K, lambdaz_K, meshv.region(i) );
+	}
+
+	//somma la matrice -Bv alla matrice di rigidezza Am_transp
+	gmm::add(gmm::scaled(Bv, -1.0),
 			  gmm::sub_matrix(AM_transp, 
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
-	*/
 	
 	
+	gmm::MatrixMarket_IO::write("Bv.mm",Bv);
 	}
-	else{
-	cout<<"---NO ADVECTION TERM ---"<<endl;
-	}
+
 				
 
 	/*  blocco per i termini di junctions... rivedere il modello: serve anche nelle equazioni del trasporto?*/
@@ -756,9 +793,34 @@ transport3d1d::assembly_rhs(void)
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Building vessel boundary term ..." << endl;
 	#endif
-		sparse_matrix_type Mvv(dof_transp.Cv(), dof_transp.Cv());
+		/*
+		sparse_matrix_type Avv(dof_transp.Cv(), dof_transp.Cv());
 		vector_type Fv(dof_transp.Cv());
+		gmm::add(	gmm::sub_matrix(AM_transp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()))
+				, Avv);
+		gmm::scale(	gmm::sub_matrix(AM_transp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()))
+				, 0.0);		
 
+		asm_network_bc_transp(Avv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp );
+		gmm::add(Avv, 
+			gmm::sub_matrix(AM_transp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv())));
+		gmm::add(Fv, 
+			gmm::sub_vector(FM_transp,
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+		// De-allocate memory
+		gmm::clear(Avv);
+		gmm::clear(Fv);
+		*/
+		
+		/*sparse_matrix_type Mvv(dof_transp.Cv(), dof_transp.Cv());
+		vector_type Fv(dof_transp.Cv());
+	
 
 		asm_network_bc_transp(Mvv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp );
 		gmm::add(Mvv, 
@@ -770,37 +832,121 @@ transport3d1d::assembly_rhs(void)
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
 		// De-allocate memory
 		gmm::clear(Mvv);
-		gmm::clear(Fv);
+		gmm::clear(Fv);		
+		*/
+		 
+		/*
+		
+		asm_network_bc_transp(  gmm::sub_matrix(AM_transp,
+						gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+						gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv())),	
+					gmm::sub_vector(FM_transp,
+						gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())),	
+					 mimv, mf_Cv, mf_coefv, BCv_transp);
+*/
 	}
 	
 }
 
+
+void transport3d1d::update (void){
+
+// ho la matrice AM assemblata con tutti i termini (da non modificare mai più!)
+// ho  il vettore F ancora vuoto (da aggiungere: il termine temporale; le condizioni al contorno 1d)
+gmm::copy(AM_transp, AM_temp);
+gmm::copy(FM_transp, FM_temp);
+
+// faccio l'update temporale: sommo a F le concentrazioni al passo precedente
+
+// update rhs (there is the time step mass term)
+ 
+	vector_type TFt(dof_transp.Ct());
+	vector_type TFv(dof_transp.Cv());
+	//vector_type Ct(dof_transp.Ct());
+	//vector_type Cv(dof_transp.Cv());
+	//gmm::add(gmm::sub_vector(UM_transp, gmm::sub_interval(0, dof_transp.Ct())), Ct);
+	//gmm::add(gmm::sub_vector(UM_transp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())), Cv);
+	asm_source_term(TFt,mimt, mf_Ct, mf_Ct,gmm::sub_vector(UM_transp, gmm::sub_interval(0, dof_transp.Ct()))); // tentativo con generic_assembly: lo trovi in 										assembling3d_transp, la funzione è asm_time_rhs_transp
+	asm_source_term(TFv,mimv, mf_Cv, mf_Cv,gmm::sub_vector(UM_transp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+	gmm::scale(TFt, (1.0/param_transp.dt())); // dt time step
+	gmm::scale(TFv, (1.0/param_transp.dt())); // dt time step
+	gmm::add(TFt, gmm::sub_vector(FM_temp, gmm::sub_interval(0, dof_transp.Ct())));
+	gmm::add(TFv, gmm::sub_vector(FM_temp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+	gmm::clear(UM_transp);
+	gmm::clear(TFt); gmm::clear(TFv);
+
+
+//costruisco le condizioni al contorno: influenzeranno AM_temp e Fv
+
+		sparse_matrix_type Avv(dof_transp.Cv(), dof_transp.Cv());
+		vector_type Fv(dof_transp.Cv());
+		gmm::add(	gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()))
+				, Avv);
+		gmm::scale(	gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()))
+				, 0.0);	
+				
+		gmm::add(	 gmm::sub_vector(FM_temp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))
+				,Fv);	
+		gmm::scale(	 gmm::sub_vector(FM_temp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))
+				,0.0);
+
+		asm_network_bc_transp(Avv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp );
+		gmm::add(Avv, 
+			gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv())));
+		gmm::add(Fv, 
+			gmm::sub_vector(FM_temp,
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+		// De-allocate memory
+		gmm::clear(Avv);
+		gmm::clear(Fv);
+
+}
  bool transport3d1d::solve (void)
  {
   std::cout<<"solve transport problem"<<std::endl<<std::endl;
   #ifdef M3D1D_VERBOSE_
 	cout << "Solving the monolithic system ... " << endl;
 	#endif
-	gmm::csc_matrix<scalar_type> A_transp;
-	gmm::clean(AM_transp, 1E-12);
-	gmm::copy(AM_transp, A_transp);
+	gmm::resize(AM_temp, dof_transp.tot(), dof_transp.tot()); gmm::clear(AM_temp);
+	gmm::resize(FM_temp, dof_transp.tot()); gmm::clear(FM_temp);
 	
-	vector_type F_transp(gmm::vect_size(FM_transp));
-	gmm::clean(FM_transp, 1E-12);
-	gmm::copy(FM_transp, F_transp);
-	
-	//gmm::clear(AM_transp); // to be postponed for preconditioner
-	double time = gmm::uclock_sec();		
-	//gmm::MatrixMarket_IO::write("Atransp.mm",A_transp);	
-	
-	
-	double time_count = 0;
+	double time = gmm::uclock_sec();
+	double time_count = 0;	
+
+
 	for(double t=0;t<=param_transp.T()*(!descr_transp.STATIONARY) ; t = t + param_transp.dt() + (param_transp.dt()==0) ){ 
 	time_count++; 
 	std::cout<<"iteration number:"<<time_count<<std::endl;
 	std::cout<<"time = "<<t<<" s"<<std::endl;	
 	
+	update();
 	
+	
+	gmm::csc_matrix<scalar_type> A_transp;
+	gmm::clean(AM_transp, 1E-12);
+	gmm::copy(AM_temp, A_transp);
+	
+	vector_type F_transp(gmm::vect_size(FM_transp));
+	gmm::clean(FM_transp, 1E-12);
+	gmm::copy(FM_temp, F_transp);
+	
+	//gmm::clear(AM_transp); // to be postponed for preconditioner
+			
+	//gmm::MatrixMarket_IO::write("Atransp.mm",A_transp);	
+	
+	
+	
+	
+	
+	
+
+		
 	if ( descr_transp.SOLVE_METHOD == "SuperLU" ) { // direct solver //
 		#ifdef M3D1D_VERBOSE_
 		cout << "  Applying the SuperLU method ... " << endl;
@@ -879,23 +1025,12 @@ transport3d1d::assembly_rhs(void)
 		outFF.close();
 		
 	std::cout<<"exported! now new iteration..."<<std::endl;
-	// update rhs (there is the time step mass term)
-	gmm::clear(F_transp);
-	gmm::copy(FM_transp, F_transp); 
-	vector_type TFt(dof_transp.Ct());
-	vector_type TFv(dof_transp.Cv());
-	//vector_type Ct(dof_transp.Ct());
-	//vector_type Cv(dof_transp.Cv());
-	//gmm::add(gmm::sub_vector(UM_transp, gmm::sub_interval(0, dof_transp.Ct())), Ct);
-	//gmm::add(gmm::sub_vector(UM_transp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())), Cv);
-	asm_source_term(TFt,mimt, mf_Ct, mf_Ct,gmm::sub_vector(UM_transp, gmm::sub_interval(0, dof_transp.Ct()))); // tentativo con generic_assembly: lo trovi in 										assembling3d_transp, la funzione è asm_time_rhs_transp
-	asm_source_term(TFv,mimv, mf_Cv, mf_Cv,gmm::sub_vector(UM_transp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
-	gmm::scale(TFt, (1.0/param_transp.dt())); // dt time step
-	gmm::scale(TFv, (1.0/param_transp.dt())); // dt time step
-	gmm::add(TFt, gmm::sub_vector(F_transp, gmm::sub_interval(0, dof_transp.Ct())));
-	gmm::add(TFv, gmm::sub_vector(F_transp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
-	gmm::clear(UM_transp);
-	gmm::clear(TFt); gmm::clear(TFv);
+	
+	
+	/*
+
+		 
+	*/	
 	
 	} //end of cycle over time 
 	

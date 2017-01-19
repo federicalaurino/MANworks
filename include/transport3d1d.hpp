@@ -129,6 +129,13 @@ protected:
 	vector_type        FM_transp;
 	
 	
+	//Monolithic matrix temporary for update
+	sparse_matrix_type AM_temp;
+	//Monolithic right hand side temporary for update
+	vector_type FM_temp; 
+	
+	
+	
 ////	//T totale, deltaT, T iniziale, T stop
 	//matrice con le soluzioni della concentrazione ad ogni t per ogni colonna
 	
@@ -158,7 +165,7 @@ protected:
 	void assembly_mat(void);
 	//! Build the monolithic rhs FM_transp by blocks
 	void assembly_rhs(void);
-	
+	void update(void);
 
 	
 	
