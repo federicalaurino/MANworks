@@ -15,9 +15,9 @@
 %  FLAGS
 %===================================
 % Flag to import dimensionless param
-TEST_PARAM = 1;
+TEST_PARAM = 1; 
 % Flag to select a specific rhs
-TEST_RHS   = 1;
+TEST_RHS   = 0;
 %Flag to export parameters
 EXPORT_PARAM = 0; 
 % Flag to export results
@@ -25,25 +25,29 @@ VTK_EXPORT = 1;
 %Flag to take the stationary problem
 STATIONARY=0;
 %Flag to add advection terms
-ADVECTION=0;
+ADVECTION_T=0;
+ADVECTION_V=0;
+%Flag to add diffusion terms
+DIFFUSION_T=1;
+DIFFUSION_V=1;
 %Flag to add reaction terms
 REACTION=0;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
 % Output directory
-OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk_network/';
+OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk_network//';
 %===================================
 %  MESH
 %===================================
 % Flags to build a regular 3d mesh
-TEST_GEOMETRY = 1;
+TEST_GEOMETRY = 0;
 GT_T       = 'GT_PK(3,1)'; 
 NSUBDIV_T  = '[11,11,11]';  
 ORG_T      = '[0,0,0]'; 
 SIZES_T    = '[1,1,1]';  
 NOISED_T   = '0';
 % Path to import the 3d mesh
-MESH_FILET = ' '; 
+MESH_FILET = './rat98AdimSemiCoarse.msh'; 
 % Path to import the 1d list of points
 MESH_FILEV = './network.pts'; %'/home/nico/workspace/pacs/model3d1d/src/1_uncoupled/segment.pts';  
 MESH_FILEV_TRANSP = './network_transp.pts';
@@ -91,15 +95,15 @@ Q  = 1.0;
 % Dimensionless conductivity of the capillary bed
 Kv = 1.0;
 % Dimensionless average radius of the capillary vessels []
-RADIUS = 0.10;
+RADIUS = 0.15;
 %Dimensionless At[]
-At=1.0;
+At=0.2;
 %Dimensionless Av[]
-Av=1.0;
+Av=40.0;
 %Dimensionless Dalpha[]
 D_alpha=1.0;
 %Dimensionless Y[]
-Y=1.0;
+Y=0.2;
 %Dimensionless Qpl[]
 Q_pl=1.0;
 
@@ -117,7 +121,7 @@ U  = 166E-06;
 % characteristic length of the problem [m]
 d  = 240E-06;
 % average radius of the capillary vessels []
-%%RADIUS = 5E-06;
+%RADIUS = 5E-06;
 % Viscosity of the blood [kg/ms]
 mu_V = 0.001; 	
 % Viscosity of the interstitial fluid [kg/ms]
@@ -137,7 +141,7 @@ SV = 1;
 
 
 % simulation time length [s]
-T = 3;
+T = 5;
 % time step [s]
 dt = 0.2;
 %===================================
