@@ -85,6 +85,38 @@ asm_network_poiseuille_transp
 	*/
 }
 
+template<typename MAT, typename VEC>
+void 
+asm_advection_network
+	(MAT & D,
+	 const mesh_im & mim,
+	 const mesh_fem & mf_c,
+	 const mesh_fem & mf_data,
+	 const mesh_fem & mf_u,
+	 const VEC & U,
+	 const VEC & lambdax, const VEC & lambday, const VEC & lambdaz,
+	 const mesh_region & rg = mesh_region::all_convexes()
+	 ) 	
+	 
+	 {
+
+generic_assembly 
+	assem("l1=data$1(#2); l2=data$2(#2); l3=data$3(#2);  u=data$4(#3);"
+		  "t=comp(Base(#1).Grad(#1).Base(#2).Base(#3));"
+		  "M$1(#1,#1)+=t(:,:,1,i,p).l1(i).u(p)+t(:,:,2,i,p).l2(i).u(p)+t(:,:,3,i,p).l3(i).u(p);"); //.u(p)
+	assem.push_mi(mim);
+	assem.push_mf(mf_c);
+	assem.push_mf(mf_data);
+	assem.push_mf(mf_u);
+	assem.push_data(lambdax);
+	assem.push_data(lambday);
+	assem.push_data(lambdaz);
+	assem.push_data(U);
+	assem.push_mat(D);
+	assem.assembly(rg);
+
+}
+
 
 /*! Build the mixed boundary conditions for Poiseuille's problem
     @f$ M=\int_{\mathcal{E}_u} \frac{1}{\beta}\,u\,v~d\sigma@f$ and
@@ -127,6 +159,7 @@ asm_network_bc_transp
 			gmm::copy(ones, BC_temp); 
 			//bc dir term
 			gmm::scale(BC_temp,BC[bc].value);
+			//getfem::asm_dirichlet_constraints(M, F, mim, mf_c, mf_c, mf_data, BC_temp,mf_c.linked_mesh().region(BC[bc].rg));  
 			getfem::assembling_Dirichlet_condition(M, F, mf_c, BC[bc].rg, BC_temp);
 			gmm::clear(BC_temp);				
 		} 

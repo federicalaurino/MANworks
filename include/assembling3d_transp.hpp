@@ -66,10 +66,12 @@ asm_tissue_darcy_transp
 
 //! Assemble a generic advection matrix 
   template<typename MAT, typename VECT>
-  void asm_advection_matrix(MAT &M, const getfem::mesh_im &mim,
+  void asm_advection_tissue(MAT &M, const getfem::mesh_im &mim,
 			    const getfem::mesh_fem &mf,
                             const getfem::mesh_fem &mfvel,
-                            const VECT &vel) {
+                            const VECT &vel,
+                            	 const mesh_region & rg = mesh_region::all_convexes()                            	 
+                            	 ) {
     getfem::generic_assembly
       assem("vel=data(#2);"
             "M$1(#1,#1) += comp(Base(#1).Grad(#1).vBase(#2))"
@@ -79,7 +81,7 @@ asm_tissue_darcy_transp
     assem.push_mf(mfvel);
     assem.push_data(vel);
     assem.push_mat(M);
-    assem.assembly();
+    assem.assembly(rg);
   }  /* end of asm_advection_matrix*/
 
 
