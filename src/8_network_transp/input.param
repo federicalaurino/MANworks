@@ -35,7 +35,7 @@ REACTION=0;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
 % Output directory
-OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk_network//';
+OUTPUT     = './vtk/';
 %===================================
 %  MESH
 %===================================
@@ -97,13 +97,13 @@ Kv = 1.0;
 % Dimensionless average radius of the capillary vessels []
 RADIUS = 0.15;
 %Dimensionless At[]
-At=0.2;
+At=1.0;
 %Dimensionless Av[]
-Av=40.0;
+Av=1.0;
 %Dimensionless Dalpha[]
 D_alpha=1.0;
 %Dimensionless Y[]
-Y=0.2;
+Y=1.0;
 %Dimensionless Qpl[]
 Q_pl=1.0;
 
