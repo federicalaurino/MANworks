@@ -622,7 +622,7 @@ transport3d1d::assembly_mat(void)
 	vector_type Ut(dof.Ut()); gmm::clear(Ut);
 	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())) ,  Ut);
 	asm_advection_tissue(Bt, mimt, mf_Ct, mf_Ut,Ut);
-	gmm::add(gmm::scaled(Bt, -1.0),
+	gmm::add(gmm::scaled(Bt, 1.0),
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
@@ -672,7 +672,7 @@ transport3d1d::assembly_mat(void)
 	}
 
 	//somma la matrice -Bv alla matrice di rigidezza Am_transp
-	gmm::add(gmm::scaled(Bv, -1.0),
+	gmm::add(gmm::scaled(Bv, 1.0),
 			  gmm::sub_matrix(AM_transp, 
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
