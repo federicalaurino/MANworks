@@ -800,15 +800,8 @@ transport3d1d::assembly_mat(void)
 void 
 transport3d1d::assembly_rhs(void)
 {
- cout<<"assembling rhs vector..."<< endl;  
  
- /*genera una CONDIZIONE INIZIALE NON NULLA nella mesh 3d
  
- for(int i = 0; i<dof_transp.Ct()/4; i++)
- FM_transp[i]= 0.0005* i/(i+3);
- */
- cout<<"assembled rhs vector..."<< endl; 
-	
 	#ifdef M3D1D_VERBOSE_
 	cout << "Assembling the monolithic rhs FM ... " << endl;
 	#endif
@@ -845,13 +838,9 @@ transport3d1d::assembly_rhs(void)
 		gmm::scale(	 gmm::sub_vector(FM_temp, gmm::sub_interval(0,dof_transp.Ct()))
 				,0.0);
 
-cout<<"prima di entrare nella funzione asm_tissue_bc: queste sono le facce della mia mesh 3d: "<<endl;
-	for (size_type bc=0; bc < BCt_transp.size(); ++bc) {
-	cout<< BCt_transp[bc]<<endl;}
 	
-	scalar_type bcoef  = PARAM.real_value("BETA_transp", "Coefficient for mixed BC for transport problem");
-	vector_type beta(dof.coeft(), bcoef);
-	asm_tissue_bc_transp(Att, Ft, mimt, mf_Ct, mf_coeft, BCt_transp,beta);
+	scalar_type beta_t  = PARAM.real_value("BETAtissue_transp", "Coefficient for mixed BC for transport problem in tissue");
+	asm_tissue_bc_transp(Att, Ft, mimt, mf_Ct, mf_coeft, BCt_transp,beta_t);
 		gmm::add(Att, 
 			gmm::sub_matrix(AM_temp,
 				gmm::sub_interval(0,dof_transp.Ct()),
@@ -885,7 +874,8 @@ cout<<"prima di entrare nella funzione asm_tissue_bc: queste sono le facce della
 		gmm::scale(	 gmm::sub_vector(FM_temp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))
 				,0.0);
 
-		asm_network_bc_transp(Avv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp );
+		scalar_type beta_v  = PARAM.real_value("BETAvessel_transp", "Coefficient for mixed BC for transport problem in vessels");
+		asm_network_bc_transp(Avv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp, beta_v );
 		gmm::add(Avv, 
 			gmm::sub_matrix(AM_temp,
 				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),

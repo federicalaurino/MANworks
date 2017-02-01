@@ -111,40 +111,34 @@ asm_tissue_bc_transp
 	 const mesh_fem & mf_c,
 	 const mesh_fem & mf_data,
 	 const std::vector<getfem::node> & BC,
-	 const VEC & coef
+	 const scalar_type beta
 	 )
 {
 
-cout<<"assemblo le bc per il tessuto"<<endl;
-cout<<"queste sono le facce della mia mesh 3d: "<<endl;
-	for (size_type bc=0; bc < BC.size(); ++bc) {
-	cout<< BC[bc]<<endl;}
 	
 	
 	GMM_ASSERT1(mf_c.get_qdim()==1,  "invalid data mesh fem (Qdim=1 required)");
 	GMM_ASSERT1(mf_data.get_qdim()==1, "invalid data mesh fem (Qdim=1 required)");
 
-	std::vector<scalar_type> ones(mf_data.nb_dof(), 1.0);
 
 	// Define assembly for velocity bc (\Gamma_u)
 
 
 	for (size_type bc=0; bc < BC.size(); ++bc) {
-	cout<< BC[bc]<<endl;
-		GMM_ASSERT1(mf_c.linked_mesh().has_region(bc), 
-				"missed mesh region" << bc);
-		if (BC[bc].label=="MIX") { // Robin BC
-			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, coef,mf_c.linked_mesh().region(BC[bc].rg) );
-		} 
-		else if (BC[bc].label=="DIR") { // Robin BC
-			
-			VEC BC_temp(gmm::vect_size(ones));
-			gmm::copy(ones, BC_temp); 
-			//bc dir term
-			gmm::scale(BC_temp,BC[bc].value);
+		GMM_ASSERT1(mf_c.linked_mesh().has_region(bc), "missed mesh region" << bc);
+		if (BC[bc].label=="DIR") { // Dirichlet BC
+			// Add cv_in contribution to Fv, and add a penalty as a mass matrix
+			VEC BC_temp(mf_data.nb_dof(), BC[bc].value);
 			//getfem::asm_dirichlet_constraints(M, F, mim, mf_c, mf_c, mf_data, BC_temp,mf_c.linked_mesh().region(BC[bc].rg));  
 			getfem::assembling_Dirichlet_condition(M, F, mf_c, BC[bc].rg, BC_temp);
-			gmm::clear(BC_temp);
+			gmm::clear(BC_temp);				
+		} 
+		else if (BC[bc].label=="MIX") { // Robin BC
+			VEC BETA(mf_data.nb_dof(), beta);
+			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, BETA,mf_c.linked_mesh().region(BC[bc].rg) );
+			
+			VEC BETA_C0(mf_data.nb_dof(), beta*BC[bc].value);
+			asm_source_term(F,mim, mf_c, mf_data,BETA_C0);
 			
 		}
 		else if (BC[bc].label=="INT") { // Internal Node

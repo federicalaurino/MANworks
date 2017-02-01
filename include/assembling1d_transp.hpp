@@ -141,34 +141,28 @@ asm_network_bc_transp
 	 const mesh_im & mim,
 	 const mesh_fem & mf_c,
 	 const mesh_fem & mf_data,
-	 const std::vector<getfem::node> & BC
-	 ) 
+	 const std::vector<getfem::node> & BC,
+	 const scalar_type beta) 
 { 
-	// Aux data
-	std::vector<scalar_type> ones(mf_data.nb_dof(), 1.0);
+	GMM_ASSERT1(mf_c.get_qdim()==1,  "invalid data mesh fem (Qdim=1 required)");
+	GMM_ASSERT1(mf_data.get_qdim()==1, "invalid data mesh fem (Qdim=1 required)");
+
 
 	for (size_type bc=0; bc < BC.size(); bc++) { 
-	cout<< BC[bc]<<endl;
-		//size_type i = abs(BC[bc].branches[0]);
-		//size_type start = i*mf_u[i].nb_dof();
-		//scalar_type Ri = compute_radius(mim, mf_data, R, i);
-
+		GMM_ASSERT1(mf_c.linked_mesh().has_region(bc), "missed mesh region" << bc);
 		if (BC[bc].label=="DIR") { // Dirichlet BC
 			// Add cv_in contribution to Fv, and add a penalty as a mass matrix
-			VEC BC_temp(gmm::vect_size(ones));
-			gmm::copy(ones, BC_temp); 
-			//bc dir term
-			gmm::scale(BC_temp,BC[bc].value);
+			VEC BC_temp(mf_data.nb_dof(), BC[bc].value);
 			//getfem::asm_dirichlet_constraints(M, F, mim, mf_c, mf_c, mf_data, BC_temp,mf_c.linked_mesh().region(BC[bc].rg));  
 			getfem::assembling_Dirichlet_condition(M, F, mf_c, BC[bc].rg, BC_temp);
 			gmm::clear(BC_temp);				
 		} 
 		else if (BC[bc].label=="MIX") { // Robin BC
-			VEC BC_temp(gmm::vect_size(ones));
-			gmm::copy(ones, BC_temp); 
-			//bc dir term
-			gmm::scale(BC_temp,BC[bc].value);
-			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, BC_temp,mf_c.linked_mesh().region(BC[bc].rg) );
+			VEC BETA(mf_data.nb_dof(), beta);
+			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, BETA,mf_c.linked_mesh().region(BC[bc].rg) );
+			
+			VEC BETA_C0(mf_data.nb_dof(), beta*BC[bc].value);
+			asm_source_term(F,mim, mf_c, mf_data,BETA_C0);
 	
 		}
 		else if (BC[bc].label=="INT") { // Internal Node
