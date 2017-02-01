@@ -399,7 +399,7 @@ try {
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
 				BCv_transp[bc].branches.emplace_back(branch); 
 			}
-			else { /* interior -> Mixed point */
+			/*else { // interior -> Mixed point
 				// "MIX" label via post-processing
 				// Build a new region made by a single face
 				GMM_ASSERT1(meshv.has_region(fer)==0, 
@@ -416,7 +416,7 @@ try {
 				}
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
 				BCv_transp.back().branches.emplace_back(branch); 
-			}
+			}*/
 		}
 		else if (meshv.convex_to_point(i1).size()==2){ /* trivial outflow junction */
 
