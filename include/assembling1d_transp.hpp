@@ -148,7 +148,7 @@ asm_network_bc_transp
 	std::vector<scalar_type> ones(mf_data.nb_dof(), 1.0);
 
 	for (size_type bc=0; bc < BC.size(); bc++) { 
-
+	cout<< BC[bc]<<endl;
 		//size_type i = abs(BC[bc].branches[0]);
 		//size_type start = i*mf_u[i].nb_dof();
 		//scalar_type Ri = compute_radius(mim, mf_data, R, i);
@@ -164,22 +164,12 @@ asm_network_bc_transp
 			gmm::clear(BC_temp);				
 		} 
 		else if (BC[bc].label=="MIX") { // Robin BC
-			
-			// Add correction to Mvv
-			/*MAT Mi(mf_u[i].nb_dof(), mf_u[i].nb_dof());
-			getfem::asm_mass_matrix(Mi,
-				mim, mf_u[i], BC[bc].rg);
-			gmm::scale(Mi, pi*pi*Ri*Ri*Ri*Ri/beta);				
-			gmm::add(gmm::scaled(Mi, -1.0), 
-				gmm::sub_matrix(M,
-					gmm::sub_interval(start, mf_u[i].nb_dof()),
-					gmm::sub_interval(start, mf_u[i].nb_dof())));
-			gmm::clear(Mi);	
-			// Add p0 contribution to Fv
-			getfem::asm_source_term(gmm::sub_vector(F, gmm::sub_interval(start,mf_u[i].nb_dof())), 
-				mim, mf_u[i], mf_data, gmm::scaled(P0, pi*Ri*Ri), BC[bc].rg);	
-				
-				*/		
+			VEC BC_temp(gmm::vect_size(ones));
+			gmm::copy(ones, BC_temp); 
+			//bc dir term
+			gmm::scale(BC_temp,BC[bc].value);
+			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, BC_temp,mf_c.linked_mesh().region(BC[bc].rg) );
+	
 		}
 		else if (BC[bc].label=="INT") { // Internal Node
 			DAL_WARNING1("internal node passed as boundary.");

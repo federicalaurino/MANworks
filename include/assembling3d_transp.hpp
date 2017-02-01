@@ -106,6 +106,7 @@ template<typename MAT, typename VEC>
 void
 asm_tissue_bc_transp
 	(MAT & M,
+	 VEC & F,
 	 const mesh_im & mim,
 	 const mesh_fem & mf_c,
 	 const mesh_fem & mf_data,
@@ -113,35 +114,47 @@ asm_tissue_bc_transp
 	 const VEC & coef
 	 )
 {
+
+cout<<"assemblo le bc per il tessuto"<<endl;
+cout<<"queste sono le facce della mia mesh 3d: "<<endl;
+	for (size_type bc=0; bc < BC.size(); ++bc) {
+	cout<< BC[bc]<<endl;}
+	
+	
 	GMM_ASSERT1(mf_c.get_qdim()==1,  "invalid data mesh fem (Qdim=1 required)");
 	GMM_ASSERT1(mf_data.get_qdim()==1, "invalid data mesh fem (Qdim=1 required)");
 
-	std::vector<scalar_type> G(mf_data.nb_dof());
 	std::vector<scalar_type> ones(mf_data.nb_dof(), 1.0);
 
 	// Define assembly for velocity bc (\Gamma_u)
 
 
-	for (size_type f=0; f < BC.size(); ++f) {
-
-		GMM_ASSERT1(mf_c.linked_mesh().has_region(f), 
-				"missed mesh region" << f);
-		if (BC[f].label=="MIX") { // Robin BC
-			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, coef,mf_c.linked_mesh().region(BC[f].rg) );
+	for (size_type bc=0; bc < BC.size(); ++bc) {
+	cout<< BC[bc]<<endl;
+		GMM_ASSERT1(mf_c.linked_mesh().has_region(bc), 
+				"missed mesh region" << bc);
+		if (BC[bc].label=="MIX") { // Robin BC
+			getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, coef,mf_c.linked_mesh().region(BC[bc].rg) );
 		} 
-		else if (BC[f].label=="DIR") { // Robin BC
-			//assemU.assembly(mf_u.linked_mesh().region(BC[f].rg));
-			//homogeneus dirichlet
+		else if (BC[bc].label=="DIR") { // Robin BC
+			
+			VEC BC_temp(gmm::vect_size(ones));
+			gmm::copy(ones, BC_temp); 
+			//bc dir term
+			gmm::scale(BC_temp,BC[bc].value);
+			//getfem::asm_dirichlet_constraints(M, F, mim, mf_c, mf_c, mf_data, BC_temp,mf_c.linked_mesh().region(BC[bc].rg));  
+			getfem::assembling_Dirichlet_condition(M, F, mf_c, BC[bc].rg, BC_temp);
+			gmm::clear(BC_temp);
 			
 		}
-		else if (BC[f].label=="INT") { // Internal Node
+		else if (BC[bc].label=="INT") { // Internal Node
 			DAL_WARNING1("internal node passed as boundary.");
 		}
-		else if (BC[f].label=="JUN") { // Junction Node
+		else if (BC[bc].label=="JUN") { // Junction Node
 			DAL_WARNING1("junction node passed as boundary.");
 		}
 		else {
-			GMM_ASSERT1(0, "Unknown Boundary Condition " << BC[f].label << endl);
+			GMM_ASSERT1(0, "Unknown Boundary Condition " << BC[bc].label << endl);
 		}
 	}
 

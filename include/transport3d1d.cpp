@@ -27,6 +27,7 @@
  set_im_and_fem();
  build_param();
  build_vessel_boundary();
+ build_tissue_boundary();
  
  }; // end of init
 
@@ -52,9 +53,29 @@
 	
 	//! Import mesh for tissue (3D) and vessel (1D)  
 	void transport3d1d::build_mesh(void){
-	//no need to build again the  3d mesh
+
 	//but, in order to have the boundary conditions for the nodes
 	//we need to build again the 1D mesh from another pts file
+	mesht.clear();
+		bool test = 0;
+	test = PARAM.int_value("TEST_GEOMETRY");
+	if(test==0){
+		#ifdef M3D1D_VERBOSE_
+		cout << "Importing the 3D mesh for the tissue ...  "   << endl;
+		#endif
+		 import_msh_file(descr.MESH_FILET, mesht);
+	}else{
+		#ifdef M3D1D_VERBOSE_
+		cout << "Building the regular 3D mesh for the tissue ...  "   << endl;
+		#endif
+		string st("GT='" + PARAM.string_value("GT_T") + "'; " +
+					   "NSUBDIV=" + PARAM.string_value("NSUBDIV_T") + "; " +  
+					   "ORG=" + PARAM.string_value("ORG_T") + "; " +  
+					   "SIZES=" + PARAM.string_value("SIZES_T") + "; " +  
+					   "NOISED=" + PARAM.string_value("NOISED_T")); 
+		cout << "mesht description: " << st << endl;
+		regular_mesh(mesht, st);
+	}
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "Importing the 1D mesh for the vessel (transport problem)... "   << endl;
@@ -128,7 +149,14 @@ mf_Uvi.clear();
 mf_Pv.clear();
 mf_coefv.clear();
 
+mimt.clear();
+mf_Ut.clear();
+mf_Pt.clear();
+mf_coeft.clear();
 
+
+problem3d1d::set_im_and_fem();
+/*
 #ifdef M3D1D_VERBOSE_
 	cout << "Setting IMs for tissue and vessel problems ..." << endl;
 	#endif
@@ -162,7 +190,7 @@ mf_coefv.clear();
 	mf_Pv.set_finite_element(meshv.convex_index(), pf_Pv);
 	mf_coefv.set_finite_element(meshv.convex_index(), pf_coefv);
 	
-
+*/
 
 
 	};
@@ -201,14 +229,44 @@ transport3d1d::build_tissue_boundary (void)
 	GMM_ASSERT1(labels.size()==2*DIMT, "wrong number of BC labels");
 	GMM_ASSERT1(values.size()==2*DIMT, "wrong number of BC values");
 	for (unsigned f=0; f<2*DIMT; ++f) {
-		BCt.emplace_back(labels[f], std::stof(values[f]), 0, f);
+		BCt_transp.emplace_back(labels[f], std::stof(values[f]), 0, f);
 		#ifdef M3D1D_VERBOSE_
-		cout << "  face " << f << " : " << BCt.back() << endl;
+		cout << "  face " << f << " : " << BCt_transp.back() << endl;
 		#endif
-	}
-		
+	} 
+	
+	for (size_type bc=0; bc < BCt_transp.size(); bc++)
+	cout<<BCt_transp[bc]<<endl;
+	
+	// Build mesht regions
+	mesh_region border_faces;
+	outer_faces_of_mesh(mesht, border_faces);
+
+	for (mr_visitor i(border_faces); !i.finished(); ++i) {
+
+		assert(i.is_face());
+
+		// Unit outward normal : used to identify faces
+		//! \todo Use getfem 5.0's function select_faces_of_normal?
+		base_node un = mesht.normal_of_face_of_convex(i.cv(), i.f());
+		un /= gmm::vect_norm2(un);
+
+		if (gmm::abs(un[0] + 1.0) < 1.0E-7)      // back
+			mesht.region(0).add(i.cv(), i.f());
+		else if (gmm::abs(un[0] - 1.0) < 1.0E-7) // front
+			mesht.region(1).add(i.cv(), i.f());
+		else if (gmm::abs(un[1] + 1.0) < 1.0E-7) // left
+			mesht.region(2).add(i.cv(), i.f());
+		else if (gmm::abs(un[1] - 1.0) < 1.0E-7) // right
+			mesht.region(3).add(i.cv(), i.f());
+		else if (gmm::abs(un[2] + 1.0) < 1.0E-7) // bottom
+			mesht.region(4).add(i.cv(), i.f());
+		else if (gmm::abs(un[2] - 1.0) < 1.0E-7) // top
+			mesht.region(5).add(i.cv(), i.f());
+				
 }
 
+}
 void 
 transport3d1d::build_vessel_boundary(void)
 {
@@ -328,7 +386,7 @@ try {
 					"Overload in meshv region assembling!");
 				meshv.region(fer).add(cv, 0);
 				// Store the current index and then update it
-				BCv_transp[bc].value *= -1.0;
+				BCv_transp[bc].value *= +1.0;
 				BCv_transp[bc].rg = fer; 
 				fer++;
 				// Store the containing branch index
@@ -488,7 +546,7 @@ GMM_STANDARD_CATCH_ERROR; // catches standard errors
  	//1 Build the monolithic matrix AM
 	assembly_mat();
 	//2 Build the monolithic rhs FM
-	assembly_rhs();
+	//assembly_rhs();
  }; // end of assembly
  
 void 
@@ -757,42 +815,87 @@ transport3d1d::assembly_rhs(void)
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Initializing RHS for FM ..." << endl;
 	#endif
-	// Right Hand Side for the interstitial problem 
-	vector_type Ft(dof_transp.Ct());
-	// Right Hand Side for the network problem 
-	vector_type Fv(dof_transp.Cv());
 
-	// Coefficients for tissue BCs
-	scalar_type bcoef  = PARAM.real_value("BETA_transp", "Coefficient for mixed BC for transport problem");
 
+
+	
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Building tissue boundary term ..." << endl;
 	#endif
-	vector_type beta(dof.coeft(), 1.0/bcoef);
 
-	
-	if (1==0) {
-		#ifdef M3D1D_VERBOSE_
-		cout << "  ... as the divergence of exact velocity ... " << endl;
-		#endif
-		assembly_tissue_test_rhs();
-	}
-	else { cout<<"assemble BC for tissue"<<endl;
-		sparse_matrix_type Mtt(dof_transp.Ct(), dof_transp.Ct());
-		asm_tissue_bc_transp(Mtt, mimt, mf_Ct, mf_coeft, BCt_transp,beta);
-		gmm::add(Mtt, 
-			gmm::sub_matrix(AM_transp,
-				gmm::sub_interval(0, dof_transp.Ct()),
-				gmm::sub_interval(0, dof_transp.Ct()))); 
-					
-		// De-allocate memory
-		gmm::clear(Mtt); 
+		cout<<"assemble BC for tissue"<<endl;
+
 		
+		
+		
+		sparse_matrix_type Att(dof_transp.Ct(), dof_transp.Ct());
+		vector_type Ft(dof_transp.Ct());
+		gmm::add(	gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(0,dof_transp.Ct()),
+				gmm::sub_interval(0,dof_transp.Ct()))
+				, Att);
+		gmm::scale(	gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(0,dof_transp.Ct()),
+				gmm::sub_interval(0,dof_transp.Ct()))
+				, 0.0);	
+				
+		gmm::add(	 gmm::sub_vector(FM_temp, gmm::sub_interval(0,dof_transp.Ct()))
+				,Ft);	 
+		gmm::scale(	 gmm::sub_vector(FM_temp, gmm::sub_interval(0,dof_transp.Ct()))
+				,0.0);
+
+cout<<"prima di entrare nella funzione asm_tissue_bc: queste sono le facce della mia mesh 3d: "<<endl;
+	for (size_type bc=0; bc < BCt_transp.size(); ++bc) {
+	cout<< BCt_transp[bc]<<endl;}
+	
+	scalar_type bcoef  = PARAM.real_value("BETA_transp", "Coefficient for mixed BC for transport problem");
+	vector_type beta(dof.coeft(), bcoef);
+	asm_tissue_bc_transp(Att, Ft, mimt, mf_Ct, mf_coeft, BCt_transp,beta);
+		gmm::add(Att, 
+			gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(0,dof_transp.Ct()),
+				gmm::sub_interval(0,dof_transp.Ct())));
+		gmm::add(Ft, 
+			gmm::sub_vector(FM_temp,
+				gmm::sub_interval(0,dof_transp.Ct())));
+		// De-allocate memory
+		gmm::clear(Att);
+		gmm::clear(Ft);
 		cout<<"assemble BC for vessel"<<endl;
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Building vessel boundary term ..." << endl;
 	#endif
+		
+		//costruisco le condizioni al contorno: influenzeranno AM_temp e Fv
+
+		sparse_matrix_type Avv(dof_transp.Cv(), dof_transp.Cv());
+		vector_type Fv(dof_transp.Cv());
+		gmm::add(	gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()))
+				, Avv);
+		gmm::scale(	gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()))
+				, 0.0);	
+				
+		gmm::add(	 gmm::sub_vector(FM_temp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))
+				,Fv);	
+		gmm::scale(	 gmm::sub_vector(FM_temp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))
+				,0.0);
+
+		asm_network_bc_transp(Avv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp );
+		gmm::add(Avv, 
+			gmm::sub_matrix(AM_temp,
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
+				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv())));
+		gmm::add(Fv, 
+			gmm::sub_vector(FM_temp,
+				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+		// De-allocate memory
+		gmm::clear(Avv);
+		gmm::clear(Fv);
 		/*
 		sparse_matrix_type Avv(dof_transp.Cv(), dof_transp.Cv());
 		vector_type Fv(dof_transp.Cv());
@@ -844,7 +947,7 @@ transport3d1d::assembly_rhs(void)
 						gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())),	
 					 mimv, mf_Cv, mf_coefv, BCv_transp);
 */
-	}
+	
 	
 }
 
@@ -875,36 +978,8 @@ gmm::copy(FM_transp, FM_temp);
 	gmm::clear(UM_transp);
 	gmm::clear(TFt); gmm::clear(TFv);
 
+assembly_rhs();
 
-//costruisco le condizioni al contorno: influenzeranno AM_temp e Fv
-
-		sparse_matrix_type Avv(dof_transp.Cv(), dof_transp.Cv());
-		vector_type Fv(dof_transp.Cv());
-		gmm::add(	gmm::sub_matrix(AM_temp,
-				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
-				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()))
-				, Avv);
-		gmm::scale(	gmm::sub_matrix(AM_temp,
-				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
-				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()))
-				, 0.0);	
-				
-		gmm::add(	 gmm::sub_vector(FM_temp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))
-				,Fv);	
-		gmm::scale(	 gmm::sub_vector(FM_temp, gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))
-				,0.0);
-
-		asm_network_bc_transp(Avv, Fv, mimv, mf_Cv, mf_coefv, BCv_transp );
-		gmm::add(Avv, 
-			gmm::sub_matrix(AM_temp,
-				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv()),
-				gmm::sub_interval(dof_transp.Ct(),dof_transp.Cv())));
-		gmm::add(Fv, 
-			gmm::sub_vector(FM_temp,
-				gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
-		// De-allocate memory
-		gmm::clear(Avv);
-		gmm::clear(Fv);
 
 }
  bool transport3d1d::solve (void)
