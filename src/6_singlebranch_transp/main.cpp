@@ -8,14 +8,14 @@
                 Copyright (C) 2017 Stefano Brambilla
 ======================================================================*/
 /*! 
-  @file   main.cpp 
+  @file   main.cpp  
   @author Domenico Notaro <s.brambilla93@gmail.com>   
   @date   January 2017. 
   @brief  Main program for test simulations.    
   @details
     We solve the coupled 3D/1D problem of fluid exchange between a 1D  
     network \Lambda and the 3D interstitial tissue \Omega
-          
+            
     ***************************************** 
       Benchmark : transport problem on single branch  
       Mixed finite elements approximation  
@@ -24,8 +24,8 @@
      
 	See Section "Code verification: test-cases" 
  */  
- 	
- 	#define M3D1D_VERBOSE_
+ 	 
+ 	#define M3D1D_VERBOSE_ 
 #include <iostream>
 #include <problem3d1d.hpp>  
 #include <transport3d1d.hpp> 

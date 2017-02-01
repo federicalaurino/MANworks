@@ -17,13 +17,17 @@
 % Flag to import dimensionless param
 TEST_PARAM = 1;
 % Flag to select a specific rhs
-TEST_RHS   = 1;
+TEST_RHS   = 0;
 %Flag to export parameters
 EXPORT_PARAM = 0; 
 % Flag to export results
 VTK_EXPORT = 1;
+%Flag to add diffusion terms
+DIFFUSION_T=1;
+DIFFUSION_V=1;
 %Flag to add advection terms
-ADVECTION=0;
+ADVECTION_T=0;
+ADVECTION_V=0;
 %Flag to add reaction terms
 REACTION=0;
 %Flag to take the stationary problem
@@ -60,8 +64,8 @@ FEM_TYPET_P = 'FEM_PK_DISCONTINUOUS(3,0)';
 FEM_TYPET_DATA = 'FEM_PK(3,0)';
 FEM_TYPET_C = 'FEM_PK(3,1)';
 % GetFem type for the 1D Finite Element Methods
-FEM_TYPEV   = 'FEM_PK(1,1)';  
-FEM_TYPEV_P = 'FEM_PK(1,0)';  
+FEM_TYPEV   = 'FEM_PK(1,2)';  
+FEM_TYPEV_P = 'FEM_PK(1,1)';  
 FEM_TYPEV_DATA = 'FEM_PK(1,0)';  
 FEM_TYPEV_C = 'FEM_PK(1,1)';  
 % GetFem type for the 3D Integration Method
@@ -144,11 +148,11 @@ dt = 0.2;
 %===================================
 % Faces:   x=0  x=L  y=0  y=L  z=0  z=L
 % BC labels (DIR / MIX)
-BClabel = 'DIR  DIR  DIR  DIR  DIR  DIR'
+BClabel = 'MIX  MIX  DIR  DIR  MIX  MIX'
 % BC values
-BCvalue = '0.0  0.0  0.0  0.0  0.0  0.0'
+BCvalue = '0.0  0.0  -5.00  10.0  0.0  0.0'
 % Coefficient for MIX condition
-BETA = 1.0E-10
+BETA = 1.0E-10 
 
 % Faces:   x=0  x=L  y=0  y=L  z=0  z=L
 % BC labels (DIR / MIX)
