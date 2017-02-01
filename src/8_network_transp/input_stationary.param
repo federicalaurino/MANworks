@@ -15,7 +15,7 @@
 %  FLAGS
 %===================================
 % Flag to import dimensionless param
-TEST_PARAM = 1; 
+TEST_PARAM = 1;
 % Flag to select a specific rhs
 TEST_RHS   = 0;
 %Flag to export parameters
@@ -23,13 +23,13 @@ EXPORT_PARAM = 0;
 % Flag to export results
 VTK_EXPORT = 1;
 %Flag to take the stationary problem
-STATIONARY=0;
-%Flag to add diffusion terms
-DIFFUSION_T=1;
-DIFFUSION_V=1;
+STATIONARY=1;
 %Flag to add advection terms
 ADVECTION_T=0;
 ADVECTION_V=0;
+%Flag to add diffusion terms
+DIFFUSION_T=1;
+DIFFUSION_V=1;
 %Flag to add reaction terms
 REACTION=0;
 %Flag for the new formulation
@@ -40,7 +40,7 @@ OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk_network_stationary/';
 %  MESH
 %===================================
 % Flags to build a regular 3d mesh
-TEST_GEOMETRY = 0;
+TEST_GEOMETRY = 1;
 GT_T       = 'GT_PK(3,1)'; 
 NSUBDIV_T  = '[11,11,11]';  
 ORG_T      = '[0,0,0]'; 
@@ -95,7 +95,7 @@ Q  = 1.0;
 % Dimensionless conductivity of the capillary bed
 Kv = 1.0;
 % Dimensionless average radius of the capillary vessels []
-RADIUS = 0.15;
+RADIUS = 0.010;
 %Dimensionless At[]
 At=1.0;
 %Dimensionless Av[]
@@ -121,7 +121,7 @@ U  = 166E-06;
 % characteristic length of the problem [m]
 d  = 240E-06;
 % average radius of the capillary vessels []
-%RADIUS = 5E-06;
+%%RADIUS = 5E-06;
 % Viscosity of the blood [kg/ms]
 mu_V = 0.001; 	
 % Viscosity of the interstitial fluid [kg/ms]
@@ -157,7 +157,7 @@ BETA = 1.0E-10
 
 % Faces:   x=0  x=L  y=0  y=L  z=0  z=L
 % BC labels (DIR / MIX)
-BClabel_transp = 'MIX  MIX  MIX  MIX  MIX  MIX'
+BClabel_transp = 'DIR  DIR   DIR  DIR  DIR DIR'
 % BC values
 BCvalue_transp = '0.0  0.0  0.0  0.0  0.0  0.0'
 % Coefficient for MIX condition
