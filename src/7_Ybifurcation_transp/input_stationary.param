@@ -23,19 +23,19 @@ EXPORT_PARAM = 0;
 % Flag to export results
 VTK_EXPORT = 1;
 %Flag to take the stationary problem
-STATIONARY=0;
-%Flag to add advection terms
-ADVECTION_T=0;
-ADVECTION_V=0;
+STATIONARY=1;
 %Flag to add diffusion terms
 DIFFUSION_T=1;
 DIFFUSION_V=1;
+%Flag to add advection terms
+ADVECTION_T=0;
+ADVECTION_V=0;
 %Flag to add reaction terms
 REACTION=0;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
 % Output directory
-OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk_bif/';
+OUTPUT     = '/home/pacs_student/Desktop/pacs_shared/vtk_bif_stationary/';
 %===================================
 %  MESH
 %===================================
@@ -156,8 +156,8 @@ BETA = 1.0E-10
 
 % Faces:   x=0  x=L  y=0  y=L  z=0  z=L
 % BC labels (DIR / MIX)
-BClabel_transp = 'MIX  MIX  DIR  DIR  MIX  MIX'
+BClabel_transp = 'MIX  MIX  MIX  MIX  MIX  MIX'
 % BC values
-BCvalue_transp = '0.0  0.0  1.0  0.0  10.0  30.0'
+BCvalue_transp = '0.0  0.0  0.0  0.0  0.0  0.0'
 % Coefficient for MIX condition
 BETA_transp = 1.0E-1

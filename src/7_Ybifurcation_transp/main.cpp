@@ -8,7 +8,7 @@
                 Copyright (C) 2017 Stefano Brambilla
 ======================================================================*/
 /*! 
-  @file   main.cpp 
+  @file   main.cpp  
   @author Domenico Notaro <s.brambilla93@gmail.com>   
   @date   January 2017. 
   @brief  Main program for test simulations.    
