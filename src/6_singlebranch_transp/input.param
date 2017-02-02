@@ -159,5 +159,7 @@ BETA = 1.0E-10
 BClabel_transp = 'MIX  MIX  MIX  MIX  MIX  MIX'
 % BC values
 BCvalue_transp = '0.0  0.0  0.0  0.0  0.0  0.0'
-% Coefficient for MIX condition
-BETA_transp = 1.0E-1
+% Coefficient for MIX condition in tissue
+BETAtissue_transp = 1.0E-1
+% Coefficient for MIX condition in vessels
+BETAvessel_transp = 1.0E-1
