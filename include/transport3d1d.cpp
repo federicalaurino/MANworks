@@ -18,16 +18,16 @@
  
  namespace getfem {
  
- void transport3d1d::init (int argc, char *argv[]) 
+ void transport3d1d::init_transp (int argc, char *argv[]) 
  {
  std::cout << "initialize transport problem..."<<std::endl<<std::endl;
  
- import_data();
- build_mesh();
- set_im_and_fem();
- build_param();
- build_vessel_boundary();
- build_tissue_boundary();
+ import_data_transp();
+ build_mesh_transp();
+ set_im_and_fem_transp();
+ build_param_transp();
+ build_vessel_boundary_transp();
+ build_tissue_boundary_transp();
  
  }; // end of init
 
@@ -35,7 +35,7 @@
  // Aux methods for init
 	
 	//! Import algorithm specifications
-	void transport3d1d::import_data(void)
+	void transport3d1d::import_data_transp(void)
 	{
 		std::cout<<"init part 1: import data!......" <<std::endl;
 	#ifdef M3D1D_VERBOSE_
@@ -52,7 +52,7 @@
 	 
 	
 	//! Import mesh for tissue (3D) and vessel (1D)  
-	void transport3d1d::build_mesh(void){
+	void transport3d1d::build_mesh_transp(void){
 
 	//but, in order to have the boundary conditions for the nodes
 	//we need to build again the 1D mesh from another pts file
@@ -104,7 +104,7 @@
 	
 	};
 	//! Set finite elements methods and integration methods 
-	void transport3d1d::set_im_and_fem(void)
+	void transport3d1d::set_im_and_fem_transp(void)
 	{
 	std::cout<<"init part 2: set fem methods!......" <<std::endl;
 	
@@ -155,7 +155,7 @@ mf_Pt.clear();
 mf_coeft.clear();
 
 
-problem3d1d::set_im_and_fem();
+set_im_and_fem();
 /*
 #ifdef M3D1D_VERBOSE_
 	cout << "Setting IMs for tissue and vessel problems ..." << endl;
@@ -197,7 +197,7 @@ problem3d1d::set_im_and_fem();
 	
 	
 	//! Build problem parameters
-	void transport3d1d::build_param(void)
+	void transport3d1d::build_param_transp(void)
 	{
 	std::cout<<"init part 3: build dimensionless parameters!" <<std::endl;
 	
@@ -214,7 +214,7 @@ problem3d1d::set_im_and_fem();
   
   
 void
-transport3d1d::build_tissue_boundary (void) 
+transport3d1d::build_tissue_boundary_transp (void) 
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Building tissue boundary ..." << endl;
@@ -268,7 +268,7 @@ transport3d1d::build_tissue_boundary (void)
 
 }
 void 
-transport3d1d::build_vessel_boundary(void)
+transport3d1d::build_vessel_boundary_transp(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Building vessel boundary ..." << endl;
@@ -540,17 +540,17 @@ GMM_STANDARD_CATCH_ERROR; // catches standard errors
 
 
   
-  void transport3d1d::assembly (void)
+  void transport3d1d::assembly_transp (void)
  {
  std::cout<<"assemble transport problem"<<std::endl<<std::endl;
  	//1 Build the monolithic matrix AM
-	assembly_mat();
+	assembly_mat_transp();
 	//2 Build the monolithic rhs FM
 	//assembly_rhs();
  }; // end of assembly
  
 void 
-transport3d1d::assembly_mat(void)
+transport3d1d::assembly_mat_transp(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Allocating AM, UM, FM ..." << endl;
@@ -798,7 +798,7 @@ transport3d1d::assembly_mat(void)
 }
 
 void 
-transport3d1d::assembly_rhs(void)
+transport3d1d::assembly_rhs_transp(void)
 {
  
  
@@ -942,7 +942,7 @@ transport3d1d::assembly_rhs(void)
 }
 
 
-void transport3d1d::update (void){
+void transport3d1d::update_transp (void){
 
 // ho la matrice AM assemblata con tutti i termini (da non modificare mai più!)
 // ho  il vettore F ancora vuoto (da aggiungere: il termine temporale; le condizioni al contorno 1d)
@@ -968,11 +968,11 @@ gmm::copy(FM_transp, FM_temp);
 	gmm::clear(UM_transp);
 	gmm::clear(TFt); gmm::clear(TFv);
 
-assembly_rhs();
+assembly_rhs_transp();
 
 
 }
- bool transport3d1d::solve (void)
+ bool transport3d1d::solve_transp (void)
  {
   std::cout<<"solve transport problem"<<std::endl<<std::endl;
   #ifdef M3D1D_VERBOSE_
@@ -990,7 +990,7 @@ assembly_rhs();
 	std::cout<<"iteration number:"<<time_count<<std::endl;
 	std::cout<<"time = "<<t<<" s"<<std::endl;	
 	
-	update();
+	update_transp();
 	
 	
 	gmm::csc_matrix<scalar_type> A_transp;
@@ -1083,7 +1083,7 @@ assembly_rhs();
 	std::ostringstream convert;
 	convert << time_count;
 	time_suff = convert.str();
-	export_vtk(time_suff); 
+	export_vtk_transp(time_suff); 
 	
 	std::ofstream outFF(descr_transp.OUTPUT+"FF"+"_t"+time_suff+".txt");
 		outFF << gmm::col_vector(F_transp);
@@ -1105,7 +1105,7 @@ assembly_rhs();
  }; // end of solve
 	
 	
- void transport3d1d::export_vtk (const string & time_suff,const string & suff)
+ void transport3d1d::export_vtk_transp (const string & time_suff,const string & suff)
  {
   if (PARAM.int_value("VTK_EXPORT"))
   {
@@ -1156,203 +1156,34 @@ assembly_rhs();
  
   
   
-	void transport3d1d::test(void){
-
-// risolvi il problema: (At + Btt)Ct = Btv Cv
-// stazionario
-//con Cv considerato costante e uguale a 1 su tutta la mesh
-//At è la matrice di stiffness per il laplaciano
-//Btt e Btv sono le matrici di accoppiamento tra le mesh 3d - 1d
-
+  // Interface with problem3d1d class
+  	//! Initialize the problem
+	void transport3d1d::init_fluid (int argc, char *argv[])
+	{ 
+	problem3d1d::init(argc, argv);
+	};
 	
-	//definizioni di matrici e vettori
-	vector_type Ct(dof_transp.Ct()); gmm::clear(Ct);
-	sparse_matrix_type At(dof_transp.Ct(), dof_transp.Ct());gmm::clear(At);
-	sparse_matrix_type Btt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Btt);
-	sparse_matrix_type Btv(dof_transp.Ct(), dof_transp.Cv());gmm::clear(Btv);
-	sparse_matrix_type Bvt(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Bvt); // non servono, ma devo comunque passarle alla funzione asm_exchange_mat
-	sparse_matrix_type Bvv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Bvv); //	
-	vector_type Cv(dof_transp.Cv(), 1.0);
-	vector_type F(dof_transp.Ct()); gmm::clear(F);  //F= Btv Cv
+	//! Assemble the problem
+	void transport3d1d::assembly_fluid (void)
+	{ 
+	problem3d1d::assembly();
+	};
+	//! Solve the problem
+	bool transport3d1d::solve_fluid (void)
+	{ 
+	return problem3d1d::solve();
+	};	
+	//! Export the solution
+	void transport3d1d::export_vtk_fluid (const string & suff)
+	{ 
+	problem3d1d::export_vtk(suff);
+	};
 	
-	//stiffness matrix
-	getfem::generic_assembly
-	  assem("M$1(#1,#1) += sym(comp(vGrad(#1).vGrad(#1)) (:, i,k, : ,i,k) )");
-	  assem.push_mi(mimt);
-	  assem.push_mf(mf_Ct);
-	  assem.push_mat(At);
-	  assem.assembly();
 	
-	//matrici di accoppiamento
-	sparse_matrix_type Mbar(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Mbar);
-	sparse_matrix_type Mlin(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Mlin);
-  	asm_exchange_aux_mat(Mbar, Mlin, mimv, mf_Ct, mf_Cv, param.R(), descr.NInt);
-	
-	bool NEWFORM = true;	
-	asm_exchange_mat_transp(Btt, Btv, Bvt, Bvv,
-			mimv, mf_Cv, mf_coefv, Mbar, Mlin, param_transp.Y(), NEWFORM);
 
-	// Copying Btt and add it to At
-	gmm::add(Btt, At); 
-
-	// F è il termine noto, F= Btv*Cv
-	gmm::mult(Btv, Cv, F);
-
-	//costruisci una matrice del tipo adatto per SuperLU_solver
-	gmm::csc_matrix<scalar_type> A;
-	gmm::clean(At, 1E-12); 
-	gmm::copy(At, A);
-	
-	gmm::MatrixMarket_IO::write("At.mm",At);
-	gmm::MatrixMarket_IO::write("Btt.mm",Btt);
-	gmm::MatrixMarket_IO::write("Btv.mm",Btv);
-	gmm::MatrixMarket_IO::write("Bvt.mm",Bvt);
-	gmm::MatrixMarket_IO::write("Bvv.mm",Bvv);	
-	std::ofstream outF("F.txt");
-	outF << gmm::col_vector(F);
-	outF.close();	
-	
-	int a;
-	cout<<"type 0 for superLU; 1 for GMRES"<<endl;
-	cin>>a;
-	
-	if(a==0){
-	cout<<"	superLU"<<endl;
-	scalar_type cond;
-	gmm::SuperLU_solve(At, Ct, F, cond);
-	cout << "  Condition number (test diffusion problem): " << cond << endl;}
-	else if(a==1){
-	cout<<"	GMRES"<<endl;
-	gmm::iteration iter (0.0000001, 1,40000);
-	//gmm::ilutp_precond<sparse_matrix_type> P(At, 20, 1E-6);
-	gmm::identity_matrix P;
-	gmm::gmres (At, Ct, F, P, 50, iter);
-	
-	}
-
-
-
-	std::ofstream outUU("Ct.txt");
-	outUU << gmm::col_vector(Ct);
-	outUU.close();		
-
-	vtk_export exp_Ct("test_Ct.vtk");
-	exp_Ct.exporting(mf_Ct);
-	exp_Ct.write_mesh();
-	exp_Ct.write_point_data(mf_Ct, Ct, "Ct");
- 	
-
-
-
-/*
-proviamo a risolvere il problema di diffusione con i gradi di libertà e la mesh 3d definita per il problema dei fluidi.
-
-
-	//! Monolithic matrix for the coupled problem
-	sparse_matrix_type AM;
-	//! Monolithic array of unknowns for the coupled problem
-	vector_type        UM;
-	//! Monolithic right hand side for the coupled problem
-	vector_type        FM;
-
-	gmm::resize(AM, dof.Pt(), dof.Pt()); gmm::clear(AM);
-	gmm::resize(UM, dof.Pt()); gmm::clear(UM);
-	gmm::resize(FM, dof.Pt()); gmm::clear(FM);
-	
-	#ifdef M3D1D_VERBOSE_
-	cout << "Assembling the monolithic matrix AM ..." << endl;
-	#endif
-	// Mass matrix for the interstitial problem
-	//getfem::asm_mass_matrix(AM, mimt, mf_Pt);
-	  /*getfem::generic_assembly
-	  assem("M$1(#1,#1) += sym(comp(vGrad(#1).vGrad(#1)) (:, i,k, : ,i,k) )");
-	  assem.push_mi(mimt);
-	  assem.push_mf(mf_Pt);
-	  assem.push_mat(AM);
-	  assem.assembly();
-	 getfem::asm_stiffness_matrix_for_homogeneous_laplacian(AM, mimt, mf_Pt);
-	  
-	vector_type F(dof.coeft(), 1.0);
-	getfem::asm_source_term(FM, mimt, mf_Pt, mf_coeft, F);
-	gmm::MatrixMarket_IO::write("A_mass.mm",AM);
-	std::ofstream outFF("Ct.txt");
-	outFF << gmm::col_vector(FM);
-	outFF.close();	
-	
-	gmm::csc_matrix<scalar_type> A;
-	gmm::clean(AM, 1E-12);
-	gmm::copy(AM, A);
-	gmm::clear(AM); // to be postponed for preconditioner
-	double time = gmm::uclock_sec();	
-	
-	// direct solver //
-		#ifdef M3D1D_VERBOSE_
-		cout << "  Applying the SuperLU method ... " << endl;
-		#endif
-		scalar_type cond;
-		gmm::SuperLU_solve(A, UM, FM, cond);
-		cout << "  Condition number : " << cond << endl;
-
-	std::ofstream outU("U_mass.txt");
-	outU << gmm::col_vector(UM);
-	outU.close();	
-	
-	};//end of test
 	
 	
 	  
-	void transport3d1d::test2(void){
 
-	vector_type U(dof_transp.Cv()); gmm::clear(U);
-	sparse_matrix_type A(dof_transp.Cv(), dof_transp.Cv());gmm::clear(A);
-	vector_type F(dof_transp.Cv());gmm::clear(F);
-	vector_type Rg(dof_transp.Cv());	gmm::clear(Rg);
-	
-	getfem::generic_assembly
-	  assem("M$1(#1,#1) += sym(comp(vGrad(#1).vGrad(#1)) (:, i,k, : ,i,k) )");
-	  assem.push_mi(mimv);
-	  assem.push_mf(mf_Cv);
-	  assem.push_mat(A);
-	  assem.assembly();
-	  
-	  gmm::MatrixMarket_IO::write("A.mm",A);
-	  
-	  vector_type ones(dof_transp.Cv(), 0.01);
-
-
-	getfem::asm_source_term(F, mimv, mf_Cv, mf_Cv, ones);
-	Rg[1]= 1;
-
-	std::ofstream outFF("F.txt");
-		outFF << gmm::col_vector(F);
-		outFF.close();
-
-
-		scalar_type cond;
-		gmm::SuperLU_solve(A, U, F, cond);
-		cout << "  Condition number (test diffusion problem): " << cond << endl;
-
-	std::ofstream outUU("u_tilde.txt");
-		outUU << gmm::col_vector(U);
-		outUU.close();		
-
-gmm::add(Rg, U);
-
-
-	std::ofstream outU("U.txt");
-		outU << gmm::col_vector(U);
-		outU.close();
-		
-		
-	vtk_export exp_U("test2.vtk");
-	exp_U.exporting(mf_Cv);
-	exp_U.write_mesh();
-	exp_U.write_point_data(mf_Cv, U, "test2");
- 	
- */	
-	
-
-
-	};//end of test
  
  } // end of namespace
