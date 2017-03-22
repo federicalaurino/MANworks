@@ -39,21 +39,21 @@ int main(int argc, char *argv[])
 	FE_ENABLE_EXCEPT;        // Enable floating point exception for Nan.
  
 	try {   
+		  
 		// Declare a new problem 
 		getfem::transport3d1d p; 
 		  
 		/// fluid problem: velocity field and pressure
 		
 		// Initialize the problem
-		p.problem3d1d::init(argc, argv);
+		p.init_fluid(argc, argv);
 		// Build the monolithic system 
-		p.problem3d1d::assembly();
+		p.assembly_fluid();
 		// Solve the problem 
-		if (!p.problem3d1d::solve()) GMM_ASSERT1(false, "solve procedure has failed");
+		if (!p.solve_fluid()) GMM_ASSERT1(false, "solve procedure has failed");
 		// Save results in .vtk format
-		p.problem3d1d::export_vtk();
+		p.export_vtk_fluid();
 		// Display some global results: mean pressures, total flow rate
-		
 		
 		std::cout << "--- FINAL RESULTS -------------------------" << std::endl; 
 		std::cout << "  Pt average            = " << p.mean_pt()   << std::endl;
@@ -66,11 +66,11 @@ int main(int argc, char *argv[])
 		//transport problem: concentration  
 		
 		//initialize 
-		p.init(argc, argv);
+		p.init_transp(argc, argv);
 		//assemble        
-		p.assembly();    
+		p.assembly_transp();    
 		//solve     
-		if (!p.solve()) GMM_ASSERT1(false, "solve procedure has failed");  // the export is in the solve at each time step 
+		if (!p.solve_transp()) GMM_ASSERT1(false, "solve procedure has failed");  // the export is in the solve at each time step 
 				      
 		   	
 		}  
