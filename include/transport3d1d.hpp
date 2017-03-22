@@ -32,6 +32,7 @@
 #include <gmm/gmm_matrix.h>
 #include <gmm/gmm_inoutput.h>
 #include <gmm/gmm_iter_solvers.h>
+#include <getfem/dal_bit_vector.h>
 // Standard libraries
 #include <iostream>
 #include <fstream>
@@ -79,19 +80,31 @@ public:
 		mf_Ct(mesht), mf_Cv(meshv) //, mimv_transp(meshv_transp)
 	{} 
 	//! Initialize the problem
-	void init (int argc, char *argv[]);
+	void init_transp (int argc, char *argv[]);
 	
 	//! Assemble the problem
-	void assembly (void);
+	void assembly_transp (void);
 
 	//! Solve the problem
-	bool solve (void);
+	bool solve_transp (void);
 	
 	//! Export the solution
-	void export_vtk (const string & time_suff = "",const string & suff = ""); 
+	void export_vtk_transp (const string & time_suff = "",const string & suff = ""); 
 
-	void test(void);
-	void test2(void);
+
+	//Aux methods for interface with problem3d1d class
+	//! Initialize the problem
+	void init_fluid (int argc, char *argv[]);
+	
+	//! Assemble the problem
+	void assembly_fluid (void);
+
+	//! Solve the problem
+	bool solve_fluid (void);
+	
+	//! Export the solution
+	void export_vtk_fluid (const string & suff = "");
+	
 protected:
 	 
 	//! Mesh for the vessel network for transport problem @f$\Lambda_(transp)@f$ (1D)
@@ -135,20 +148,16 @@ protected:
 	vector_type FM_temp; 
 	
 	
-	
-////	//T totale, deltaT, T iniziale, T stop
-	//matrice con le soluzioni della concentrazione ad ogni t per ogni colonna
-	
 
 	// Aux methods for init
 	//! Import algorithm specifications
-	void import_data(void);
+	void import_data_transp(void);
 	//! Import mesh for tissue (3D) and vessel (1D)  
-	void build_mesh(void); 
+	void build_mesh_transp(void); 
 	//! Set finite elements methods and integration methods 
-	void set_im_and_fem(void);
+	void set_im_and_fem_transp(void);
 	//! Build problem parameters
-	void build_param(void);
+	void build_param_transp(void);
 	//! Build the list of tissue boundary data 
 	/*!	Face numbering:
 		  0 : {x = 0 }  "back"
@@ -158,16 +167,25 @@ protected:
 		  4 : {z = 0 }  "bottom"
 		  5 : {z = Lz}  "top"
 	 */
-	void build_tissue_boundary(void);
+	void build_tissue_boundary_transp(void);
 	//! Build the list of vessel boundary (and junctions) data 
-	void build_vessel_boundary(void);
-	//! Build the monolithic matrix AM_transp by blocks
-	void assembly_mat(void);
-	//! Build the monolithic rhs FM_transp by blocks
-	void assembly_rhs(void);
-	void update(void);
-
+	void build_vessel_boundary_transp(void);
 	
+	//Aux method for assembly
+	//! Build the monolithic matrix AM_transp by blocks
+	void assembly_mat_transp(void);
+	//! Build the monolithic rhs FM_transp by blocks
+	void assembly_rhs_transp(void);
+	//! Compute the Peclèt number for the network
+	scalar_type peclet_vessel(void);
+	//! Compute the Peclèt number for the tissue
+	scalar_type peclet_tissue(void);
+	
+	//Aux method for solve 
+	//! Aux function for update of rhs at each time step
+	void update_transp(void);
+	
+
 	
 }; //end of class trasport3d1d
 
