@@ -192,13 +192,23 @@ asm_network_junctions
 				"Error in assembling pressure basis function");
 			std::vector<long signed int>::const_iterator bb = J_data[j].branches.begin();
 			std::vector<long signed int>::const_iterator be = J_data[j].branches.end();
+			size_type last_, first_;
+			vector_type dof_enum;
+			int fine=0;
+			for (getfem::mr_visitor mrv(mf_u[i].linked_mesh().region(i)); !mrv.finished(); ++mrv)
+			for (auto b : mf_u[i].ind_basic_dof_of_element(mrv.cv()))
+				{dof_enum.emplace_back(b);
+				fine++;}			
+			first_=dof_enum[0];
+			last_=dof_enum[fine-1];
+			dof_enum.clear();
 			// Outflow branch contribution
 			if (std::find(bb, be, i) != be){
-				J(row, (i+1)*mf_u[i].nb_dof()-1) -= pi*Ri*Ri; //col to be generalized!
+				J(row, i*mf_u[i].nb_dof()+last_) -= pi*Ri*Ri;//col to be generalized!
 			}
 			// Inflow branch contribution
 			if (i!=0 && std::find(bb, be, -i) != be){
-				J(row, i*mf_u[i].nb_dof()) += pi*Ri*Ri;	//col to be generalized!
+				J(row, i*mf_u[i].nb_dof()+first_) += pi*Ri*Ri;	//col to be generalized!
 			}
 		}
 	}

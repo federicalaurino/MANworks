@@ -102,8 +102,18 @@ asm_mean(const mesh_fem &mf, const mesh_im &mim, const VEC &U)
 	std::vector<scalar_type> v(1);
 	assem.push_vec(v);
 	assem.assembly();
+
+        getfem::generic_assembly assem1;
+        assem1.set("u=data(#1); V()+=u(i).comp(Base(#1))(i)");
+        assem1.push_mi(mim);
+        assem1.push_mf(mf);
+        std::vector<scalar_type> one(gmm::vect_size(U), 1.0);
+        assem1.push_data(one);
+        std::vector<scalar_type> measure(1);
+        assem1.push_vec(measure);
+        assem1.assembly();
 	
-	return v[0];
+        return v[0]/measure[0];
 }
 //! Aux function to save a gmm::col_vector as a plain list of values
 template 

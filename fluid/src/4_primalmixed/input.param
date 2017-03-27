@@ -63,6 +63,10 @@ NInt = 50;
 k  = 1.0E-18;
 % fluid viscosity [kg/ms]
 mu = 4.0E-03;
+% Viscosity of the blood [kg/ms]
+mu_V = 0.001; 	
+% Viscosity of the interstitial fluid [kg/ms]
+mu_T = 0.001; 
 % hydraulic conductivity of the vessel walls [m^2 s/kg]
 Lp = 1.0E-10;
 % average interstitial pressure [Pa]

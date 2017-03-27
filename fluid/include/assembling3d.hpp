@@ -59,6 +59,31 @@ asm_tissue_darcy
 	assem.assembly(rg);
 }
 
+//! Build the contribute of lymphatic to 3D Darcy's problem,
+//! @f$ M = \int_{\Omega} L_p^{LF} \, \frac{S}{V}\,p \, q~dx @f$ and
+/*!
+        @param Mlf   Limphatic mass matrix
+        @param mim   The integration method to be used
+        @param mf_p  The finite element method for the pressure @f$ p @f$
+        @param rg    The region where to integrate
+
+        @ingroup asm
+ */
+template<typename MAT>
+void
+asm_tissue_lymph_sink
+        (MAT & Mlf,
+         const mesh_im & mim,
+         const mesh_fem & mf_p,
+         const mesh_region & rg = mesh_region::all_convexes()
+         )
+{
+        GMM_ASSERT1(mf_p.get_qdim() == 1,
+                "invalid data mesh fem for pressure (Qdim=1 required)");
+        // Build the mass matrix Mlf
+        getfem::asm_mass_matrix(Mlf, mim, mf_p, rg);
+}
+
 /*! Build the mixed boundary conditions for Darcy's problem
     @f$ M = \int_{\Gamma_u} \frac{1}{\beta}\,(u.n)(v.n)~d\sigma
     @f$ F = - \int_{\Gamma_u} p0\,(v.n)~d\sigma - \int_{\Gamma_p} g\,(v.n)~d\sigma

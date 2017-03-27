@@ -114,6 +114,9 @@ public:
 	//! Compute total flow rate (network to tissue) - pressure
 	inline scalar_type flow_rate (void) { return TFR; };
 
+        //! Compute total flow rate from cube
+        inline scalar_type cube_flow_rate (void) { return FRCube; };
+
 protected:
 
 	//! Mesh for the interstitial tissue @f$\Omega@f$ (3D)
@@ -163,6 +166,8 @@ protected:
 	dof3d1d dof;
 	//! Total flow rate from network to tissue
 	scalar_type TFR;
+        //! Total flow rate from the cube
+        scalar_type FRCube;
 
 	////////////////////////////////////////////////////////////////////
 

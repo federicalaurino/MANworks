@@ -45,10 +45,14 @@ struct param3d1d {
 	scalar_type d_; 
 	//! Hydraulic conductivity of the interstitium [m^2]
 	scalar_type k_; 
-	//! Viscosity of the fluid [kg/ms]
-	scalar_type mu_; 
+	//! Viscosity of the blood [kg/ms]
+	scalar_type mu_V_; 	
+	//! Viscosity of the interstitial fluid [kg/ms]
+	scalar_type mu_T_; 
 	//! Hydraulic conductivity of the capillary walls [m^2 s/kg]
 	scalar_type Lp_;
+        //! Hydraulic conductivity of the lymphatic vessels [m s/kg]
+        scalar_type Lp_LF_;
 	// Dimensionless physical parameters (test-cases)
 	//! Dimensionless average radius of the vessel network
 	scalar_type Rav_;
@@ -60,6 +64,8 @@ struct param3d1d {
 	vector_type Q_;
 	//! Dimensionless conductivity of the vessel bed
 	vector_type kv_;
+        //! Dimensionless hydraulic conductivity of the lymphatic vessels
+        vector_type Q_LF_;
 	// Utils
 	//! File .param
 	ftool::md_param FILE_;
@@ -114,11 +120,14 @@ struct param3d1d {
 			// Import dimensionless params from FILE_
 			scalar_type ktval = FILE_.real_value("Kt"); 
 			scalar_type Qval  = FILE_.real_value("Q"); 
+                        scalar_type QLFval  = FILE_.real_value("Q_LF");
 			scalar_type kvval = FILE_.real_value("Kv");
 			// Fill the data arrays
 			kt_.assign(dof_datat, ktval);
 			kv_.assign(dof_datav, kvval);
 			 Q_.assign(dof_datav,  Qval);
+                        //L2
+                        Q_LF_.assign(dof_datat, QLFval);
 		} 
 		else {
 			// Import dimensional params from FILE_
@@ -126,12 +135,15 @@ struct param3d1d {
 			U_  = FILE_.real_value("U", "characteristic flow speed in the capillary bed [m/s]"); 
 			d_  = FILE_.real_value("d", "characteristic length of the problem [m]"); 
 			k_  = FILE_.real_value("k", "permeability of the interstitium [m^2]"); 
-			mu_ = FILE_.real_value("mu", "fluid viscosity [kg/ms]"); 
+			mu_V_ = FILE_.real_value("mu_V", "blood viscosity [kg/ms]"); 
+			mu_T_ = FILE_.real_value("mu_T", "interstitial fluid viscosity [kg/ms]"); 
 			Lp_ = FILE_.real_value("Lp", "permeability of the vessel walls [m^2 s/kg]"); 
+                        Lp_LF_ = FILE_.real_value("Lp_LF");
 			// Compute the dimenless params
-			kt_.assign(dof_datat, k_/mu_*P_/U_/d_);
+			kt_.assign(dof_datat, k_/mu_T_*P_/U_/d_);
+                        Q_LF_.assign(dof_datat, Lp_LF_*P_*d_/U_);
 			for (auto r : R_){ // C++11-only!
-				kv_.emplace_back(pi/8.0/mu_*P_*d_/U_*r*r*r*r);
+				kv_.emplace_back(pi/8.0/mu_V_*P_*d_/U_*r*r*r*r);
 				Q_.emplace_back(2*pi*Lp_*P_/U_*r);
 			}
 		}
@@ -157,18 +169,26 @@ struct param3d1d {
 	inline scalar_type R  (size_type i) { return R_[i];  } const
 	//! Get the tissue permeability at a given dof
 	inline scalar_type kt (size_type i) { return kt_[i]; } const
-	//! Get the vessel wall permeability at a given dof
-	inline scalar_type kv (size_type i) { return kv_[i]; } const
 	//! Get the vessel bed permeability at a given dof
+	inline scalar_type kv (size_type i) { return kv_[i]; } const
+	//! Get the vessel wall permeability at a given dof
 	inline scalar_type Q  (size_type i) { return Q_[i];  } const
 	//! Get the radius at a given mesh_region
 	scalar_type R  (const getfem::mesh_im & mim, const size_type rg) { 
 		return compute_radius(mim, mf_datav_, R_, rg);  
 	}
+	//! Get the vessel bed permeability at a given mesh_region
+	scalar_type kv  (const getfem::mesh_im & mim, const size_type rg) { 
+		return compute_radius(mim, mf_datav_, kv_, rg);  
+	}
 	//! Get the radius
 	vector_type & R (void) { return R_; }
 	//! Get the vessel wall permeabilities
 	vector_type & Q (void) { return Q_; }
+	//! Get the vessel bed permeabilities
+	vector_type & kv (void) { return kv_; }
+        //! Get the lymphatic vessels permeability
+        inline scalar_type Q_LF (size_type i) { return Q_LF_[i]; } const
 	//! Overloading of the output operator
 	friend std::ostream & operator << (
 		std::ostream & out, const param3d1d & param
@@ -178,7 +198,8 @@ struct param3d1d {
 		out << "  R'     : "                << param.R_[0] << endl; 
 		out << "  kappat : "                << param.kt_[0] << endl; 
 		out << "  Q      : "                << param.Q_[0] << endl; 
-		out << "  kappav : "                << param.kv_[0] << endl; 
+                out << "  kappav : "                << param.kv_[0] << endl;
+                out << "  Q_LF   : "                << param.Q_LF_[0] << endl;
 		out << "--------------------------" << endl;
 
 		return out;            

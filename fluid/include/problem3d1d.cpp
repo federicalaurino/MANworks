@@ -441,21 +441,33 @@ try {
 					// Create a new junction node
 					Jv.emplace_back("JUN", 0, i1, fer);
 					fer++;
-				}
 				// Search for index of second containing branch (\mathcal{P}^{out}_j)
-				size_type secondbranch = firstbranch+1; 
+				size_type secondbranch = 0; 
 				size_type secondcv = (( cv1 == cv) ? cv2 : cv1);
+				size_type firstcv = (( cv1 != cv) ? cv2 : cv1);
 				contained = false;
 				while (!contained && secondbranch<nb_branches ) {
+					if (secondbranch!=firstbranch)
 					contained = meshv.region(secondbranch).is_in(secondcv);
 					if (!contained) secondbranch++;
 				}
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
 				// Add the two branches
-				Jv.back().branches.emplace_back(+firstbranch);
-				Jv.back().branches.emplace_back(-secondbranch);
+				scalar_type in;
+				in=0;
+				if (meshv.ind_points_of_convex(firstcv)[0]==i1) in=-1;
+				else if (meshv.ind_points_of_convex(firstcv)[1]==i1) in=+1;
+				GMM_ASSERT1(in!=0, "There's something wrong in firstbranch convex index");
+				Jv.back().branches.emplace_back(in*firstbranch);
+
+				in=0;
+				if (meshv.ind_points_of_convex(secondcv)[0]==i1) in=-1;
+				else if (meshv.ind_points_of_convex(secondcv)[1]==i1) in=+1;
+				GMM_ASSERT1(in!=0, "There's something wrong in secondbranch convex index");
+				Jv.back().branches.emplace_back(in*secondbranch);
 				Jv.back().value += param.R(mimv, firstbranch);
 				Jv.back().value += param.R(mimv, secondbranch);
+				}
 			}
 		}
 		else if (meshv.convex_to_point(i1).size()>=2){ /* non-trivial outflow junction */
@@ -568,12 +580,14 @@ problem3d1d::assembly_mat(void)
 	sparse_matrix_type Mbar(dof.Pv(), dof.Pt());
 	// Aux tissue-to-vessel interpolation matrix
 	sparse_matrix_type Mlin(dof.Pv(), dof.Pt());
+        // Mass matrix for lymphatic sink in the interstitium
+        sparse_matrix_type Mlf(dof.Pt(), dof.Pt());
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Mtt and Dtt ..." << endl;
 	#endif
 	asm_tissue_darcy(Mtt, Dtt, mimt, mf_Ut, mf_Pt);
-	gmm::scale(Mtt, 1.0/param.kt(0)); // kt scalar
+        gmm::scale(Mtt, 1.0/param.kt(0)); // kt scalar
 	// Copy Mtt
 	gmm::add(Mtt, 
 			  gmm::sub_matrix(AM, 
@@ -588,7 +602,16 @@ problem3d1d::assembly_mat(void)
 	gmm::add(Dtt,
 			  gmm::sub_matrix(AM, 
 					gmm::sub_interval(dof.Ut(), dof.Pt()),
-					gmm::sub_interval(0, dof.Ut()))); 
+                                        gmm::sub_interval(0, dof.Ut())));
+        //L2
+        scalar_type lf_coef=param.Q_LF(0);//scalar then uniform untill now
+        asm_tissue_lymph_sink(Mlf, mimt, mf_Pt);
+        gmm::scale(Mlf,lf_coef);
+        //Copy Mlf
+        gmm::add(Mlf,
+                          gmm::sub_matrix(AM,
+                                        gmm::sub_interval(dof.Ut(), dof.Pt()),
+                                        gmm::sub_interval(dof.Ut(), dof.Pt())));
 
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling the tangent versor ..." << endl;
@@ -610,8 +633,9 @@ problem3d1d::assembly_mat(void)
 
 		if(i>0) shift += mf_Uvi[i-1].nb_dof();
 		scalar_type Ri = param.R(mimv, i);
+		scalar_type kvi = param.kv(mimv, i);
 		// Coefficient \pi^2*Ri'^4/\kappa_v
-		vector_type ci(mf_coefvi[i].nb_dof(), pi*pi*Ri*Ri*Ri*Ri/param.kv(i));
+		vector_type ci(mf_coefvi[i].nb_dof(), pi*pi*Ri*Ri*Ri*Ri/kvi);
 		// Allocate temp local matrices
 		sparse_matrix_type Mvvi(mf_Uvi[i].nb_dof(), mf_Uvi[i].nb_dof());
 		sparse_matrix_type Dvvi(dof.Pv(), mf_Uvi[i].nb_dof());
@@ -699,11 +723,24 @@ if (nb_junctions > 0){
 					gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv()), 
 					gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv()))); 
 
+        //adding oncotic
+        scalar_type picoef = PARAM.real_value("DELTA_P_ON");
+        vector_type DeltaPi(dof.Pv(),picoef);
+        vector_type auxOSt(dof.Pt());
+        vector_type auxOSv(dof.Pv());
+        gmm::mult(Btv,DeltaPi,auxOSt);
+        gmm::mult(Bvv,DeltaPi,auxOSv);
+        gmm::scale(auxOSt,-1);
+        gmm::add(auxOSt,gmm::sub_vector(FM,gmm::sub_interval(dof.Ut(),dof.Pt())));
+        gmm::add(auxOSv,gmm::sub_vector(FM,gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(),dof.Pv())));
+
 	// De-allocate memory
 	gmm::clear(Mtt);  gmm::clear(Dtt); 
 	gmm::clear(Mbar); gmm::clear(Mlin);
 	gmm::clear(Btt);  gmm::clear(Btv);
 	gmm::clear(Bvt);  gmm::clear(Bvv);
+        gmm::clear(auxOSt); gmm::clear(auxOSv); gmm::clear(DeltaPi);
+        gmm::clear(Mlf);
 
 }
 
@@ -720,6 +757,10 @@ problem3d1d::assembly_rhs(void)
 	vector_type Ft(dof.Ut());
 	// Right Hand Side for the network problem 
 	vector_type Fv(dof.Uv());
+        // Mass matrix for lymphatic sink in the interstitium
+        sparse_matrix_type Mlf(dof.Pt(), dof.Pt());
+        // Right Hand Side for lymph sink
+        vector_type Pl(dof.Pt(),PARAM.real_value("PL"));
 
 	// Coefficients for tissue BCs
 	scalar_type bcoef  = PARAM.real_value("BETA", "Coefficient for mixed BC");
@@ -759,8 +800,18 @@ problem3d1d::assembly_rhs(void)
 			gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv()),
 			gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv())));
 	gmm::add(Fv, gmm::sub_vector(FM, gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv())));
+
+        //lymph sink
+        //L2
+        scalar_type lf_coef=param.Q_LF(0);//scalar then uniform untill now
+        asm_tissue_lymph_sink(Mlf, mimt, mf_Pt);
+        gmm::scale(Mlf,lf_coef);
+        gmm::mult(Mlf,Pl,Pl);
+        gmm::add(Pl, gmm::sub_vector(FM, gmm::sub_interval(dof.Ut(),dof.Pt())));
+
+
 	// De-allocate memory
-	gmm::clear(Ft); gmm::clear(Fv); gmm::clear(Mvv);
+        gmm::clear(Ft); gmm::clear(Fv); gmm::clear(Mvv); gmm::clear(Mlf); gmm::clear(Pl);
 	
 }
 
@@ -946,12 +997,34 @@ problem3d1d::solve(void)
 	// Computing Bvv*Pv - Bvt*Pt
 	gmm::mult(Bvt, Pt, Uphi);
 	gmm::mult_add(Bvv, Pv, Uphi);
+        //oncotic term
+        scalar_type picoef = PARAM.real_value("DELTA_P_ON");
+        vector_type DeltaPi(dof.Pv(),picoef);
+        gmm::scale(DeltaPi,-1);
+        gmm::mult_add(Bvv, DeltaPi, Uphi);
 	TFR = std::accumulate(Uphi.begin(), Uphi.end(), 0.0);
+
+        //computing flowrate from the cube
+        // Aux vector
+        vector_type Uphi2(dof.Pt());
+        vector_type Pl(dof.Pt(),PARAM.real_value("PL"));
+        sparse_matrix_type Mlf (dof.Pt(), dof.Pt());
+        scalar_type lf_coef=param.Q_LF(0);//scalar then uniform untill now
+        asm_tissue_lymph_sink(Mlf, mimt, mf_Pt);
+        gmm::scale(Mlf,lf_coef);
+        gmm::mult(Mlf,Pl,Pl);
+        gmm::scale(Pl,-1);
+        gmm::mult(Mlf,Pt,Uphi2);
+        gmm::add(Uphi2,Pl,Uphi2);
+        FRCube = TFR - std::accumulate(Uphi2.begin(), Uphi2.end(), 0.0);
+
 
 	// De-allocate memory
 	gmm::clear(Bvt); gmm::clear(Bvv);
 	gmm::clear(Pt);  gmm::clear(Pv);  
-	gmm::clear(Uphi);
+        gmm::clear(Uphi); gmm::clear(Uphi2);
+        gmm:: clear(Mlf); gmm::clear(Pl);
+        gmm::clear(DeltaPi);
 
 	return true;
 }
