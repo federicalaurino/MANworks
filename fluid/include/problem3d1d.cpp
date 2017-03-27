@@ -771,7 +771,8 @@ problem3d1d::assembly_rhs(void)
 	#endif
 	vector_type beta(dof.coeft(), 1.0/bcoef);
 	vector_type P0(dof.coeft(), p0coef);
-	
+	vector_type P0_vel(mf_coefv.nb_dof(), p0coef);
+		
 	if (PARAM.int_value("TEST_RHS")) {
 		#ifdef M3D1D_VERBOSE_
 		cout << "  ... as the divergence of exact velocity ... " << endl;
@@ -794,7 +795,7 @@ problem3d1d::assembly_rhs(void)
 	#endif
 	sparse_matrix_type Mvv(dof.Uv(), dof.Uv());
 	asm_network_bc(Mvv, Fv, 
-			mimv, mf_Uvi, mf_coefv, BCv, P0, param.R(), bcoef);
+			mimv, mf_Uvi, mf_coefv, BCv, P0_vel, param.R(), bcoef);
 	gmm::add(Mvv, 
 		gmm::sub_matrix(AM,
 			gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv()),
