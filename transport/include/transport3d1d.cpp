@@ -148,6 +148,7 @@ mimv.clear();
 mf_Uvi.clear();
 mf_Pv.clear();
 mf_coefv.clear();
+mf_coefvi.clear();
 
 mimt.clear();
 mf_Ut.clear();
@@ -543,21 +544,18 @@ GMM_STANDARD_CATCH_ERROR; // catches standard errors
 //! @f$ Pe =  \frac{U~h}{A} @f$
 //! that is the ratio between the advection flux and the diffusion coefficient
 scalar_type transport3d1d::peclet_vessel(void){
-
 // find U
 vector_type Uv(dof.Uv()); gmm::clear(Uv);
-gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Uv())) ,  Uv);
+gmm::add(gmm::sub_vector(UM, gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv())) ,  Uv);
 scalar_type U= max_vec (Uv, 1);
 
 // find h
 scalar_type h=0;
 scalar_type temp=0;
 for(dal::bv_visitor i(meshv.convex_index()); !i.finished(); ++i){
-	temp= 2*meshv.convex_radius_estimate(i);
+	temp= 2*estimate_h(meshv, i);
 	if(temp>h) h=temp;
 	}
-
-
 // compute peclet
 scalar_type peclet= U*h/param_transp.Av(1);
 return peclet;
@@ -570,7 +568,6 @@ return peclet;
 //! that is the ratio between the advection flux and the diffusion coefficient
 scalar_type transport3d1d::peclet_tissue(void){
 
-	
 // find U
 vector_type Ut(dof.Ut()); gmm::clear(Ut);
 gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())) ,  Ut);
@@ -583,13 +580,12 @@ for(dal::bv_visitor i(mesht.convex_index()); !i.finished(); ++i){
 	temp= 2*mesht.convex_radius_estimate(i);
 	if(temp>h) h=temp;
 }
-
-
 // compute peclet
 scalar_type peclet= U*h/param_transp.At(1);
 return peclet;
 
 } /* end of peclet_tissue*/
+
 
   
   void transport3d1d::assembly_transp (void)
@@ -617,21 +613,23 @@ transport3d1d::assembly_mat_transp(void)
 	#ifdef M3D1D_VERBOSE_
 	cout << "Assembling the monolithic matrix AM_transp ..." << endl;
 	#endif
-	// Reaction matrix for the interstitial problem
-	sparse_matrix_type Rt(dof_transp.Ct(), dof_transp.Ct()); gmm::clear(Rt);
-	// Diffusion matrix for the interstitial problem
-	sparse_matrix_type Dt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Dt);
-	//Transport matrix for interstitial problem
-	sparse_matrix_type Bt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Bt);
 	// Mass(time derivative)  matrix for the interstitial problem
 	sparse_matrix_type Mt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Mt);
-		
+	// Diffusion matrix for the interstitial problem
+	sparse_matrix_type Dt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Dt);
+	//Advection matrix for interstitial problem
+	sparse_matrix_type Bt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Bt);
+	// Reaction matrix for the interstitial problem
+	sparse_matrix_type Rt(dof_transp.Ct(), dof_transp.Ct()); gmm::clear(Rt);
+
+	// Mass (time derivative)  matrix for the network problem
+	sparse_matrix_type Mv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Mv);		
 	// Diffusion matrix for the network problem
 	sparse_matrix_type Dv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Dv);
-	//Transport matrix for network problem
+	//Advection matrix for network problem
 	sparse_matrix_type Bv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Bv);
-	// Mass (time derivative)  matrix for the network problem
-	sparse_matrix_type Mv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Mv);
+	// Reaction matrix for the network problem
+	sparse_matrix_type Rv(dof_transp.Cv(), dof_transp.Cv()); gmm::clear(Rv);
 
 	// Tissue-to-tissue exchange matrix
 	sparse_matrix_type Btt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Btt);
@@ -653,9 +651,17 @@ transport3d1d::assembly_mat_transp(void)
 	bool REACTION = PARAM.int_value("REACTION", "flag for reaction term");
 	bool ADVECTION_T = PARAM.int_value("ADVECTION_T", "flag for advection term in tissue");
 	bool ADVECTION_V = PARAM.int_value("ADVECTION_V", "flag for advection term in vessels");
-	
+
+	#ifdef M3D1D_VERBOSE_
+	cout<< "   Computing Peclet number..."<<endl;	
+	#endif	
 	scalar_type peclet_v= peclet_vessel();
 	scalar_type peclet_t= peclet_tissue();
+	
+	#ifdef M3D1D_VERBOSE_
+	cout<< "Peclet in vessels:    "<< peclet_v<<endl;
+	cout<< "Peclet in tissue:    "<< peclet_t<<endl;
+	#endif	
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Mt, Dt, Rt ..." << endl;
@@ -686,6 +692,7 @@ transport3d1d::assembly_mat_transp(void)
 		// Check peclet number for instability
 		if((ADVECTION_T==1) && (peclet_t>1))
 			{ DAL_WARNING1("Peclet > 1 in tissue: applying artificial diffusion");	
+			cout<<"artificial diffusion in tissue"<<endl;
 		  	gmm::scale(Dt, (1+peclet_t));}
 		  
 	gmm::add(Dt,
@@ -726,6 +733,7 @@ transport3d1d::assembly_mat_transp(void)
 		// Check peclet number for instability
 		 if((ADVECTION_V==1) && (peclet_v>1))
 			{ DAL_WARNING1("Peclet > 1 in network: applying artificial diffusion");
+			cout<<"artificial diffusion in vessels"<<endl;
 		 	gmm::scale(Dv, (1+peclet_v)); }
 		 	
 	gmm::add(Dv, 	gmm::sub_matrix(AM_transp, 
@@ -750,7 +758,8 @@ transport3d1d::assembly_mat_transp(void)
 	gmm::add(Bt,
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
-					gmm::sub_interval(0, dof_transp.Ct()))); 			
+					gmm::sub_interval(0, dof_transp.Ct()))); 	
+
 	}				
 
 	// Build Bv 		
@@ -794,6 +803,37 @@ transport3d1d::assembly_mat_transp(void)
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
 	
 	
+	//Build Rv: assemble int(c_v* d(u_v)/ds, phi_i) = int(c_v* [Bvv*Pv-Bvt*Pt], phi_i)
+	
+	sparse_matrix_type Btt_(dof.Pt(), dof.Pt());
+	sparse_matrix_type Btv_(dof.Pt(), dof.Pv());
+	sparse_matrix_type Bvt_(dof.Pv(), dof.Pt());
+	sparse_matrix_type Bvv_(dof.Pv(), dof.Pv());
+	sparse_matrix_type Mbar_(dof.Pv(), dof.Pt());
+	sparse_matrix_type Mlin_(dof.Pv(), dof.Pt());
+		
+	asm_exchange_aux_mat(Mbar_, Mlin_, mimv, mf_Pt, mf_Pv, param.R(), descr.NInt);
+	bool NEWFORM = PARAM.int_value("NEW_FORMULATION");
+	asm_exchange_mat(Btt_, Btv_, Bvt_, Bvv_, mimv, mf_Pv, mf_coefv, Mbar_, Mlin_, param.Q(), NEWFORM);
+
+	vector_type Rv_coef (dof.Pv());
+	gmm::mult(Bvv_, 
+		  gmm::sub_vector(UM, 
+		  		  gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv())),
+		  Rv_coef);
+		  	  
+	gmm::mult_add(gmm::scaled(Bvt_, -1.0),
+		      gmm::sub_vector(UM, 
+		  		  gmm::sub_interval(dof.Ut(), dof.Pt())),
+		      Rv_coef);				
+	//Build Rv				
+	getfem::asm_mass_matrix_param(Rv, mimv, mf_Cv, mf_Pv, Rv_coef);
+	// Copy Rv
+	gmm::add(Rv,
+			  gmm::sub_matrix(AM_transp, 
+					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
+					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+	
 	}
 
 				
@@ -814,22 +854,22 @@ transport3d1d::assembly_mat_transp(void)
 			mimv, mf_Cv, mf_coefv, Mbar, Mlin, param_transp.Y(), NEWFORM);
 
 	// Copying Btt
-	gmm::add(Btt, 
+	gmm::add(gmm::scaled(Btt, 2.0*pi*param.R(0)), 
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
 	// Copying Btv
-	gmm::add(gmm::scaled(Btv, -1.0),
+	gmm::add(gmm::scaled(Btv, -2.0*pi*param.R(0)),	
 	 		  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()),
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 	// Copying -Bvt
-	gmm::add(gmm::scaled(Bvt, -1.0),  
+	gmm::add(gmm::scaled(Bvt, -2.0/param.R(0)),  
 			  gmm::sub_matrix(AM_transp, 
 			  		gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()),
 					gmm::sub_interval(0, dof_transp.Ct()))); 
 	// Copying Bvv
-	gmm::add(Bvv, 
+	gmm::add(gmm::scaled(Bvv, 2.0/param.R(0)), 
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 

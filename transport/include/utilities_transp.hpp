@@ -73,7 +73,7 @@ if(std::abs(V[i])>max) max= std::abs(V[i]);
 }
 
 } 
-}/* end of max_vec*/
+return max;}/* end of max_vec*/
 
 
 
