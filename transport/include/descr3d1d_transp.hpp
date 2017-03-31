@@ -42,7 +42,9 @@ struct descr3d1d_transp {
 	//! Output directory for transport problem
 	std::string OUTPUT;
 	//! Flag to make the problem stationary
-	size_type STATIONARY;	
+	size_type STATIONARY;
+	//! Flag to add the advection term
+	size_type ADVECTION;		
 	// Solver information
 	//! Identifief of the monolithic solver for transport problem
 	std::string SOLVE_METHOD;
@@ -73,6 +75,7 @@ struct descr3d1d_transp {
 		NInt = size_type(FILE_.int_value("NInt", "Node numbers on the circle for the nonlocal term"));  
 		OUTPUT = FILE_.string_value("OUTPUT","Output Directory");
 		STATIONARY = size_type(FILE_.int_value("STATIONARY", "Flag to make the problem stationary")); 
+		ADVECTION = size_type(FILE_.int_value("ADVECTION", "Flag to add the advection term"));
 	}
 
 	//! Overloading of the output operator

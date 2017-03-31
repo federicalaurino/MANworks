@@ -540,53 +540,6 @@ GMM_STANDARD_CATCH_ERROR; // catches standard errors
 } /* end of build_vessel_boundary */
 
 
-//! Compute the Peclèt Number for vessel network, defined as: 
-//! @f$ Pe =  \frac{U~h}{A} @f$
-//! that is the ratio between the advection flux and the diffusion coefficient
-scalar_type transport3d1d::peclet_vessel(void){
-// find U
-vector_type Uv(dof.Uv()); gmm::clear(Uv);
-gmm::add(gmm::sub_vector(UM, gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv())) ,  Uv);
-scalar_type U= max_vec (Uv, 1);
-
-// find h
-scalar_type h=0;
-scalar_type temp=0;
-for(dal::bv_visitor i(meshv.convex_index()); !i.finished(); ++i){
-	temp= 2*estimate_h(meshv, i);
-	if(temp>h) h=temp;
-	}
-// compute peclet
-scalar_type peclet= U*h/param_transp.Av(1);
-return peclet;
-
-} /* end of peclet_vessel */
-
-
-//! Compute the Peclèt Number for tissue, defined as: 
-//! @f$ Pe =  \frac{U~h}{A} @f$
-//! that is the ratio between the advection flux and the diffusion coefficient
-scalar_type transport3d1d::peclet_tissue(void){
-
-// find U
-vector_type Ut(dof.Ut()); gmm::clear(Ut);
-gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())) ,  Ut);
-scalar_type U= max_vec (Ut, 3);
-
-// find h
-scalar_type h=0;
-scalar_type temp=0;
-for(dal::bv_visitor i(mesht.convex_index()); !i.finished(); ++i){
-	temp= 2*mesht.convex_radius_estimate(i);
-	if(temp>h) h=temp;
-}
-// compute peclet
-scalar_type peclet= U*h/param_transp.At(1);
-return peclet;
-
-} /* end of peclet_tissue*/
-
-
   
   void transport3d1d::assembly_transp (void)
  {
@@ -646,17 +599,14 @@ transport3d1d::assembly_mat_transp(void)
 	
 	
 	//Descriptors for the problem solved
-	bool DIFFUSION_T = PARAM.int_value("DIFFUSION_T", "flag for diffusion term in tissue");
-	bool DIFFUSION_V = PARAM.int_value("DIFFUSION_V", "flag for diffusion term in vessel");
-	bool REACTION = PARAM.int_value("REACTION", "flag for reaction term");
-	bool ADVECTION_T = PARAM.int_value("ADVECTION_T", "flag for advection term in tissue");
-	bool ADVECTION_V = PARAM.int_value("ADVECTION_V", "flag for advection term in vessels");
 
 	#ifdef M3D1D_VERBOSE_
 	cout<< "   Computing Peclet number..."<<endl;	
 	#endif	
-	scalar_type peclet_v= peclet_vessel();
-	scalar_type peclet_t= peclet_tissue();
+	vector_type Ut(dof.Ut()); 	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())), 		Ut);
+	vector_type Uv(dof.Uv()); 	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(dof.Ut()+dof.Pt(), dof.Uv())), Uv);
+	scalar_type peclet_v= peclet(meshv, Uv, param_transp.Av(1), 1);
+	scalar_type peclet_t= peclet(mesht, Ut, param_transp.At(1), 3);
 	
 	#ifdef M3D1D_VERBOSE_
 	cout<< "Peclet in vessels:    "<< peclet_v<<endl;
@@ -667,14 +617,9 @@ transport3d1d::assembly_mat_transp(void)
 	cout << "  Assembling Mt, Dt, Rt ..." << endl;
 	#endif
 	
-	//compute reaction parameter: mass_coeff = Q_pl*Pt + Dalpha (lynphatic and consumption terms) 
-	vector_type mass_coeff(dof.coeft()); gmm::clear(mass_coeff);
-	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(dof.Ut(), dof.Pt())) ,  mass_coeff);
-	gmm::scale (param_transp.Q_pl(), mass_coeff);
-	gmm::add(param_transp.Dalpha(), mass_coeff); 
 	
 	//Build Mt, Dt and Rt
-	asm_tissue_transp(Mt, Dt, Rt, mimt, mf_Ct, mf_coeft, mass_coeff, param_transp.At() ); //vedi file assembling3d_transp.hpp
+	asm_tissue_transp(Mt, Dt, Rt, mimt, mf_Ct, mf_coeft,  param_transp.At(), param_transp.Dalpha() );
 
 	// Copy Mt: Time Derivative in tissue
 	if(descr_transp.STATIONARY ==0)
@@ -686,28 +631,25 @@ transport3d1d::assembly_mat_transp(void)
 					gmm::sub_interval(0, dof_transp.Ct()))); 
 	}
 	
-	// Copy Dt: diffusion in tissue
-	if(DIFFUSION_T ==1)
-	{
-		// Check peclet number for instability
-		if((ADVECTION_T==1) && (peclet_t>1))
-			{ DAL_WARNING1("Peclet > 1 in tissue: applying artificial diffusion");	
-			cout<<"artificial diffusion in tissue"<<endl;
-		  	gmm::scale(Dt, (1+peclet_t));}
-		  
+		
+	// Check peclet number for instability
+	if((descr_transp.ADVECTION==1) && (peclet_t>1))
+		{ DAL_WARNING1("Peclet > 1 in tissue: applying artificial diffusion");	
+	  	  gmm::scale(Dt, (1+peclet_t));}
+	
+	// Copy Dt: diffusion in tissue		  
 	gmm::add(Dt,
 			 gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct())));  
-	}	
+	
 		
 	// Copy Rt: reaction in tissue
-	if(REACTION ==1){
 	gmm::add(Rt, 
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 				 	gmm::sub_interval(0, dof_transp.Ct()))); 
-	}
+
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Mv and Dv ..." << endl;
@@ -726,45 +668,38 @@ transport3d1d::assembly_mat_transp(void)
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 	}
+
+	// Check peclet number for instability
+	 if((descr_transp.ADVECTION==1) && (peclet_v>1))
+		{ DAL_WARNING1("Peclet > 1 in network: applying artificial diffusion");
+   	 	  gmm::scale(Dv, (1+peclet_v)); }
 		
-	// Copy Dv: diffusion in network
-	if(DIFFUSION_V ==1)
-	{	
-		// Check peclet number for instability
-		 if((ADVECTION_V==1) && (peclet_v>1))
-			{ DAL_WARNING1("Peclet > 1 in network: applying artificial diffusion");
-			cout<<"artificial diffusion in vessels"<<endl;
-		 	gmm::scale(Dv, (1+peclet_v)); }
-		 	
+	// Copy Dv: diffusion in network		 	
 	gmm::add(Dv, 	gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
-	}			
 	
 		
 	//ADVECTION	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Bt and Bv ..." << endl;
-	#endif		
+	#endif	
 	
 	
-	if(ADVECTION_T ==1)
-	{				
-	vector_type Ut(dof.Ut()); gmm::clear(Ut);
-	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())) ,  Ut);
+	if(descr_transp.ADVECTION ==1)
+	{		
+	//ADVECTION IN TISSUE		
 	// Build Bt
-	asm_advection_tissue(Bt, mimt, mf_Ct, mf_Ut,Ut);
+	asm_advection_tissue(Bt, mimt, mf_Ct, mf_Ut, gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())));
 	// Copy Bt: advection in tissue
 	gmm::add(Bt,
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 	
 
-	}				
+				
 
-	// Build Bv 		
-	if(ADVECTION_V ==1)
-	{
+	// ADVECTION IN VESSELS 		
 	size_type shift = 0;
 	
 	//Build tangent versors
@@ -875,7 +810,9 @@ transport3d1d::assembly_mat_transp(void)
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 
 	
-	
+	cout<< "Peclet in vessels:    "<< peclet_v<<endl;
+	cout<< "Peclet in tissue:    "<< peclet_t<<endl;
+		
 	// De-allocate memory
 	gmm::clear(Mt);    gmm::clear(Mv); 
 	gmm::clear(Dt);    gmm::clear(Dv);

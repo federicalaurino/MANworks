@@ -160,10 +160,6 @@ protected:
 	void assembly_mat_transp(void);
 	//! Build the monolithic rhs FM_transp by blocks
 	void assembly_rhs_transp(void);
-	//! Compute the Peclèt number for the network
-	scalar_type peclet_vessel(void);
-	//! Compute the Peclèt number for the tissue
-	scalar_type peclet_tissue(void);
 	
 	//Aux method for solve 
 	//! Aux function for update of rhs at each time step

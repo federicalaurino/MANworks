@@ -76,6 +76,39 @@ if(std::abs(V[i])>max) max= std::abs(V[i]);
 return max;}/* end of max_vec*/
 
 
+//! Compute the Peclèt Number, defined as: 
+//! @f$ Pe =  \frac{U~h}{A} @f$
+//! that is the ratio between the advection flux and the diffusion coefficient
+template
+<typename VEC>
+scalar_type peclet(const mesh & mesh,const VEC & U, const scalar_type & A, size_type  dim){
+
+cout <<"computing peclet...  "<<endl;
+cout <<"dimensione mesh:   "<<mesh.dim()<<endl;
+// find Umax
+scalar_type Umax= max_vec (U, dim);
+
+// find h
+scalar_type h=0;
+scalar_type temp=0;
+for(dal::bv_visitor i(mesh.convex_index()); !i.finished(); ++i){
+	if(dim==1)
+		temp= estimate_h(mesh, i);
+	else if(dim==3)
+		temp= 2*mesh.convex_radius_estimate(i);
+	if(temp>h) h=temp;
+	}
+
+// compute peclet
+scalar_type peclet= Umax*h/A;
+cout <<"U:   "<<Umax<<endl;
+cout <<"h:   "<<h<<endl;
+cout <<"A:   "<<A<<endl;
+cout <<"Peclet:   "<<peclet<<endl;
+return peclet;
+
+} /* end of peclet_vessel */
+
 
 
 } /* end of getfem namespace */
