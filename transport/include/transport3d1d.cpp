@@ -832,7 +832,10 @@ transport3d1d::assembly_rhs_transp(void)
 	cout << "Assembling the monolithic rhs FM_transp ... " << endl;
 	#endif
 	
-	
+	#ifdef M3D1D_VERBOSE_
+	cout << "  Building coupling dirichlet boundary term ..." << endl;
+	#endif
+	asm_coupled_bc_transp (FM_temp, AM_temp, mf_Ct, mf_Cv, mf_coeft, mf_coefv, BCt_transp, BCv_transp);
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Building tissue boundary term ..." << endl;
