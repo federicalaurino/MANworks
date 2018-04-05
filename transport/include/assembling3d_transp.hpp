@@ -79,15 +79,25 @@ asm_tissue_transp
                             	 const mesh_region & rg = mesh_region::all_convexes()                            	 
                             	 ) {
     getfem::generic_assembly
-      assem("vel=data(#2);"
-            "M$1(#1,#1) += comp(Base(#1).Grad(#1).vBase(#2))"
-            "(:, :,i, k,i).vel(k);");
-    assem.push_mi(mim);
-    assem.push_mf(mf);
-    assem.push_mf(mfvel);
-    assem.push_data(vel);
-    assem.push_mat(B);
-    assem.assembly(rg);
+      assem1("vel=data(#2);"
+            "M$1(#1,#1) += comp(Base(#1).Grad(#1).vBase(#2)) (:, :,i, k,i).vel(k);");
+    assem1.push_mi(mim);
+    assem1.push_mf(mf);
+    assem1.push_mf(mfvel);
+    assem1.push_data(vel);
+    assem1.push_mat(B);
+    assem1.assembly(rg);
+    
+    
+    getfem::generic_assembly
+      assem2("vel=data(#2);"
+            "M$1(#1,#1) += comp( Base(#1).Base(#1).vGrad(#2) )(:, :,k, p,p).vel(k);");
+    assem2.push_mi(mim);
+    assem2.push_mf(mf);
+    assem2.push_mf(mfvel);
+    assem2.push_data(vel);
+    assem2.push_mat(B);
+    assem2.assembly(rg);
   }  /* end of asm_advection_matrix*/
 
 

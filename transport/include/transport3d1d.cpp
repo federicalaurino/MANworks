@@ -679,6 +679,8 @@ transport3d1d::assembly_mat_transp(void)
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
 	
+	
+	
 		
 	//ADVECTION	
 	#ifdef M3D1D_VERBOSE_
@@ -737,6 +739,8 @@ transport3d1d::assembly_mat_transp(void)
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
 	
+	/*
+	
 	
 	//Build Rv: assemble int(c_v* d(u_v)/ds, phi_i) = int(c_v* [Bvv*Pv-Bvt*Pt], phi_i)
 	
@@ -768,6 +772,10 @@ transport3d1d::assembly_mat_transp(void)
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv())));
+	
+	
+	
+	*/
 	
 	}
 

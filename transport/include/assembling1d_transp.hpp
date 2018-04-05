@@ -90,19 +90,36 @@ asm_advection_network
 	 {
 
 	generic_assembly 
-	assem("l1=data$1(#2); l2=data$2(#2); l3=data$3(#2);  u=data$4(#3);"
+	assem1("l1=data$1(#2); l2=data$2(#2); l3=data$3(#2);  u=data$4(#3);"
 		  "t=comp(Base(#1).Grad(#1).Base(#2).Base(#3));"
 		  "M$1(#1,#1)+=t(:,:,1,i,p).l1(i).u(p)+t(:,:,2,i,p).l2(i).u(p)+t(:,:,3,i,p).l3(i).u(p);"); //.u(p)
-	assem.push_mi(mim);
-	assem.push_mf(mf_c);
-	assem.push_mf(mf_data);
-	assem.push_mf(mf_u);
-	assem.push_data(lambdax);
-	assem.push_data(lambday);
-	assem.push_data(lambdaz);
-	assem.push_data(U);
-	assem.push_mat(B);
-	assem.assembly(rg);
+	assem1.push_mi(mim);
+	assem1.push_mf(mf_c);
+	assem1.push_mf(mf_data);
+	assem1.push_mf(mf_u);
+	assem1.push_data(lambdax);
+	assem1.push_data(lambday);
+	assem1.push_data(lambdaz);
+	assem1.push_data(U);
+	assem1.push_mat(B);
+	assem1.assembly(rg);
+	
+	
+	generic_assembly 
+	assem2("l1=data$1(#2); l2=data$2(#2); l3=data$3(#2);  u=data$4(#3);"
+		  "t=comp(Base(#1).Base(#1).Base(#2).Grad(#3));"
+		  "M$1(#1,#1)+=t(:,:,i,p,1).l1(i).u(p)+t(:,:,i,p,2).l2(i).u(p)+t(:,:,i,p,3).l3(i).u(p);"); 
+	assem2.push_mi(mim);
+	assem2.push_mf(mf_c);
+	assem2.push_mf(mf_data);
+	assem2.push_mf(mf_u);
+	assem2.push_data(lambdax);
+	assem2.push_data(lambday);
+	assem2.push_data(lambdaz);
+	assem2.push_data(U);
+	assem2.push_mat(B);
+	assem2.assembly(rg);
+	
 
 }
 
