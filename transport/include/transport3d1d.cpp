@@ -522,14 +522,14 @@ try {
 		 << "  Vertices:   " << nn.size()+1 << endl;
 	cout << "  Extrema:    " << extrema << endl;	  
 	for (size_type i=0; i<BCv_transp.size(); ++i)
-		cout << "    -  label=" << BCv_transp[i].label 
-			 << ", value=" << BCv_transp[i].value << ", ind=" << BCv_transp[i].idx 
-			 << ", rg=" << BCv_transp[i].rg << ", branches=" << BCv_transp[i].branches << endl; 
+		//cout << "    -  label=" << BCv_transp[i].label 
+			// << ", value=" << BCv_transp[i].value << ", ind=" << BCv_transp[i].idx 
+			 //<< ", rg=" << BCv_transp[i].rg << ", branches=" << BCv_transp[i].branches << endl; 
 	cout << "  Junctions: " << junctions << endl;
 	for (size_type i=0; i<Jv.size(); ++i)
-		cout << "    -  label=" << Jv[i].label 
-			 << ", value=" << Jv[i].value << ", ind=" << Jv[i].idx 
-			 << ", rg=" << Jv[i].rg << ", branches=" << Jv[i].branches << endl; 
+		//cout << "    -  label=" << Jv[i].label 
+			// << ", value=" << Jv[i].value << ", ind=" << Jv[i].idx 
+			// << ", rg=" << Jv[i].rg << ", branches=" << Jv[i].branches << endl; 
 	cout << "---------------------------------------- "   << endl;
 	#endif
 
@@ -634,7 +634,7 @@ transport3d1d::assembly_mat_transp(void)
 		
 	// Check peclet number for instability
 	if((descr_transp.ADVECTION==1) && (peclet_t>1))
-		{ DAL_WARNING1("Peclet > 1 in tissue: applying artificial diffusion");	
+		{ //DAL_WARNING1("Peclet > 1 in tissue: applying artificial diffusion");	
 	  	  gmm::scale(Dt, (1+peclet_t));}
 	
 	// Copy Dt: diffusion in tissue		  
@@ -671,7 +671,7 @@ transport3d1d::assembly_mat_transp(void)
 
 	// Check peclet number for instability
 	 if((descr_transp.ADVECTION==1) && (peclet_v>1))
-		{ DAL_WARNING1("Peclet > 1 in network: applying artificial diffusion");
+		{// DAL_WARNING1("Peclet > 1 in network: applying artificial diffusion");
    	 	  gmm::scale(Dv, (1+peclet_v)); }
 		
 	// Copy Dv: diffusion in network		 	
