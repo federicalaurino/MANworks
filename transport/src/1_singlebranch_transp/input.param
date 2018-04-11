@@ -22,12 +22,8 @@ TEST_RHS   = 0;
 EXPORT_PARAM = 0; 
 % Flag to export results
 VTK_EXPORT = 1;
-%Flag to add diffusion terms
-DIFFUSION_T=1;
-DIFFUSION_V=1;
 %Flag to add advection terms
-ADVECTION_T=1;
-ADVECTION_V=0;
+ADVECTION=1;
 %Flag to add reaction terms
 REACTION=0;
 %Flag to take the stationary problem
@@ -35,7 +31,14 @@ STATIONARY=0;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
 % Output directory
-OUTPUT   = '/home/pacs_student/Desktop/pacs_shared/vtk_branch/';
+OUTPUT   = '/vagrant/simulazioni/vtk_branch/';
+% Output directory where parameters EXPORT_PARAM=1 are saved 
+OutputDir       = '/vagrant/simulazioni/vtk_branch/';
+OutputDirectory = '/vagrant/simulazioni/vtk_branch/';
+% Flag to enable the curve model
+CURVE_PROBLEM = 0;
+% Flag to print residuals of Fixed Point Method
+PRINT_RESIDUALS       = 1;
 %===================================
 %  MESH
 %===================================
@@ -139,6 +142,18 @@ Lp_LF = 1.04E-06;
 SV = 1;
 
 
+% Coefficient of lymphatic flow modelled as a SIGMOID of equation QLF = A - B / ( 1 + exp ( ( Pt + D ) / C )
+% Dimensionless Parameter A
+%QLF_A = 1.7170E-5;
+% Dimensionless Parameter B
+%QLF_B = 1.6485E-5;
+% Dimensionless Parameter C
+%QLF_C = 0.6573;
+% Dimensionless Parameter D
+%QLF_D = -2;
+% Flag to choose Lymphatic Drainage Curve (0 = sigmoid; 1= linear)
+LINEAR_LYMPHATIC_DRAINAGE = 1;
+
 % simulation time length [s]
 T = 3;
 % time step [s]
@@ -163,3 +178,21 @@ BCvalue_transp = '0.0  0.0  0.0  0.0  0.0  0.0'
 BETAtissue_transp = 1.0E-1
 % Coefficient for MIX condition in vessels
 BETAvessel_transp = 1.0E-1
+
+%===================================
+%  FLAG FOR FIXED POINT METHOD (FPM)
+%===================================
+% Residual for Solution of FPM
+Residual_Sol_FPM   = 1E-12;
+% Residual for Conservation of Mass FPM
+Residual_Mass_FPM  = 1E-10;
+% Maximum number of iterations for FPM
+Number_Iteration   = 30;
+% Under-relaxation coefficient
+UNDER_RELAXATION_COEFFICIENT  = 1;
+% Number of iteration between saving progress
+Saving_Iteration   = 1;
+% Residual for Conservation of Mass FPM
+Residual_Hema_FPM  = 1E-10;
+% Under-relaxation coefficient for Hematocrit Solution
+UNDER_RELAXATION_COEFFICIENT_HEMA  = 0.4;

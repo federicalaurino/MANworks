@@ -14,7 +14,7 @@
 
 include ../config.mk
 
-CPPFLAGS=-I. -I$(GETFEM_PREFIX)/include -I$(PROBLEM_FLUID_PREFIX)/include
+CPPFLAGS=-I. -I$(GETFEM_PREFIX)/include -I$(mkBoostInc) -I$(PROBLEM_FLUID_PREFIX)/include
 CXXFLAGS=-std=c++11 -Wall -fPIC
 OPTFLAGS=-O3 -DNDEBUG -march=native
 

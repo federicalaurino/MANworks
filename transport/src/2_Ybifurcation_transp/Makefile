@@ -14,7 +14,7 @@
 
 include ../../config.mk
 
-CPPFLAGS=-I../../include -I$(GETFEM_PREFIX)/include -I$(PROBLEM_FLUID_PREFIX)/include
+CPPFLAGS=-I../../include -I$(GETFEM_PREFIX)/include -I$(mkBoostInc) -I$(PROBLEM_FLUID_PREFIX)/include
 CXXFLAGS=-std=c++11 -D=M3D1D_VERBOSE_
 ifeq ($(DEBUG),yes)
   OPTFLAGS=-g -Wall
@@ -22,8 +22,8 @@ else
   OPTFLAGS=-O3 -march=native
   CPPFLAGS+=-DNDEBUG
 endif
-LDFLAGS=-L$(GETFEM_PREFIX)/lib -L$(PROBLEM_FLUID_PREFIX)/lib -L../../lib -Wl,-rpath=../../lib -Wl,-rpath=$(PROBLEM_FLUID_PREFIX)/lib
-LIBRARIES=-lgetfem -lproblem3d1d -ltransport3d1d
+LDFLAGS=-L$(GETFEM_PREFIX)/lib -L$(PROBLEM_FLUID_PREFIX)/lib -L../../lib -Wl,-rpath=../../lib -Wl,-rpath=$(PROBLEM_FLUID_PREFIX)/lib -L$(mkBoostLib)
+LIBRARIES=-lgetfem -lproblem3d1d -ltransport3d1d -lutil -lboost_iostreams -lboost_system -lboost_filesystem
 
 SRCS=$(wildcard *.cpp)
 OBJS=$(SRCS:.cpp=.o)
