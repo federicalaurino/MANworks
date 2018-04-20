@@ -168,10 +168,10 @@ asm_network_bc_transp
 	
 		}
 		else if (BC[bc].label=="INT") { // Internal Node
-			//DAL_WARNING1("internal node passed as boundary.");
+			GMM_WARNING1("internal node passed as boundary.");
 		}
 		else if (BC[bc].label=="JUN") { // Junction Node
-			//DAL_WARNING1("junction node passed as boundary.");
+			GMM_WARNING1("junction node passed as boundary.");
 		}
 		else {
 			GMM_ASSERT1(0, "Unknown Boundary Condition"<< BC[bc].label << endl);
