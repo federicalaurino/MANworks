@@ -24,10 +24,10 @@ CURVE_PROBLEM = 1;
 % If this flag is 0, the curvature is computed on the mesh
 IMPORT_CURVE = 0;
 % Output directory
-OUTPUT          = '/vagrant/simulazioni/ht_branch/';
+OUTPUT          = './vtk/';
 % Output directory where parameters EXPORT_PARAM=1 are saved 
-OutputDir       = '/vagrant/simulazioni/ht_branch/';
-OutputDirectory = '/vagrant/simulazioni/ht_branch/';
+OutputDir       = './vtk/';
+OutputDirectory = './vtk/';
 % Flag to import the dimensionless radius (to do that TEST_PARAM must be equal to 0 and parameters P U d k mu must be left)
 IMPORT_RADIUS   = 0;
 % Flag to export radius and conductivity of network in vtk file

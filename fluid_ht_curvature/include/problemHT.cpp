@@ -23,31 +23,33 @@ namespace getfem {
 
 /////////// Initialize the problem ///////////////////////////////////// 
 void 
-problemHT::init(int argc, char *argv[])
+problemHT::init_HT(int argc, char *argv[])
 {
 	/*//1. Read the .param filename from standard input
 	PARAM.read_command_line(argc, argv);
 	//2. Import data (algorithm specifications, boundary conditions, ...)
 	import_data();*/ // DONE IN problemHT::HEMATOCRIT_TRANSPORT
 	//3. Import mesh vessel network (1D)
-	build_mesh();
+	build_mesh_HT();
 	//4. Set finite elements and integration methods
-	set_im_and_fem();
+	set_im_and_fem_HT();
 	//5. Build problem parameters
-	build_param();
+	build_param_HT();
 	//6. Build the list of vessel boundary (and junction) data
-	build_vessel_boundary();
+	build_vessel_boundary_HT();
 }
 bool
 problemHT::HEMATOCRIT_TRANSPORT(int argc, char *argv[])
 {	//1. Read the .param filename from standard input
-	PARAM.read_command_line(argc, argv);
+	//PARAM.read_command_line(argc, argv);
 	//2. Import data (algorithm specifications, boundary conditions, ...)
-	import_data();
+
+	import_data_HT();
+
 	return descrHT.HEMATOCRIT_TRANS;
 }
 void
-problemHT::import_data(void)
+problemHT::import_data_HT(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Importing descriptors for hematocrit problems ..." << endl;
@@ -60,7 +62,7 @@ problemHT::import_data(void)
 
 
 void
-problemHT::build_mesh(void)
+problemHT::build_mesh_HT(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Importing the 1D mesh for the vessel in hematocrit problem... "   << endl;
@@ -75,7 +77,7 @@ problemHT::build_mesh(void)
 }
 
 void
-problemHT::set_im_and_fem(void)
+problemHT::set_im_and_fem_HT(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Setting FEMs for hematocrit problems ..." << endl;
@@ -113,7 +115,7 @@ problemHT::set_im_and_fem(void)
 }
 
 void
-problemHT::build_param(void)
+problemHT::build_param_HT(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Building parameters for hematocrit problems ..." << endl;
@@ -125,7 +127,7 @@ problemHT::build_param(void)
 }
 
 void 
-problemHT::build_vessel_boundary(void)
+problemHT::build_vessel_boundary_HT(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Building hematocrit boundary ..." << endl;
@@ -408,22 +410,22 @@ GMM_STANDARD_CATCH_ERROR; // catches standard errors
 
 //////// Assemble the problem ////////////////////////////////////////// 
 void
-problemHT::assembly(void)
+problemHT::assembly_HT(void)
 {	
 	//1 Build the monolithic matrix AM
-	assembly_mat();
+	assembly_mat_HT();
 	//2 Build the monolithic rhs FM
-	assembly_rhs();
+	assembly_rhs_HT();
 }
 
 void
-problemHT::assembly_fixpoint(void)
+problemHT::assembly_fixpoint_HT(void)
 {
-assembly();
+assembly_HT();
 }
 
 void 
-problemHT::assembly_mat(void)
+problemHT::assembly_mat_HT(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Allocating AM_HT, UM_HT, FM_HT ..." << endl;
@@ -553,7 +555,7 @@ problemHT::assembly_mat(void)
 }
 
 void 
-problemHT::assembly_rhs(void)
+problemHT::assembly_rhs_HT(void)
 {
 	#ifdef M3D1D_VERBOSE_
 	cout << "Assembling rhs of FM_HT ... " << endl;
@@ -584,7 +586,7 @@ problemHT::assembly_rhs(void)
 ////////// Solve the problem ///////////////////////////////////////////    
 
 vector_type 
-problemHT::iteration_solve(vector_type U_O,vector_type F_N){
+problemHT::iteration_solve_HT(vector_type U_O,vector_type F_N){
 	
 	#ifdef M3D1D_VERBOSE_
 	cout << "Solving the hematocrit system ... " << endl;
@@ -614,7 +616,7 @@ problemHT::iteration_solve(vector_type U_O,vector_type F_N){
 }
 
 scalar_type
-problemHT::calcolo_Rk(vector_type U_N, vector_type U_O){
+problemHT::calcolo_Rk_HT(vector_type U_N, vector_type U_O){
 
 // The residual is computed as ||V(k)-V(k-1)||/||V(k-1)|| with ||V(k)|| Eucledian norm
 
@@ -643,7 +645,7 @@ problemHT::calcolo_Rk(vector_type U_N, vector_type U_O){
 
 }
 bool
-problemHT::solve_fixpoint(void)
+problemHT::solve_fixpoint_HT(void)
 {
 /*solver 
 1- Declaration of variables
@@ -821,7 +823,7 @@ problemHT::solve_fixpoint(void)
 	gmm::add(ones_H, UM_HT);
 	gmm::scale(UM_HT,H_start);	
 
-		assembly();
+		assembly_HT();
 
 // 3 - Get the initial guess H0
 	#ifdef M3D1D_VERBOSE_
@@ -977,8 +979,8 @@ while(RK && iteration < max_iteration)
 	#ifdef M3D1D_VERBOSE_
 	cout << "Solving the hematocrit problem - Iteration "<< iteration << "..." << endl;
 	#endif
-		assembly();
-		H_new=iteration_solve(H_old, FM_HT);
+		assembly_HT();
+		H_new=iteration_solve_HT(H_old, FM_HT);
 
 //f-compute TFR
 //g-compute lymphatic total flow rate
@@ -1040,7 +1042,7 @@ while(RK && iteration < max_iteration)
 	//Solution residual
 			resSol=problem3d1d::calcolo_Rk(U_new, U_old);
 	//Hematocrit residual
-			resH=calcolo_Rk(H_new,H_old);
+			resH=calcolo_Rk_HT(H_new,H_old);
 	//Conservation of mass residual
 			gmm::mult(gmm::sub_matrix(AM, 
 						gmm::sub_interval(dof.Ut(), dof.Pt()),
@@ -1136,7 +1138,7 @@ return true;
 
 ////////// Export results into vtk files ///////////////////////////////
 void 
-problemHT::export_vtk(const string & suff) //ODIFCA 
+problemHT::export_vtk_HT(const string & suff) //ODIFCA 
 {
   if (PARAM.int_value("VTK_EXPORT"))
   {

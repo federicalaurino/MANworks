@@ -24,6 +24,7 @@
     
 	See Section "Code verification: test-cases"
  */
+
 #include <iostream>
 #include <getfem/bgeot_config.h> // for FE_ENABLE_EXCEPT
 #include <problemHT.hpp>
@@ -41,32 +42,32 @@ int main(int argc, char *argv[])
 		// Declare a new problem
 		problemHT p;
 		// Initialize the problem
-		p.problem3d1d::init(argc, argv);
+		p.init(argc, argv);
 		// Build the monolithic system		
-		p.problem3d1d::assembly();
+		p.assembly();
 			// Solve the problem
 			if(p.HEMATOCRIT_TRANSPORT(argc, argv))
 				{
-				if (!p.problem3d1d::solve()) GMM_ASSERT1(false, "solve procedure has failed");
-				p.init(argc, argv);
-				if (!p.solve_fixpoint()) GMM_ASSERT1(false, "solve procedure has failed");			
+				if (!p.solve()) GMM_ASSERT1(false, "solve procedure has failed");
+				p.init_HT(argc, argv);
+				if (!p.solve_fixpoint_HT()) GMM_ASSERT1(false, "solve procedure has failed");			
 		// Save results in .vtk format
-		p.export_vtk();
+		p.export_vtk_HT();
 }
 			else
 				{if(!p.problem3d1d::LINEAR_LYMPH())
 					{
 					// Solve the problem
-					if (!p.problem3d1d::solve_fixpoint()) GMM_ASSERT1(false, "solve procedure has failed");
+					if (!p.solve_fixpoint()) GMM_ASSERT1(false, "solve procedure has failed");
 					}
 				else
 					{
 					// Solve the problem
-					if (!p.problem3d1d::solve()) GMM_ASSERT1(false, "solve procedure has failed");
+					if (!p.solve()) GMM_ASSERT1(false, "solve procedure has failed");
 					}
 			}
 		// Save results in .vtk format
-		p.problem3d1d::export_vtk();
+		p.export_vtk();
 
 
 		// Display some global results: mean pressures, total flow rate

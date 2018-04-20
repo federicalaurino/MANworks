@@ -51,26 +51,26 @@ public:
 		6. Build the list of tissue boundary data
 		7. Build the list of vessel boundary (and junction) data
 	 */
-	void init (int argc, char *argv[]);
+	void init_HT (int argc, char *argv[]);
 	//! Assemble the problem
 	/*!
 		1. Initialize problem matrices and vectors
 		2. Build the monolithic matrix AM
 		3. Build the monolithic rhs FM
 	 */
-	void assembly (void);
-	void assembly_fixpoint (void);
+	void assembly_HT (void);
+	void assembly_fixpoint_HT (void);
 	//! Solve the problem
 	/*!
 		Solve the monolithic system AM*UM=FM (direct or iterative)
 	 */
-	bool solve_fixpoint (void);
+	bool solve_fixpoint_HT (void);
 
 	//! Export results into vtk files
 	/*!
 		Export solutions Ut, Pt, Uv, Pv, Ht from the monolithic array UM and HT
 	 */
-	void export_vtk (const string & suff = "");
+	void export_vtk_HT (const string & suff = "");
 	//! Flag to linear or sigmoid lymphatic
 	bool HEMATOCRIT_TRANSPORT(int argc, char *argv[]);
 
@@ -87,7 +87,7 @@ protected:
 	mesh_fem mf_coefh;
 
 	//! Input file
-	ftool::md_param PARAM;
+	//ftool::md_param PARAM;
 	//! Algorithm description strings (mesh files, FEM types, solver info, ...) 
 	descr1dHT descrHT;
 	//! Physical parameters (dimensionless)
@@ -114,23 +114,23 @@ protected:
 	
 	// Aux methods for init
 	//! Import algorithm specifications
-	void import_data(void);
+	void import_data_HT(void);
 	//! Import mesh for tissue (3D) and vessel (1D)  
-	void build_mesh(void); 
+	void build_mesh_HT(void); 
 	//! Set finite elements methods and integration methods 
-	void set_im_and_fem(void);
+	void set_im_and_fem_HT(void);
 	//! Build problem parameters
-	void build_param(void);
+	void build_param_HT(void);
 	//! Build the list of vessel boundary (and junctions) data 
-	void build_vessel_boundary(void);
+	void build_vessel_boundary_HT(void);
 	// Aux methods for assembly
 	//! Build the monolithic matrix AM by blocks
-	void assembly_mat(void);
+	void assembly_mat_HT(void);
 	//! Build the monolithic rhs FM by blocks
-	void assembly_rhs(void);
+	void assembly_rhs_HT(void);
 	//! Solve the iterative system of hematocrit problem
-	vector_type iteration_solve(vector_type,vector_type);
-	scalar_type calcolo_Rk(vector_type, vector_type);
+	vector_type iteration_solve_HT(vector_type,vector_type);
+	scalar_type calcolo_Rk_HT(vector_type, vector_type);
 
 
 
