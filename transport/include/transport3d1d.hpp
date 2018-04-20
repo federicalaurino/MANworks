@@ -62,12 +62,13 @@
 #include <param3d1d_transp.hpp>
 
 #include <problem3d1d.hpp>
+#include <problemHT.hpp>
 
  
  namespace getfem {
 
 //!	Main class defining the coupled 3D/1D transport problem.
-class transport3d1d: public problem3d1d { 
+class transport3d1d: public problemHT { 
 
 public:
 	transport3d1d(void) : 

@@ -15,13 +15,18 @@
  */
  
  #include <transport3d1d.hpp>
- 
+//  using namespace problem3d1d;
+
  namespace getfem {
- 
+
+
+
  void transport3d1d::init_transp (int argc, char *argv[]) 
  {
+ #ifdef M3D1D_VERBOSE_
  std::cout << "initialize transport problem..."<<std::endl<<std::endl;
- 
+ #endif
+
  import_data_transp();
  build_mesh_transp();
  set_im_and_fem_transp();
@@ -74,7 +79,7 @@
 					   "SIZES=" + PARAM.string_value("SIZES_T") + "; " +  
 					   "NOISED=" + PARAM.string_value("NOISED_T")); 
 		cout << "mesht description: " << st << endl;
-		regular_mesh(mesht, st);
+		regular_mesh(problem3d1d::mesht, st);
 	}
 	
 	#ifdef M3D1D_VERBOSE_
@@ -546,6 +551,8 @@ GMM_STANDARD_CATCH_ERROR; // catches standard errors
 
  	//Build the monolithic matrix AM
 	assembly_mat_transp();
+	//The asseembly of RHS is postponed in the update method:
+	// at each time step you should rewrite the Dirichlet conditions  
 	
  }; // end of assembly
  
@@ -581,8 +588,6 @@ transport3d1d::assembly_mat_transp(void)
 	sparse_matrix_type Dv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Dv);
 	//Advection matrix for network problem
 	sparse_matrix_type Bv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Bv);
-	// Reaction matrix for the network problem
-	sparse_matrix_type Rv(dof_transp.Cv(), dof_transp.Cv()); gmm::clear(Rv);
 
 	// Tissue-to-tissue exchange matrix
 	sparse_matrix_type Btt(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Btt);
@@ -592,6 +597,14 @@ transport3d1d::assembly_mat_transp(void)
 	sparse_matrix_type Bvt(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Bvt);
 	// Vessel-to-vessel exchange matrix
 	sparse_matrix_type Bvv(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Bvv);
+	// Tissue-to-tissue exchange matrix
+	sparse_matrix_type Btt1(dof_transp.Ct(), dof_transp.Ct());gmm::clear(Btt1);
+	// Vessel-to-tissue exchange matrix
+	sparse_matrix_type Btv1(dof_transp.Ct(), dof_transp.Cv());gmm::clear(Btv1);
+	// Tissue-to-vessel exchange matrix
+	sparse_matrix_type Bvt1(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Bvt1);
+	// Vessel-to-vessel exchange matrix
+	sparse_matrix_type Bvv1(dof_transp.Cv(), dof_transp.Cv());gmm::clear(Bvv1);
 	// Aux tissue-to-vessel averaging matrix
 	sparse_matrix_type Mbar(dof_transp.Cv(), dof_transp.Ct());gmm::clear(Mbar);
 	// Aux tissue-to-vessel interpolation matrix
@@ -617,7 +630,15 @@ transport3d1d::assembly_mat_transp(void)
 	cout << "  Assembling Mt, Dt, Rt ..." << endl;
 	#endif
 	
-	
+	//Coefficient for mass term:
+	vector_type mass_coeff(dof.Pt()); gmm::clear(mass_coeff);
+	vector_type Pl(dof.Pt(),PARAM.real_value("PL"));
+	gmm::scale(Pl, -1.0); 
+	gmm::add(gmm::sub_vector(UM, gmm::sub_interval(dof.Ut(), dof.Pt())) ,  mass_coeff);
+	gmm::add(Pl ,  mass_coeff);
+	gmm::scale (param_transp.Q_pl(), mass_coeff);
+	gmm::add(param_transp.Dalpha(), mass_coeff); 
+
 	//Build Mt, Dt and Rt
 	asm_tissue_transp(Mt, Dt, Rt, mimt, mf_Ct, mf_coeft,  param_transp.At(), param_transp.Dalpha() );
 
@@ -634,7 +655,7 @@ transport3d1d::assembly_mat_transp(void)
 		
 	// Check peclet number for instability
 	if((descr_transp.ADVECTION==1) && (peclet_t>1))
-		{ //DAL_WARNING1("Peclet > 1 in tissue: applying artificial diffusion");	
+		{ GMM_WARNING1("Peclet > 1 in tissue: applying artificial diffusion");	
 	  	  gmm::scale(Dt, (1+peclet_t));}
 	
 	// Copy Dt: diffusion in tissue		  
@@ -671,7 +692,7 @@ transport3d1d::assembly_mat_transp(void)
 
 	// Check peclet number for instability
 	 if((descr_transp.ADVECTION==1) && (peclet_v>1))
-		{// DAL_WARNING1("Peclet > 1 in network: applying artificial diffusion");
+		{ GMM_WARNING1("Peclet > 1 in network: applying artificial diffusion");
    	 	  gmm::scale(Dv, (1+peclet_v)); }
 		
 	// Copy Dv: diffusion in network		 	
@@ -681,15 +702,15 @@ transport3d1d::assembly_mat_transp(void)
 	
 	
 	
-		
+	
+	if(descr_transp.ADVECTION ==1)
+	{		
 	//ADVECTION	
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling Bt and Bv ..." << endl;
 	#endif	
 	
-	
-	if(descr_transp.ADVECTION ==1)
-	{		
+		
 	//ADVECTION IN TISSUE		
 	// Build Bt
 	asm_advection_tissue(Bt, mimt, mf_Ct, mf_Ut, gmm::sub_vector(UM, gmm::sub_interval(0, dof.Ut())));
@@ -778,11 +799,12 @@ transport3d1d::assembly_mat_transp(void)
 	*/
 	
 	}
+	else GMM_WARNING1("NO ADVECTION: ONLY DIFFUSION TERMS");
 
 				
 
-	// Build coupling terms
-
+	bool COUPLING = PARAM.int_value("COUPLING", "flag for coupling-exchange term ");
+	if(COUPLING==1){
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling aux exchange matrices Mbar and Mlin ..." << endl;
 	#endif
@@ -796,30 +818,90 @@ transport3d1d::assembly_mat_transp(void)
 	asm_exchange_mat(Btt, Btv, Bvt, Bvv,
 			mimv, mf_Cv, mf_coefv, Mbar, Mlin, param_transp.Y(), NEWFORM);
 
+	vector_type Rv_coef (dof.Pv());
+	gmm::copy(gmm::sub_vector(UM, 
+		  		  gmm::sub_interval(dof.Ut()+dof.Pt()+dof.Uv(), dof.Pv())),
+		  Rv_coef);
+	gmm::mult_add(gmm::scaled(Mbar,-1.0), 
+		  gmm::sub_vector(UM, 
+		  		  gmm::sub_interval(dof.Ut(), dof.Pt())),
+		  Rv_coef);
+
+	
+	//oncotic term
+	scalar_type Pi_t=PARAM.real_value("Pi_t", "Interstitial Oncotic Pressure [-]");
+	scalar_type Pi_v=PARAM.real_value("Pi_v", "Plasmatic Oncotic Pressure [-]");
+	scalar_type sigma=PARAM.real_value("sigma", "Reflection Coefficient sigma");
+	scalar_type picoef=sigma*(Pi_v-Pi_t);
+        vector_type DeltaPi(dof.Pv(),picoef);
+        gmm::add(gmm::scaled(DeltaPi,-1.0), Rv_coef);	
+
+	gmm::scale(Rv_coef,0.5*(1.0-sigma)*param.Q(0));
+	
+	asm_exchange_mat(Btt, Btv, Bvt, Bvv,
+			mimv, mf_Cv, mf_coefv, Mbar, Mlin, param_transp.Y(), NEWFORM);
+	asm_exchange_mat(Btt1, Btv1, Bvt1, Bvv1,
+			mimv, mf_Cv, mf_Pv, Mbar, Mlin, Rv_coef, NEWFORM);
+
 	// Copying Btt
-	gmm::add(gmm::scaled(Btt, 2.0*pi*param.R(0)), 
+	//Scale 2*pi*radius* Btt 
+	//! \todo Modify for variable radius along the branches
+
+	gmm::add(gmm::scaled(Btt, 2.0*pi*param.R(0)),			 
+
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()), 
 					gmm::sub_interval(0, dof_transp.Ct()))); 
+	gmm::add(gmm::scaled(Btt1, -2.0*pi*param.R(0)),			 
+
+		  gmm::sub_matrix(AM_transp, 
+				gmm::sub_interval(0, dof_transp.Ct()), 
+				gmm::sub_interval(0, dof_transp.Ct())));
 	// Copying Btv
-	gmm::add(gmm::scaled(Btv, -2.0*pi*param.R(0)),	
-	 		  gmm::sub_matrix(AM_transp, 
+	//Scale 2*pi*radius* Btv 
+	//! \todo Modify for variable radius along the branches
+
+	gmm::add(gmm::scaled(Btv, -2.0*pi*param.R(0)),									
+		  
+					gmm::sub_matrix(AM_transp, 
+					gmm::sub_interval(0, dof_transp.Ct()),
+					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
+	gmm::add(gmm::scaled(Btv1, -2.0*pi*param.R(0)),									
+		  
+					gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(0, dof_transp.Ct()),
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 	// Copying -Bvt
-	gmm::add(gmm::scaled(Bvt, -2.0/param.R(0)),  
+	//Scale 2/Radius* Bvt 
+	//! \todo Modify for variable radius along the branches
+
+	gmm::add(gmm::scaled(Bvt, -2.0/param.R(0)),  	
+								
 			  gmm::sub_matrix(AM_transp, 
 			  		gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()),
-					gmm::sub_interval(0, dof_transp.Ct()))); 
+					gmm::sub_interval(0, dof_transp.Ct())));
+	gmm::add(gmm::scaled(Bvt1, 2.0/param.R(0)),  	
+								
+			  gmm::sub_matrix(AM_transp, 
+			  		gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()),
+					gmm::sub_interval(0, dof_transp.Ct())));
 	// Copying Bvv
-	gmm::add(gmm::scaled(Bvv, 2.0/param.R(0)), 
+	//Scale 2/radius* Bvv
+	//! \todo Modify for variable radius along the branches
+
+	gmm::add(gmm::scaled(Bvv, 2.0/param.R(0)),								
+	
+			  gmm::sub_matrix(AM_transp, 
+					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
+					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
+	gmm::add(gmm::scaled(Bvv1, 2.0/param.R(0)),								
+	
 			  gmm::sub_matrix(AM_transp, 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()), 
 					gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))); 
 
-	
-	cout<< "Peclet in vessels:    "<< peclet_v<<endl;
-	cout<< "Peclet in tissue:    "<< peclet_t<<endl;
+}	
+else GMM_WARNING1("UNCOUPLED PROBLEM: NO EXCHANGE BETWEEN TISSUE AND VESSELS");
 		
 	// De-allocate memory
 	gmm::clear(Mt);    gmm::clear(Mv); 
@@ -828,6 +910,8 @@ transport3d1d::assembly_mat_transp(void)
 	gmm::clear(Mbar);  gmm::clear(Mlin);
 	gmm::clear(Btt);   gmm::clear(Btv);
 	gmm::clear(Bvt);   gmm::clear(Bvv);
+	gmm::clear(Btt1);   gmm::clear(Btv1);
+	gmm::clear(Bvt1);   gmm::clear(Bvv1);
 
 } /* end of assembly_mat_transp */
 
@@ -881,7 +965,7 @@ transport3d1d::assembly_rhs_transp(void)
 	gmm::clear(Att);
 	gmm::clear(Ft);
 
-	cout<<"assemble BC for vessel"<<endl;
+
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Building vessel boundary term ..." << endl;
 	#endif
@@ -917,20 +1001,25 @@ transport3d1d::assembly_rhs_transp(void)
 	gmm::clear(Avv);
 	gmm::clear(Fv);
 	
-}
+}/* end of assembly_rhs_transp */
 
 
 void transport3d1d::update_transp (void){
 
-// ho la matrice AM assemblata con tutti i termini (da non modificare mai più!)
-// ho  il vettore F ancora vuoto (da aggiungere: il termine temporale; le condizioni al contorno 1d)
+/*
+At each time step, the right hand side is modified by the time derivative term.
+Since we must ensure in a strong way the Dirichlet conditions, by modifying the monolithic matrix and the rhs vector, we save both AM_transp and FM_transp, where are assembled the stationary terms; then, we work on AM_temp and FM_temp, modifying them when necessary.
+*/
+
+	#ifdef M3D1D_VERBOSE_
+	cout << "  Update monolithic matrix and rhs vector ..." << endl;
+	#endif
+
 gmm::copy(AM_transp, AM_temp);
 gmm::copy(FM_transp, FM_temp);
 
-// faccio l'update temporale: sommo a F le concentrazioni al passo precedente
 
-// update rhs (there is the time step mass term)
- 
+// update rhs (time step mass term)
 	vector_type TFt(dof_transp.Ct());
 	vector_type TFv(dof_transp.Cv());
 	asm_source_term(TFt,mimt, mf_Ct, mf_Ct,gmm::sub_vector(UM_transp, gmm::sub_interval(0, dof_transp.Ct()))); 
@@ -942,10 +1031,13 @@ gmm::copy(FM_transp, FM_temp);
 	gmm::clear(UM_transp);
 	gmm::clear(TFt); gmm::clear(TFv);
 
+//update rhs (bc term)
 assembly_rhs_transp();
 
 
-}
+} /* end of update_transp*/
+
+
  bool transport3d1d::solve_transp (void)
  {
   std::cout<<"solve transport problem"<<std::endl<<std::endl;
@@ -1076,7 +1168,7 @@ assembly_rhs_transp();
 	cout << endl<<"... time to solve : " << gmm::uclock_sec() - time << " seconds\n";
 
 	return true;
- }; // end of solve
+ }; // end of solve_transp
 	
 	
  void transport3d1d::export_vtk_transp (const string & time_suff,const string & suff)
@@ -1126,7 +1218,7 @@ assembly_rhs_transp();
 	cout << "... export done, visualize the data file with (for example) Paraview " << endl; 
 	#endif
   }
- }; // end of export
+ }; // end of export_transp
  
   
   
