@@ -15,34 +15,37 @@
 .PHONY: all doc clean distclean library
 
 all: 
-	$(MAKE) -C fluid
+	$(MAKE) -C fluid_ht_curvature
 	$(MAKE) -C transport
 	
 library:
-	$(MAKE) -C fluid library
+	$(MAKE) -C fluid_ht_curvature library
 	$(MAKE) -C transport library
+
+fluid_ht_curvature: 
+	$(MAKE) -C fluid_ht_curvature
 
 fluid: 
 	$(MAKE) -C fluid
 	
-transport: fluid
+transport: fluid_ht_curvature
 	$(MAKE) -C transport
 
 doc:
-	$(MAKE) -C fluid doc
+	$(MAKE) -C fluid_ht_curvature doc
 	$(MAKE) -C transport doc
 	
 	
 pdf: doc
-	$(MAKE) pdf -C fluid
+	$(MAKE) pdf -C fluid_ht_curvature
 	$(MAKE) pdf -C transport	
 
 clean:
 	$(RM) -r *~ *.log
-	$(MAKE) -C fluid clean
+	$(MAKE) -C fluid_ht_curvature clean
 	$(MAKE) -C transport clean
 
 distclean: clean
 	$(RM) -r doc/*
-	$(MAKE) -C fluid distclean
+	$(MAKE) -C fluid_ht_curvature distclean
 	$(MAKE) -C transport distclean

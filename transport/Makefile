@@ -18,6 +18,7 @@ all: library
 	$(MAKE) -C src/1_singlebranch_transp 
 	$(MAKE) -C src/2_Ybifurcation_transp 
 	$(MAKE) -C src/3_network_transp 
+	$(MAKE) -C src/4_curved_singlebranch 
 
 library: 
 	$(MAKE) -C include
@@ -35,6 +36,7 @@ clean:
 	$(MAKE) -C src/1_singlebranch_transp clean
 	$(MAKE) -C src/2_Ybifurcation_transp clean
 	$(MAKE) -C src/3_network_transp clean
+	$(MAKE) -C src/4_curved_singlebranch clean
 	
 distclean: clean
 	$(RM) -r doc/*
@@ -42,3 +44,4 @@ distclean: clean
 	$(MAKE) -C src/1_singlebranch_transp distclean
 	$(MAKE) -C src/2_Ybifurcation_transp distclean
 	$(MAKE) -C src/3_network_transp distclean
+	$(MAKE) -C src/4_curved_singlebranch distclean
