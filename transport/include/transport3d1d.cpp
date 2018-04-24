@@ -31,8 +31,9 @@
  build_mesh_transp();
  set_im_and_fem_transp();
  build_param_transp();
- build_vessel_boundary_transp();
  build_tissue_boundary_transp();
+ build_vessel_boundary_transp();
+
  
  }; // end of init
 
@@ -161,7 +162,7 @@ mf_Pt.clear();
 mf_coeft.clear();
 
 
-set_im_and_fem();
+problem3d1d::set_im_and_fem();
 /*
 #ifdef M3D1D_VERBOSE_
 	cout << "Setting IMs for tissue and vessel problems ..." << endl;
@@ -211,6 +212,7 @@ set_im_and_fem();
 	cout << "Building parameters for tissue and vessel problems ..." << endl;
 	#endif
 	param_transp.build(PARAM, mf_coeft, mf_coefv);
+	param.build(PARAM, mf_coeft, mf_coefv,mf_coefvi);
 	#ifdef M3D1D_VERBOSE_
 	cout << param_transp ;
 	#endif
@@ -284,7 +286,7 @@ try {
 	dal::bit_vector junctions; // global idx of junctions vertices in meshv
 	dal::bit_vector extrema;   // global idx of extreme vertices in meshv
 
-	Jv.clear();
+	Jv_transp.clear();
 	nb_extrema=0; 
 	nb_junctions=0;
 	
@@ -319,8 +321,8 @@ try {
 			// Store the current index and then update it
 			size_type bc = 0; 
 			bool found = false;
-			while (!found && (bc<BCv_transp.size())) {
-				found = (i0 == BCv_transp[bc].idx);
+			while (!found && (bc<BCv.size())) {
+				found = (i0 == BCv[bc].idx);
 				if (!found) bc++;
 			}
 			GMM_ASSERT1(found=true, "Miss a boundary node in BCv list!");
@@ -352,7 +354,7 @@ try {
 				// Build a new region with idx "first empty region"
 				meshv.region(fer).add(cv, 1); // single-face region
 				// Create a new junction node
-				Jv.emplace_back("JUN", 0, i0, fer);
+				Jv_transp.emplace_back("JUN", 0, i0, fer);
 				fer++;
 			}
 			// Search for index of containing branch (\mathcal{P}^{in}_j)
@@ -371,8 +373,8 @@ try {
 				if (!found) jj++;
 			}
 			//cout << "Branch -" << branch << " added to junction " << jj << endl;
-			Jv[jj].value += param.R(mimv, branch);
-			Jv[jj].branches.emplace_back(-branch);
+			Jv_transp[jj].value += param.R(mimv, branch);
+			Jv_transp[jj].branches.emplace_back(-branch);
 			GMM_ASSERT1(branch>0, 
 				"Error in network labeling: -0 makes no sense");
 		}
@@ -392,7 +394,7 @@ try {
 					"Overload in meshv region assembling!");
 				meshv.region(fer).add(cv, 0);
 				// Store the current index and then update it
-				BCv_transp[bc].value *= +1.0;
+				BCv_transp[bc].value *= -1.0;
 				BCv_transp[bc].rg = fer; 
 				fer++;
 				// Store the containing branch index
@@ -405,7 +407,7 @@ try {
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
 				BCv_transp[bc].branches.emplace_back(branch); 
 			}
-			/*else { // interior -> Mixed point
+			else { /* interior -> Mixed point */
 				// "MIX" label via post-processing
 				// Build a new region made by a single face
 				GMM_ASSERT1(meshv.has_region(fer)==0, 
@@ -422,7 +424,7 @@ try {
 				}
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
 				BCv_transp.back().branches.emplace_back(branch); 
-			}*/
+			}
 		}
 		else if (meshv.convex_to_point(i1).size()==2){ /* trivial outflow junction */
 
@@ -455,23 +457,35 @@ try {
 					// Build a new region with idx "first empty region"
 					meshv.region(fer).add(cv, 0);
 					// Create a new junction node
-					Jv.emplace_back("JUN", 0, i1, fer);
+					Jv_transp.emplace_back("JUN", 0, i1, fer);
 					fer++;
-				}
 				// Search for index of second containing branch (\mathcal{P}^{out}_j)
-				size_type secondbranch = firstbranch+1; 
+				size_type secondbranch = 0; 
 				size_type secondcv = (( cv1 == cv) ? cv2 : cv1);
+				size_type firstcv = (( cv1 != cv) ? cv2 : cv1);
 				contained = false;
 				while (!contained && secondbranch<nb_branches ) {
+					if (secondbranch!=firstbranch)
 					contained = meshv.region(secondbranch).is_in(secondcv);
 					if (!contained) secondbranch++;
 				}
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
 				// Add the two branches
-				Jv.back().branches.emplace_back(+firstbranch);
-				Jv.back().branches.emplace_back(-secondbranch);
-				Jv.back().value += param.R(mimv, firstbranch);
-				Jv.back().value += param.R(mimv, secondbranch);
+				scalar_type in;
+				in=0;
+				if (meshv.ind_points_of_convex(firstcv)[0]==i1) in=-1;
+				else if (meshv.ind_points_of_convex(firstcv)[1]==i1) in=+1;
+				GMM_ASSERT1(in!=0, "There's something wrong in firstbranch convex index");
+				Jv_transp.back().branches.emplace_back(in*firstbranch);
+
+				in=0;
+				if (meshv.ind_points_of_convex(secondcv)[0]==i1) in=-1;
+				else if (meshv.ind_points_of_convex(secondcv)[1]==i1) in=+1;
+				GMM_ASSERT1(in!=0, "There's something wrong in secondbranch convex index");
+				Jv_transp.back().branches.emplace_back(in*secondbranch);
+				Jv_transp.back().value += param.R(mimv, firstbranch);
+				Jv_transp.back().value += param.R(mimv, secondbranch);
+				}
 			}
 		}
 		else if (meshv.convex_to_point(i1).size()>=2){ /* non-trivial outflow junction */
@@ -497,10 +511,10 @@ try {
 				// Build a new region with idx "first empty region"
 				meshv.region(fer).add(cv, 0);
 				// Create a new junction node
-				Jv.emplace_back("JUN", 0, i1, fer);
+				Jv_transp.emplace_back("JUN", 0, i1, fer);
 				// Add the outflow branch
-				Jv.back().branches.emplace_back(+branch);
-				Jv.back().value += param.R(mimv, branch);
+				Jv_transp.back().branches.emplace_back(+branch);
+				Jv_transp.back().value += param.R(mimv, branch);
 				//cout << "Branch " << branch << " added to junction " << i1 << endl;
 				fer++;
 			}
@@ -512,8 +526,8 @@ try {
 					found = (i1 == Jv[jj].idx);
 					if (!found) jj++;
 				}
-				Jv[jj].branches.emplace_back(+branch);
-				Jv[jj].value += param.R(mimv, branch);
+				Jv_transp[jj].branches.emplace_back(+branch);
+				Jv_transp[jj].value += param.R(mimv, branch);
 				//cout << "Branch " << branch << " added to junction " << jj << endl;
 			}
 		}
@@ -527,22 +541,21 @@ try {
 		 << "  Vertices:   " << nn.size()+1 << endl;
 	cout << "  Extrema:    " << extrema << endl;	  
 	for (size_type i=0; i<BCv_transp.size(); ++i)
-		//cout << "    -  label=" << BCv_transp[i].label 
-			// << ", value=" << BCv_transp[i].value << ", ind=" << BCv_transp[i].idx 
-			 //<< ", rg=" << BCv_transp[i].rg << ", branches=" << BCv_transp[i].branches << endl; 
+		cout << "    -  label=" << BCv_transp[i].label 
+			 << ", value=" << BCv_transp[i].value << ", ind=" << BCv_transp[i].idx 
+			 << ", rg=" << BCv_transp[i].rg << ", branches=" << BCv_transp[i].branches << endl; 
 	cout << "  Junctions: " << junctions << endl;
-	for (size_type i=0; i<Jv.size(); ++i)
-		//cout << "    -  label=" << Jv[i].label 
-			// << ", value=" << Jv[i].value << ", ind=" << Jv[i].idx 
-			// << ", rg=" << Jv[i].rg << ", branches=" << Jv[i].branches << endl; 
+	for (size_type i=0; i<Jv_transp.size(); ++i)
+		cout << "    -  label=" << Jv_transp[i].label 
+			 << ", value=" << Jv_transp[i].value << ", ind=" << Jv_transp[i].idx 
+			 << ", rg=" << Jv_transp[i].rg << ", branches=" << Jv_transp[i].branches << endl; 
 	cout << "---------------------------------------- "   << endl;
 	#endif
 
 } 
 GMM_STANDARD_CATCH_ERROR; // catches standard errors
 
-
-} /* end of build_vessel_boundary */
+} /* end of build_vessel_boundary_transp */
 
 
   
@@ -829,14 +842,11 @@ transport3d1d::assembly_mat_transp(void)
 
 	
 	//oncotic term
-	scalar_type Pi_t=PARAM.real_value("Pi_t", "Interstitial Oncotic Pressure [-]");
-	scalar_type Pi_v=PARAM.real_value("Pi_v", "Plasmatic Oncotic Pressure [-]");
-	scalar_type sigma=PARAM.real_value("sigma", "Reflection Coefficient sigma");
-	scalar_type picoef=sigma*(Pi_v-Pi_t);
+	scalar_type picoef=param.sigma()*(param.pi_v()-param.pi_t());
         vector_type DeltaPi(dof.Pv(),picoef);
         gmm::add(gmm::scaled(DeltaPi,-1.0), Rv_coef);	
 
-	gmm::scale(Rv_coef,0.5*(1.0-sigma)*param.Q(0));
+	gmm::scale(Rv_coef,0.5*(1.0-param.sigma())*param.Q(0));
 	
 	asm_exchange_mat(Btt, Btv, Bvt, Bvv,
 			mimv, mf_Cv, mf_coefv, Mbar, Mlin, param_transp.Y(), NEWFORM);

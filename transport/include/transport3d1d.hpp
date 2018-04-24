@@ -117,6 +117,8 @@ protected:
 	vector< node > BCv_transp;	
 	//! List of BC nodes of the tissue
 	vector< node > BCt_transp;
+	//! List of junction nodes of the network
+	vector< node > Jv_transp;
 
 		
 	//! Monolithic matrix for the coupled problem
