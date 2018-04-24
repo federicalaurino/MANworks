@@ -110,7 +110,6 @@ struct param3d1d_transp {
 			scalar_type U_  = FILE_.real_value("U", "characteristic flow speed in the capillary bed [m/s]"); 
 			scalar_type d_  = FILE_.real_value("d", "characteristic length of the problem [m]"); 
 			scalar_type k_  = FILE_.real_value("k", "permeability of the interstitium [m^2]"); 
-			scalar_type mu_ = FILE_.real_value("mu", "fluid viscosity [kg/ms]"); 
 			scalar_type Lp_ = FILE_.real_value("Lp", "Hydraulic conductivity of the capillary walls [m^2 s/kg]"); 
 			
 			Dt_   = FILE_.real_value("Dt","Diffusivity in the tissue [m^2/s]");
