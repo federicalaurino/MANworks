@@ -29,7 +29,7 @@
 #include <iostream>
 #include <problem3d1d.hpp>  
 #include <transport3d1d.hpp> 
-
+#include <problemHT.hpp> 
 
 //! main program
 int main(int argc, char *argv[])   
@@ -45,13 +45,13 @@ int main(int argc, char *argv[])
 		/// fluid problem: velocity field and pressure
 		
 		// Initialize the problem
-		p.init_fluid(argc, argv);
+		p.problem3d1d::init(argc, argv);
 		// Build the monolithic system 
-		p.assembly_fluid();
+		p.problem3d1d::assembly();
 		// Solve the problem 
-		if (!p.solve_fluid()) GMM_ASSERT1(false, "solve procedure has failed");
+		if (!p.problem3d1d::solve()) GMM_ASSERT1(false, "solve procedure has failed");
 		// Save results in .vtk format
-		p.export_vtk_fluid();
+		p.problem3d1d::export_vtk();
 		// Display some global results: mean pressures, total flow rate
 		
 		std::cout << "--- FINAL RESULTS -------------------------" << std::endl; 

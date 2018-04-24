@@ -29,7 +29,7 @@
 #include <iostream>
 #include <problem3d1d.hpp>  
 #include <transport3d1d.hpp> 
-
+#include <problemHT.hpp> 
 
 //! main program
 int main(int argc, char *argv[])   

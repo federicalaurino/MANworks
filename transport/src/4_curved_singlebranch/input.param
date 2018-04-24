@@ -43,16 +43,17 @@ LINEAR_LYMPHATIC_DRAINAGE = 1;
 % Flag to study the hematocrit distribution all over the network (0 = constant; 1= transport)
 HEMATOCRIT_TRANSPORT = 1;
 
+% Flag to select a specific rhs
+TEST_RHS   = 0;
 %Flag to add advection terms
 ADVECTION=1;
-%Flag to add reaction terms
-REACTION=0;
+%Flag to add coupling terms
+COUPLING=1;
 %Flag to take the stationary problem
 STATIONARY=0;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
-% Flag to select a specific rhs
-TEST_RHS   = 0;
+
 
 %===================================
 %  MESH

@@ -26,19 +26,23 @@ VTK_EXPORT = 1;
 STATIONARY=0;
 %Flag to add advection terms
 ADVECTION=1;
-%Flag to add reaction terms
-REACTION=0;
+%Flag to add coupling terms
+COUPLING=1;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
-% Output directory
-OUTPUT     = '/vagrant/simulazioni/vtk_network_stationary/';
-% Output directory where parameters EXPORT_PARAM=1 are saved 
-OutputDir       = '/vagrant/simulazioni/vtk_network_stationary/';
-OutputDirectory = '/vagrant/simulazioni/vtk_network_stationary/';
+
 % Flag to enable the curve model
 CURVE_PROBLEM = 0;
 % Flag to print residuals of Fixed Point Method
 PRINT_RESIDUALS       = 1;
+% Flag to choose Lymphatic Drainage Curve (0 = sigmoid; 1= linear)
+LINEAR_LYMPHATIC_DRAINAGE = 1;
+
+% Output directory
+OUTPUT   = './vtk/';
+% Output directory where parameters EXPORT_PARAM=1 are saved 
+OutputDir       = './vtk/';
+OutputDirectory = './vtk/';
 %===================================
 %  MESH
 %===================================
@@ -151,8 +155,7 @@ SV = 1;
 %QLF_C = 0.6573;
 % Dimensionless Parameter D
 %QLF_D = -2;
-% Flag to choose Lymphatic Drainage Curve (0 = sigmoid; 1= linear)
-LINEAR_LYMPHATIC_DRAINAGE = 1;
+
 
 % simulation time length [s]
 T = 3;

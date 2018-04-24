@@ -15,7 +15,7 @@
 %  FLAGS
 %===================================
 % Flag to import dimensionless param
-TEST_PARAM = 1;
+TEST_PARAM = 0;
 % Flag to select a specific rhs
 TEST_RHS   = 0;
 %Flag to export parameters
@@ -24,21 +24,26 @@ EXPORT_PARAM = 0;
 VTK_EXPORT = 1;
 %Flag to add advection terms
 ADVECTION=1;
-%Flag to add reaction terms
-REACTION=0;
+%Flag to add coupling terms
+COUPLING=1;
 %Flag to take the stationary problem
 STATIONARY=0;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
-% Output directory
-OUTPUT   = '/vagrant/simulazioni/vtk_branch/';
-% Output directory where parameters EXPORT_PARAM=1 are saved 
-OutputDir       = '/vagrant/simulazioni/vtk_branch/';
-OutputDirectory = '/vagrant/simulazioni/vtk_branch/';
+
 % Flag to enable the curve model
 CURVE_PROBLEM = 0;
 % Flag to print residuals of Fixed Point Method
 PRINT_RESIDUALS       = 1;
+% Flag to choose Lymphatic Drainage Curve (0 = sigmoid; 1= linear)
+LINEAR_LYMPHATIC_DRAINAGE = 1;
+
+% Output directory
+OUTPUT   = './vtk/';
+% Output directory where parameters EXPORT_PARAM=1 are saved 
+OutputDir       = './vtk/';
+OutputDirectory = './vtk/';
+
 %===================================
 %  MESH
 %===================================
@@ -87,9 +92,75 @@ MAXITER  = 100;
 RESIDUAL = 1E-16;    
 % Nb of discretisation point for 3D-1D interpolation
 NInt = 50;
-%===================================
-%  MODEL PARAMETERS
-%===================================
+%===========================================
+%  DIMENSIONAL PARAMETERS FOR FLUID PROBLEM
+%===========================================
+% Hydraulic conductivity of the interstitium [m^2]
+k  = 1.0E-18;
+% Average interstitial pressure [Pa]
+P  = 133.32;
+% Characteristic flow speed in the capillary bed [m/s]
+U  = 100E-06;
+% Characteristic l37ength of the problem [m]
+d  = 5.0E-4;
+% Hydraulic conductivity of the capillary walls [m^2 s/kg]
+Lp = 1E-12;
+% Average radius of the capillary vessels [m]
+RADIUS = 4.00E-6;
+% Blood Viscosity [kg/m/s]
+mu_v = 3E-3;
+% Interstial Fluid Viscosity [kg/m/s]
+mu_t = 1.2E-3;
+% Oncotic plasma pressure [Pa]
+Pi_v = 27*133.32;
+% Oncotic Interstitial pressure [Pa]
+Pi_t = 2*133.32;
+% Reflection Coefficient of Starling Equation [-]
+sigma = 0.95;
+% Order of velocity profile in the vessels [-]
+Gamma = 2;
+
+%=================================
+%  TRANSPORT
+%=================================
+%Diffusivity in the tissue [m^2/s]  
+Dt = 1.35E-09;
+%Diffusivity in the vessels [m^2/s] 
+Dv = 5E-07;
+%rate of metabolization [1/s]
+m = 8  ; 
+%Permeability of the vessel wall [m/s]
+Perm = 3.5E-05;
+% surface area of lymphatic vessels per unit volume of tissue [1/m]
+SV = 1;
+
+% simulation time length [s]
+T = 3;
+% time step [s]
+dt = 0.2;
+
+%=================================
+%  LYMPHATIC FLOW
+%=================================
+% LINEAR case
+% Hydraulic conductivity of the lymphatic wall [kg * m/s]
+Lp_LF = 1.04E-06*0;
+% Pressure inside lymphatic capillaries [-]
+PL = 0;
+% Coefficient of lymphatic flow modelled as a SIGMOID of equation QLF = A - B / ( 1 + exp ( ( Pt + D ) / C )
+% Coefficient A [s-1]
+A_LF = 1.7170E-7;
+% Coefficient B [s-1]
+B_LF = 1.6485E-7;
+% Coefficient C [Pa]
+C_LF = 0.6573*133.32;
+% Coefficient D [Pa]
+D_LF = -2*133.32;
+
+
+%==============================================
+%  DIMENSIONLESS PARAMETER
+%==============================================
 % Dimensionless conductivity of the tissue
 Kt = 1.0;
 % Dimensionless conductivity of the capillary wall
@@ -97,7 +168,7 @@ Q  = 1.0;
 % Dimensionless conductivity of the capillary bed
 Kv = 1.0;
 % Dimensionless average radius of the capillary vessels []
-RADIUS = 0.10;
+%RADIUS = 0.10;
 %Dimensionless At[]
 At=1.0;
 %Dimensionless Av[]
@@ -109,61 +180,29 @@ Y=1.0;
 %Dimensionless Qpl[]
 Q_pl=1.0;
 
-
-% hydraulic conductivity of the interstitium [m^2]
-k  = 1.4E-14;
-% fluid viscosity [kg/ms]
-mu = 8.9E-04;
-% hydraulic conductivity of the capillary walls [m^2 s/kg]
-Lp = 1.0E-7;
-% average interstitial pressure [Pa]
-P  = 1333.22;
-% characteristic flow speed in the capillary bed [m/s]
-U  = 166E-06;
-% characteristic length of the problem [m]
-d  = 240E-06;
-% average radius of the capillary vessels []
-%RADIUS = 5E-06;
-% Viscosity of the blood [kg/ms]
-mu_V = 0.001; 	
-% Viscosity of the interstitial fluid [kg/ms]
-mu_T = 0.001; 
-%Diffusivity in the tissue [m^2/s]  
-Dt = 1.35E-09;
-%Diffusivity in the vessels [m^2/s] 
-Dv = 5E-07;
-%rate of metabolization [1/s]
-m = 8  ; %in realtà no, è una funzione di ct, non è costante
-%Permeability of the vessel wall [m/s]
-Perm = 3.5E-05;
-%hydraulic conductivity of the lymphatic wall [kg * m/s]     --> Lp_LF * S/V = 0.5 mmHg^-1 * h^-1  = 1.042E-06 *Pa^-1 * s^-1
-Lp_LF = 1.04E-06;
-% surface area of lymphatic vessels per unit volume of tissue [1/m]
-SV = 1;
-
-
+% Dimensionless conductivity of lymphatic wall
+Q_LF = 1;
 % Coefficient of lymphatic flow modelled as a SIGMOID of equation QLF = A - B / ( 1 + exp ( ( Pt + D ) / C )
 % Dimensionless Parameter A
-%QLF_A = 1.7170E-5;
+QLF_A = 1.7170E-5;
 % Dimensionless Parameter B
-%QLF_B = 1.6485E-5;
+QLF_B = 1.6485E-5;
 % Dimensionless Parameter C
-%QLF_C = 0.6573;
+QLF_C = 0.6573;
 % Dimensionless Parameter D
-%QLF_D = -2;
-% Flag to choose Lymphatic Drainage Curve (0 = sigmoid; 1= linear)
-LINEAR_LYMPHATIC_DRAINAGE = 1;
+QLF_D = -2;
+% Oncotic plasma pressure [-] 
+pi_v_adim = 27;
+% Oncotic Interstitial pressure [-]
+pi_t_adim = 2;
 
-% simulation time length [s]
-T = 3;
-% time step [s]
-dt = 0.2;
+
 %===================================
 %  BOUNDARY CONDITIONS
 %===================================
 % Faces:   x=0  x=L  y=0  y=L  z=0  z=L
 % BC labels (DIR / MIX)
-BClabel = 'MIX  MIX  DIR  DIR  MIX  MIX'
+BClabel = 'MIX  MIX DIR  DIR  MIX  MIX'
 % BC values
 BCvalue = '0.0  0.0  -5.00  10.0  0.0  0.0'
 % Coefficient for MIX condition
