@@ -83,8 +83,11 @@ template
 <typename VEC>
 scalar_type peclet(const mesh & mesh,const VEC & U, const scalar_type & A, size_type  dim){
 
-cout <<"computing peclet...  "<<endl;
-cout <<"dimensione mesh:   "<<mesh.dim()<<endl;
+
+	#ifdef M3D1D_VERBOSE_
+	cout <<"computing Peclet number...  "<<endl;
+	#endif
+
 // find Umax
 scalar_type Umax= max_vec (U, dim);
 
@@ -101,10 +104,14 @@ for(dal::bv_visitor i(mesh.convex_index()); !i.finished(); ++i){
 
 // compute peclet
 scalar_type peclet= Umax*h/A;
-cout <<"U:   "<<Umax<<endl;
-cout <<"h:   "<<h<<endl;
-cout <<"A:   "<<A<<endl;
-cout <<"Peclet:   "<<peclet<<endl;
+
+	#ifdef M3D1D_VERBOSE_
+	cout <<"U:   "<<Umax<<endl;
+	cout <<"h:   "<<h<<endl;
+	cout <<"A:   "<<A<<endl;
+	cout <<"Peclet:   "<<peclet<<endl;
+	#endif
+
 return peclet;
 
 } /* end of peclet_vessel */
@@ -126,7 +133,7 @@ return peclet;
   (MATRM &B, VECT1 &F, const mesh_fem &mf1, const mesh_fem &mf2, size_type boundary,
    const VECT2 &DIR) {
    
-    // Marche uniquement pour des ddl de lagrange.
+
     size_type Q1=mf1.get_qdim();
     size_type Q2=mf2.get_qdim();
 
@@ -150,8 +157,7 @@ return peclet;
       for (size_type i = 0; i < nbd; i++) {					//per tutti i dof i del convesso cv
 	size_type dof1 = mf1.ind_basic_dof_of_element(cv)[i*Q1];				//trova l'indice delle colonne riferite all
 	if (nndof.is_in(dof1) && pf1->dof_types()[i] == ldof) {			//se il dof i del convesso cv è in "boundary"
-	   cout << "dof : " << i << endl;
-	  
+  
 	  for (size_type j = nb_dof1; j < nb_dof1+ nb_dof2; j++) {				//allora per tutti i dof j della mesh 2
 		for (size_type l = 0; l < Q1; ++l) {
 			F[j] -= B(j, dof1+l) * DIR[dof1+l];
@@ -181,7 +187,7 @@ return peclet;
   (MATRM &B, VECT1 &F, const mesh_fem &mf1, const mesh_fem &mf2, size_type boundary,
    const VECT2 &DIR) {
    
-    // Marche uniquement pour des ddl de lagrange.
+
     size_type Q1=mf1.get_qdim();
     size_type Q2=mf2.get_qdim();
 
@@ -205,7 +211,6 @@ return peclet;
       for (size_type i = 0; i < nbd; i++) {					//per tutti i dof i del convesso cv
 	size_type dof2 = mf2.ind_basic_dof_of_element(cv)[i*Q2];				//trova l'indice delle colonne riferite all
 	if (nndof.is_in(dof2) && pf2->dof_types()[i] == ldof) {			//se il dof i del convesso cv è in "boundary"
-	   cout << "dof : " << i << endl;
 	  
 	  for (size_type j = 0; j < nb_dof1; j++) {				//allora per tutti i dof j della mesh 2
 		for (size_type l = 0; l < Q2; ++l) {
@@ -259,7 +264,7 @@ asm_coupled_bc_transp
 	for (size_type bc=0; bc < BC_tissue.size(); ++bc) {
 		GMM_ASSERT1(mf_ct.linked_mesh().has_region(bc), "missed mesh region" << bc);
 		if (BC_tissue[bc].label=="DIR") { // Dirichlet BC
-			VEC BC_temp(mf_data_t.nb_dof(), BC_tissue[bc].value);
+			VEC BC_temp(mf_ct.nb_dof(), BC_tissue[bc].value);
 			getfem::assembling_Dirichlet_condition_coupled_tissue(M, F, mf_ct, mf_cv, BC_tissue[bc].rg, BC_temp);
 			gmm::clear(BC_temp);				
 		} 
@@ -269,7 +274,7 @@ asm_coupled_bc_transp
 	for (size_type bc=0; bc < BC_vessel.size(); ++bc) {
 		GMM_ASSERT1(mf_cv.linked_mesh().has_region(bc), "missed mesh region" << bc);
 		if (BC_vessel[bc].label=="DIR") { // Dirichlet BC
-			VEC BC_temp(mf_data_v.nb_dof(), BC_vessel[bc].value);
+			VEC BC_temp(mf_cv.nb_dof(), BC_vessel[bc].value);
 			getfem::assembling_Dirichlet_condition_coupled_vessel(M, F, mf_ct, mf_cv, BC_vessel[bc].rg, BC_temp);
 			gmm::clear(BC_temp);				
 		} 

@@ -137,7 +137,7 @@ asm_tissue_bc_transp
 	for (size_type bc=0; bc < BC.size(); ++bc) {
 		GMM_ASSERT1(mf_c.linked_mesh().has_region(bc), "missed mesh region" << bc);
 		if (BC[bc].label=="DIR") { // Dirichlet BC
-			VEC BC_temp(mf_data.nb_dof(), BC[bc].value);
+			VEC BC_temp(mf_c.nb_dof(), BC[bc].value);
 			getfem::assembling_Dirichlet_condition(M, F, mf_c, BC[bc].rg, BC_temp);
 			gmm::clear(BC_temp);				
 		} 
