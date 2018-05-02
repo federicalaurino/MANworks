@@ -19,15 +19,15 @@ TEST_PARAM      = 0;
 % Flag to export results
 VTK_EXPORT      = 1;
 % Flag to enable the curve model
-CURVE_PROBLEM = 1;
+CURVE_PROBLEM = 0;
 % Flag to import the file with curvature (Remember to ENABLE CURVE_PROBLEM)
 % If this flag is 0, the curvature is computed on the mesh
-IMPORT_CURVE = 1;
+IMPORT_CURVE = 0;
 % Output directory
-OUTPUT          = './vtk/';
+OUTPUT          = './vtk1/';
 % Output directory where parameters EXPORT_PARAM=1 are saved 
-OutputDir       = './vtk/';
-OutputDirectory = './vtk/';
+OutputDir       = './vtk1/';
+OutputDirectory = './vtk1/';
 % Flag to import the dimensionless radius (to do that TEST_PARAM must be equal to 0 and parameters P U d k mu must be left)
 IMPORT_RADIUS   = 0;
 % Flag to export radius and conductivity of network in vtk file
@@ -68,15 +68,15 @@ NOISED_T   = '0';
 % Path to import the 3d mesh
 MESH_FILET = ' '; 
 % Path to import the 1d list of points
-MESH_FILEV = './segment.pts'
+MESH_FILEV = './bifurcation_1.pts'
 % Path to import radius of the newtork (read if IMPORT_RADIUS=1)
 RFILE      = './radius.pts'
 % Path to import the 1d list of points for Ht
-MESH_FILEH = './segmentHT.pts'
+MESH_FILEH = './bifurcation_HT_1.pts'
 % Path to import the curvature of the vessels
-CURVE_FILE = './curve.pts'
+CURVE_FILE = ''
 % Path to import the 1d list of points for transport
-MESH_FILEV_TRANSP = './segment_transp.pts';
+MESH_FILEV_TRANSP = './bifurcation_transp_1.pts';
 %===================================
 %  GETFEM DESCRIPTORS
 %===================================
