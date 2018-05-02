@@ -19,7 +19,7 @@ TEST_PARAM = 0;
 % Flag to select a specific rhs
 TEST_RHS   = 0;
 %Flag to export parameters
-EXPORT_PARAM = 0; 
+EXPORT_PARAM = 1; 
 % Flag to export results
 VTK_EXPORT = 1;
 %Flag to add advection terms
@@ -57,7 +57,8 @@ NOISED_T   = '0';
 % Path to import the 3d mesh
 MESH_FILET = ' '; 
 % Path to import the 1d list of points
-MESH_FILEV = './segment.pts'; %'/home/nico/workspace/pacs/model3d1d/src/1_uncoupled/segment.pts';  
+MESH_FILEV = './segment.pts';
+% Path to import the 1d list of points for transport
 MESH_FILEV_TRANSP = './segment_transp.pts';
 %===================================
 %  GETFEM DESCRIPTORS
@@ -138,6 +139,10 @@ SV = 1;
 T = 3;
 % time step [s]
 dt = 0.2;
+% initial concentration in tissue
+C0t=0;
+% initial concentration in network
+C0v=0;
 
 %=================================
 %  LYMPHATIC FLOW

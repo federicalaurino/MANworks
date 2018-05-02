@@ -58,6 +58,12 @@ struct param3d1d_transp {
 	scalar_type T_;
 	// time step
 	scalar_type dt_;
+	// initial concentration in tissue
+	scalar_type C0t_;
+	// initial concentration in network
+	scalar_type C0v_;
+	
+	
 
 	// Utils
 	//! File .param
@@ -102,7 +108,9 @@ struct param3d1d_transp {
 			 Q_pl_.assign(dof_datat,  Q_plval);
 
 			T_   = FILE_.real_value("T","Simulation time length [s]");
-			dt_   = FILE_.real_value("dt","Time step [s]");				
+			dt_   = FILE_.real_value("dt","Time step [s]");			
+			C0t_   = FILE_.real_value("C0t","Initial concentration in tissue []");	
+			C0v_   = FILE_.real_value("C0v","Initial concentration in network []");			
 		} 
 		else { 
 			// Import dimensional params from FILE_
@@ -120,8 +128,10 @@ struct param3d1d_transp {
 			SV_ = FILE_.real_value("SV","surface area of lymphatic vessels per unit volume of tissue [1/m]");
 
 			T_   = FILE_.real_value("T","Simulation time length [s]");
-			dt_   = FILE_.real_value("dt","Time step [s]");						
-			// Compute the dimenless params
+			dt_   = FILE_.real_value("dt","Time step [s]");	
+			C0t_   = FILE_.real_value("C0t","Initial concentration in tissue []");	
+			C0v_   = FILE_.real_value("C0v","Initial concentration in network []");				
+			// Compute the dimentionless params
 			At_.assign(dof_datat, Dt_/d_/U_);
 			Av_.assign(dof_datav, Dv_/d_/U_);
 			Dalpha_.assign(dof_datat, m_/U_*d_);
@@ -163,6 +173,10 @@ struct param3d1d_transp {
 	inline scalar_type T  () { return T_;  } const
 	//! Get the time step
 	inline scalar_type dt  () { return dt_;  } const
+	//! Get the sinitial concentration in tissue
+	inline scalar_type C0t  () { return C0t_;  } const
+	//! Get the sinitial concentration in network
+	inline scalar_type C0v  () { return C0v_;  } const
 	//! Get the radius at a given mesh_region
 	//scalar_type R  (const getfem::mesh_im & mim, const size_type rg) { 
 	//	return compute_radius(mim, mf_datav_, R_, rg);  

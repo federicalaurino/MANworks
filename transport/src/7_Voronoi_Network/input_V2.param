@@ -184,6 +184,10 @@ SV = 1;
 T = 3;
 % time step [s]
 dt = 0.2;
+% initial concentration in tissue
+C0t=0;
+% initial concentration in network
+C0v=0;
 
 %=================================
 %  LYMPHATIC FLOW

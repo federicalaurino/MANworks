@@ -180,10 +180,16 @@ Perm = 3.5E-05;
 % surface area of lymphatic vessels per unit volume of tissue [1/m]
 SV = 1;
 
+
+
 % simulation time length [s]
 T = 3;
 % time step [s]
 dt = 0.2;
+% initial concentration in tissue
+C0t=0;
+% initial concentration in network
+C0v=0;
 
 %=================================
 %  LYMPHATIC FLOW

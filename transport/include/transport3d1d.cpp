@@ -580,9 +580,9 @@ transport3d1d::assembly_mat_transp(void)
 	#ifdef M3D1D_VERBOSE_
 	cout << "Allocating AM_transp, UM_transp, FM_transp ..." << endl;
 	#endif
-	gmm::resize(AM_transp, dof_transp.tot(), dof_transp.tot()); gmm::clear(AM_transp);
-	gmm::resize(UM_transp, dof_transp.tot()); gmm::clear(UM_transp);
-	gmm::resize(FM_transp, dof_transp.tot()); gmm::clear(FM_transp);
+	gmm::resize(AM_transp, dof_transp.tot(), dof_transp.tot());	gmm::clear(AM_transp);
+	gmm::resize(UM_transp, dof_transp.tot()); 			gmm::clear(UM_transp);
+	gmm::resize(FM_transp, dof_transp.tot()); 			gmm::clear(FM_transp);
 	
 	
 	#ifdef M3D1D_VERBOSE_
@@ -914,7 +914,23 @@ transport3d1d::assembly_mat_transp(void)
 
 }	
 else GMM_WARNING1("UNCOUPLED PROBLEM: NO EXCHANGE BETWEEN TISSUE AND VESSELS");
-		
+
+	#ifdef M3D1D_VERBOSE_
+	cout << "  Setting initial condition for tissue and network concentration ..." << endl;
+	#endif
+
+	vector_type C0t_vect(dof_transp.Ct(), param_transp.C0t());
+	vector_type C0v_vect(dof_transp.Cv(), param_transp.C0v());
+
+	gmm::copy(C0t_vect,
+		  gmm::sub_vector(UM_transp, 
+			  	gmm::sub_interval(0, dof_transp.Ct()))	);
+	gmm::copy(C0v_vect,
+		  gmm::sub_vector(UM_transp, 
+			  	gmm::sub_interval(dof_transp.Ct(), dof_transp.Cv()))	);
+
+	gmm::clear(C0t_vect);	gmm::clear(C0v_vect);
+
 	// De-allocate memory
 	gmm::clear(Mt);    gmm::clear(Mv); 
 	gmm::clear(Dt);    gmm::clear(Dv);
