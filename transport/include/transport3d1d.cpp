@@ -321,8 +321,8 @@ try {
 			// Store the current index and then update it
 			size_type bc = 0; 
 			bool found = false;
-			while (!found && (bc<BCv.size())) {
-				found = (i0 == BCv[bc].idx);
+			while (!found && (bc<BCv_transp.size())) {
+				found = (i0 == BCv_transp[bc].idx);
 				if (!found) bc++;
 			}
 			GMM_ASSERT1(found=true, "Miss a boundary node in BCv list!");
@@ -341,8 +341,8 @@ try {
 		else if (meshv.convex_to_point(i0).size()==2){ /* trivial inflow junction */
 			// DO NOTHING
 		}
-		else if (meshv.convex_to_point(i0).size()>=2){ /* non-trivial inflow junction */
-			// Check if jucntion has been already stored, 
+		else if (meshv.convex_to_point(i0).size()>2){ /* non-trivial inflow junction */
+			// Check if junction has been already stored, 
 			// if not add to the junction list (J) and build a new region
 			dal::bit_vector tmp; tmp.add(i0);
 			if(!junctions.contains(tmp)){
@@ -369,7 +369,7 @@ try {
 			size_type jj = 0;
 			bool found = false;
 			while (!found && jj < nb_junctions){
-				found = (i0 == Jv[jj].idx);
+				found = (i0 == Jv_transp[jj].idx);
 				if (!found) jj++;
 			}
 			//cout << "Branch -" << branch << " added to junction " << jj << endl;
@@ -394,7 +394,7 @@ try {
 					"Overload in meshv region assembling!");
 				meshv.region(fer).add(cv, 0);
 				// Store the current index and then update it
-				BCv_transp[bc].value *= -1.0;
+				BCv_transp[bc].value *= +1.0;
 				BCv_transp[bc].rg = fer; 
 				fer++;
 				// Store the containing branch index
@@ -407,7 +407,8 @@ try {
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
 				BCv_transp[bc].branches.emplace_back(branch); 
 			}
-			else { /* interior -> Mixed point */
+/*
+			else { // interior -> Mixed point 
 				// "MIX" label via post-processing
 				// Build a new region made by a single face
 				GMM_ASSERT1(meshv.has_region(fer)==0, 
@@ -425,6 +426,7 @@ try {
 				GMM_ASSERT1(contained=true, "No branch region contains node i1!");
 				BCv_transp.back().branches.emplace_back(branch); 
 			}
+*/
 		}
 		else if (meshv.convex_to_point(i1).size()==2){ /* trivial outflow junction */
 
@@ -523,7 +525,7 @@ try {
 				size_type jj = 0;
 				bool found = false;
 				while (!found && jj < nb_junctions){
-					found = (i1 == Jv[jj].idx);
+					found = (i1 == Jv_transp[jj].idx);
 					if (!found) jj++;
 				}
 				Jv_transp[jj].branches.emplace_back(+branch);
@@ -532,7 +534,7 @@ try {
 			}
 		}
 
-	} /* end of convexes loop */
+	} /* end of convexes loop */  
 	
 	// Ckeck network assembly
 	#ifdef M3D1D_VERBOSE_
