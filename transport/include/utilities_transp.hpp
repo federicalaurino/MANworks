@@ -1,18 +1,20 @@
-/* -*- c++ -*- (enables emacs c++ mode) */
+/* -*- c++ -*- (enableMbars emacs c++ mode) */
 /*======================================================================
-    "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+    "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
         Course on Advanced Programming for Scientific Computing
                       Politecnico di Milano
-                          A.Y. 2015-2016
+                          A.Y. A.Y. 2015-2016
                   
-                Copyright (C) 2016 Domenico Notaro
+                Copyright (C) 2016 Stefano Brambilla
 ======================================================================*/
 /*! 
   @file   utilities_transp.hpp
   @author Stefano Brambilla <s.brambilla93@gmail.com>
-  @date   November 2017.
+  @date   September 2016 - May 2018.
   @brief  Declaration of some miscelleanous auxiliary routines.
  */
+
+
 #ifndef M3D1D_UTILITIES_TRANSP_HPP_
 #define M3D1D_UTILITIES_TRANSP_HPP_
 
@@ -26,8 +28,8 @@ namespace gmm {
 
 //As a matter of fact, it returns: B= A**B
 template
-<typename VEC>
-void scale (const VEC & A, VEC & B){
+<typename VEC1,typename VEC2>
+void vscale (const VEC1 & A, VEC2 & B){
 
 //calculate the length of the two vectors
 
@@ -38,15 +40,56 @@ GMM_ASSERT1(lengthA==lengthB, "impossible to scale the vectors: different length
 for(int i=0; i<lengthA; i++)
   B[i]= A[i]*B[i];
   
-} /* end of scale */
+} /* end of vscale */
+
+
+
+//Calculate the reciprocal of a vector, component by component.
+//That means: B=A^^-1   --> B[i]= 1/A[i]
+
+//As a matter of fact, it returns: A= A^^-1
+template
+<typename VEC>
+void reciprocal (VEC & A){
+
+//calculate the length of the vector
+
+int lengthA = gmm::mat_nrows(gmm::col_vector(A));
+
+for(int i=0; i<lengthA; i++)
+  A[i]= 1/A[i];
+  
+} /* end of reciprocal */
+
+
+//Calculate D=A*B*C.
+
+template
+<typename MAT1,typename MAT2,typename MAT3,typename MAT4>
+void mult3 (const MAT1 & A,const MAT2 & B,const MAT3 & C, MAT4 & D){
+
+//calculate the length of the vector
+
+GMM_ASSERT1(mat_ncols(A)==mat_nrows(B), "first and second matrix dimensions don't match");
+GMM_ASSERT1(mat_ncols(B)==mat_nrows(C), "second and third matrix dimensions don't match");
+GMM_ASSERT1(mat_ncols(D)==mat_ncols(C), "final matrix has not the same number of columns of third matrix");
+GMM_ASSERT1(mat_nrows(D)==mat_nrows(A), "final matrix has not the same number of rows of first matrix");
+
+MAT4 AB(mat_nrows(A), mat_ncols(B)); clear(AB);
+mult(A,B,AB); //AB = A*B
+mult(AB,C,D); //D = AB*C = A*B*C
+  
+} /* end of mult3 */
+
 
 } /* end of gmm namespace */
 
 
 namespace getfem {
 
+//Aux function for computing Peclet number
 //Calculate the max value of a scalar or a vector field contained in a vector V.
-//Aux function for computing Peclet
+// dim is te dimesion of te field, e.g. dim=1 is a scalar field and dim=3 is a vectorial 3-dimensional field
 template
 <typename VEC>
 scalar_type max_vec (const VEC & V, size_type dim){
@@ -73,11 +116,12 @@ if(std::abs(V[i])>max) max= std::abs(V[i]);
 }
 
 } 
-return max;}/* end of max_vec*/
+return max;
+}  /* end of max_vec*/
 
 
 //! Compute the Peclèt Number, defined as: 
-//! @f$ Pe =  \frac{U~h}{A} @f$
+//! @f$ \mathcal{P}e =  \frac{U~h}{A} @f$
 //! that is the ratio between the advection flux and the diffusion coefficient
 template
 <typename VEC>
@@ -116,172 +160,7 @@ return peclet;
 
 } /* end of peclet_vessel */
 
-  /**
-     Faster (and simpler) assembly of simple Dirichlet conditions (
-     u(x) = F(x) on a boundary). 
 
-     @param mf should be Lagrangian.
-     @param boundary the boundary number.
-     @param DIR the dirichlet condition value.
-     @param B,F are modified to enforce the Dirichlet condition. The
-     symmetry properties of RM are kept.
-
-     @ingroup asm
-  */
- template<typename MATRM, typename VECT1, typename VECT2>
-  void assembling_Dirichlet_condition_coupled_tissue
-  (MATRM &B, VECT1 &F, const mesh_fem &mf1, const mesh_fem &mf2, size_type boundary,
-   const VECT2 &DIR) {
-   
-
-    size_type Q1=mf1.get_qdim();
-    size_type Q2=mf2.get_qdim();
-
-    size_type nb_dof1=mf1.nb_dof();
-    size_type nb_dof2=mf2.nb_dof();    
-    
-    GMM_ASSERT1(!(mf1.is_reduced()), "This function is not adapted to "
-		"reduced finite element methods"); 
-    GMM_ASSERT1(!(mf2.is_reduced()), "This function is not adapted to "
-		"reduced finite element methods"); 
-		
-	std::cout<<"inizio uncoupled"<<std::endl;				
-    dal::bit_vector nndof = mf1.basic_dof_on_region(boundary);
-    pfem pf1;
-    
-    for (dal::bv_visitor cv(mf1.convex_index()); !cv.finished(); ++cv) {	 	//per tutti i convessi cv della mesh 1
-    
-      pf1 = mf1.fem_of_element(cv);
-      pdof_description ldof = lagrange_dof(pf1->dim());
-      size_type nbd = pf1->nb_dof(cv);	      
-      for (size_type i = 0; i < nbd; i++) {					//per tutti i dof i del convesso cv
-	size_type dof1 = mf1.ind_basic_dof_of_element(cv)[i*Q1];				//trova l'indice delle colonne riferite all
-	if (nndof.is_in(dof1) && pf1->dof_types()[i] == ldof) {			//se il dof i del convesso cv è in "boundary"
-  
-	  for (size_type j = nb_dof1; j < nb_dof1+ nb_dof2; j++) {				//allora per tutti i dof j della mesh 2
-		for (size_type l = 0; l < Q1; ++l) {
-			F[j] -= B(j, dof1+l) * DIR[dof1+l];
-	    		B(j, dof1+l) =  0;
-	    		B(dof1+l, j) =  0;
-	    	}
-	    }
-	  } 
-	}
-     }
-   } /* end of assembling_Dirichlet_condition_coupled_tissue*/
-
-  /**
-     Faster (and simpler) assembly of simple Dirichlet conditions (
-     u(x) = F(x) on a boundary). 
-
-     @param mf should be Lagrangian.
-     @param boundary the boundary number.
-     @param DIR the dirichlet condition value.
-     @param B,F are modified to enforce the Dirichlet condition. The
-     symmetry properties of RM are kept.
-
-     @ingroup asm
-  */
- template<typename MATRM, typename VECT1, typename VECT2>
-  void assembling_Dirichlet_condition_coupled_vessel
-  (MATRM &B, VECT1 &F, const mesh_fem &mf1, const mesh_fem &mf2, size_type boundary,
-   const VECT2 &DIR) {
-   
-
-    size_type Q1=mf1.get_qdim();
-    size_type Q2=mf2.get_qdim();
-
-    size_type nb_dof1=mf1.nb_dof();
-    size_type nb_dof2=mf2.nb_dof();    
-    
-    GMM_ASSERT1(!(mf1.is_reduced()), "This function is not adapted to "
-		"reduced finite element methods"); 
-    GMM_ASSERT1(!(mf2.is_reduced()), "This function is not adapted to "
-		"reduced finite element methods"); 
-		
-	std::cout<<"inizio uncoupled"<<std::endl;				
-    dal::bit_vector nndof = mf2.basic_dof_on_region(boundary);
-    pfem pf2;
-    
-    for (dal::bv_visitor cv(mf2.convex_index()); !cv.finished(); ++cv) {	 	//per tutti i convessi cv della mesh 1
-    
-      pf2 = mf2.fem_of_element(cv);
-      pdof_description ldof = lagrange_dof(pf2->dim());
-      size_type nbd = pf2->nb_dof(cv);	      
-      for (size_type i = 0; i < nbd; i++) {					//per tutti i dof i del convesso cv
-	size_type dof2 = mf2.ind_basic_dof_of_element(cv)[i*Q2];				//trova l'indice delle colonne riferite all
-	if (nndof.is_in(dof2) && pf2->dof_types()[i] == ldof) {			//se il dof i del convesso cv è in "boundary"
-	  
-	  for (size_type j = 0; j < nb_dof1; j++) {				//allora per tutti i dof j della mesh 2
-		for (size_type l = 0; l < Q2; ++l) {
-			F[j] -= B(j, nb_dof1 + dof2+l) * DIR[nb_dof1 + dof2+l];
-	    		B(j, nb_dof1 + dof2+l) =  0;
-	    		B(nb_dof1 + dof2+l, j) =  0;
-	    	}
-	    }
-	  } 
-	}
-     }
-   } /* end of assembling_Dirichlet_condition_coupled_vessel*/
-   
-  /*! Build the mixed boundary conditions (weak form) and dirichlet (strong form) for vessels
-    @f$ M=\int_{\Gamma_{MIX}} \beta~u~v~d\sigma@f$ and
-    @f$ F=\int_{\Gamma_{MIX}} \beta~c0~v~d\sigma@f$
- */
-/*!
-	@param F        BC contribution to rhs
-	@param M        BC contribution to mass matrix
-	@param mim      The integration method to be used
-	@param mf_c     The finite element method for the concentration @f$u@f$
-	@param mf_data  The finite element method for the coefficients
-	@param BC       Array of values of network boundary points
-	@param beta     The beta value for mix condition @f$p_0@f$
-	@ingroup asm
- */ 
-template<typename MAT, typename VEC>
-void
-asm_coupled_bc_transp
-	(VEC & F,
-	 MAT & M,
-	 const mesh_fem & mf_ct,
-	 const mesh_fem & mf_cv,
-	 const mesh_fem & mf_data_t,
-	 const mesh_fem & mf_data_v,
-	 const std::vector<getfem::node> & BC_tissue,
-	 const std::vector<getfem::node> & BC_vessel
-	 )
-{
-
-	
-	
-	GMM_ASSERT1(mf_ct.get_qdim()==1,  "invalid data mesh fem (Qdim=1 required)");
-	GMM_ASSERT1(mf_cv.get_qdim()==1,  "invalid data mesh fem (Qdim=1 required)");
-	GMM_ASSERT1(mf_data_t.get_qdim()==1, "invalid data mesh fem (Qdim=1 required)");
-	GMM_ASSERT1(mf_data_v.get_qdim()==1, "invalid data mesh fem (Qdim=1 required)");
-
-
-//cycle over the tissue boundary nodes
-	for (size_type bc=0; bc < BC_tissue.size(); ++bc) {
-		GMM_ASSERT1(mf_ct.linked_mesh().has_region(bc), "missed mesh region" << bc);
-		if (BC_tissue[bc].label=="DIR") { // Dirichlet BC
-			VEC BC_temp(mf_ct.nb_dof(), BC_tissue[bc].value);
-			getfem::assembling_Dirichlet_condition_coupled_tissue(M, F, mf_ct, mf_cv, BC_tissue[bc].rg, BC_temp);
-			gmm::clear(BC_temp);				
-		} 
-	}
-	
-//cycle over the vessels boundary nodes
-	for (size_type bc=0; bc < BC_vessel.size(); ++bc) {
-		GMM_ASSERT1(mf_cv.linked_mesh().has_region(bc), "missed mesh region" << bc);
-		if (BC_vessel[bc].label=="DIR") { // Dirichlet BC
-			VEC BC_temp(mf_cv.nb_dof(), BC_vessel[bc].value);
-			getfem::assembling_Dirichlet_condition_coupled_vessel(M, F, mf_ct, mf_cv, BC_vessel[bc].rg, BC_temp);
-			gmm::clear(BC_temp);				
-		} 
-	}
-
-
-} /* end of asm_coupled_bc_transp */
 
 } /* end of getfem namespace */
 
