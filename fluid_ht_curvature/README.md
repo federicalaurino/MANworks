@@ -47,7 +47,7 @@ Alternatively, at MOX cluster use the `module.sh` file:
 ``` 
 $ source configure.sh
 ``` 
-Also SAMG LECENCE is required.
+SAMG LICENCE is not required but recommended for more efficient simulations.
 
 Gnuplot: 
 Gnuplot is NOT required, but it can be used to visualize residuals. 
@@ -60,6 +60,30 @@ Recall to add the library path to LD_LIBRARY_PATH. Example:
 $ export LD_LIBRARY_PATH=/home/...path/to.../getfem/lib
 
 ```
+### Before installation
+
+You must modify, in `config.mk`, the path to the GetFEM library
+``` 
+GETFEM_PREFIX=/home/.../path/to/.../getfem
+``` 
+In `config.mk`, you can also set the flags for optimized or debug installation, and for activating the comments at runtime:
+``` 
+DEBUG= no
+VERBOSE= yes
+``` 
+
+Finally, you need to export to LD_LIBRARY_PATH the paths to GetFEM, Boost and Qhull libraries;
+this can be done using the modules system (from a MOX computer) or setting manually the paths in the file configure.sh.
+Before compiling, call:
+``` 
+$ source configure.sh
+``` 
+
+BEWARE: configure.sh contains the details of SAMG LICENCE: if you do not have a SAMG LICENCE, you should use:
+``` 
+$ source configure_nosamg.sh
+``` 
+
 ======================
 
 ### Installation
