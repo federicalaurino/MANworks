@@ -1,10 +1,10 @@
 # ====================================================================
-#   "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+#   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
 #      Course on Advanced Programming for Scientific Computing
 #                     Politecnico di Milano
-#                         A.Y. 2016-2017
+#                         A.Y. 2015-2016
 #
-#                    Copyright D. Brambilla2017
+#                    Copyright D. Brambilla 2017
 # ====================================================================
 #   FILE        : Makefile
 #   DESCRIPTION : makefile for test simulations
@@ -22,11 +22,8 @@ library:
 	$(MAKE) -C fluid_ht_curvature library
 	$(MAKE) -C transport library
 
-fluid_ht_curvature: 
-	$(MAKE) -C fluid_ht_curvature
-
 fluid: 
-	$(MAKE) -C fluid
+	$(MAKE) -C fluid_ht_curvature
 	
 transport: fluid_ht_curvature
 	$(MAKE) -C transport
@@ -34,7 +31,6 @@ transport: fluid_ht_curvature
 doc:
 	$(MAKE) -C fluid_ht_curvature doc
 	$(MAKE) -C transport doc
-	
 	
 pdf: doc
 	$(MAKE) pdf -C fluid_ht_curvature
