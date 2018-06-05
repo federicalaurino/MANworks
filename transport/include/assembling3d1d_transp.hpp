@@ -26,7 +26,7 @@ namespace getfem {
 
 
 //! Compute mass matrix with two parameters, that is:
-//! @f$ M = \int_{\Omega} /left(~p_1~+~p_2/rigt)~u~v~dx @f$ and
+//! @f$ M = \int_{\Omega} (~p_1~+~p_2 )~u~v~dx @f$ and
 /*!
 	@param M		Computed mass matrix
 	@param mim		The integration metod used
@@ -70,10 +70,10 @@ asm_mass_matrix_two_param
 
 /*!
 	Build the exchange matrices
-	@f$B_{tt} = \left( - A + B \right)~ \Pi^T_{tv} M_{vv} \bar{\Pi}_{tv}@f$,
-	@f$B_{tv} = \left( - A - B \right)~ \Pi^T_{tv} M_{vv}@f$,
-	@f$B_{vt} = \left( + A - B \right)~ M_{vv} \bar{\Pi}_{tv}@f$,
-	@f$B_{vv} = \left( + A + B \right)~ M_{vv}@f$,
+	@f$B_{tt} = \left( - A + B \right)~ \Pi^T_{tv} M_{vv} \bar{\Pi}_{tv}@f$,    
+	@f$B_{tv} = \left( - A - B \right)~ \Pi^T_{tv} M_{vv}@f$,    
+	@f$B_{vt} = \left( + A - B \right)~ M_{vv} \bar{\Pi}_{tv}@f$,    
+	@f$B_{vv} = \left( + A + B \right)~ M_{vv}@f$,    
 	where @f$ A @f$ is the oncotic term and @f$ B @f$ is the vessel permeability term.   
 	If ALT_FORM==true we substitute @f${\Pi}_{tv}@f$ with @f$\bar{\Pi}_{tv}@f$.
 	@ingroup asm

@@ -68,7 +68,7 @@ asm_network_transp
 
 
 //! Build the advection matrice for the 1D Poiseuille's problem,
-//! @f$ B = \int_{\Lambda} ~u  ~\nabla c \cdot \mathbf{\lambda} \,v ~ds ~ + ~ B = \int_{\Lambda} ~c  ~\nabla\cdot \left( u ~\mathbf{\lambda}\right) \,v~ds @f$
+//! @f$ B = \int_{\Lambda} ~u  ~\nabla c \cdot \mathbf{\lambda} \,v ~ds ~ + ~  \int_{\Lambda} ~c  ~\nabla\cdot \left( u ~\mathbf{\lambda}\right) \,v~ds @f$
 /*!
 	@param B         Computed advection matrix
 	@param mim       The integration method to be used
@@ -144,7 +144,7 @@ asm_advection_network
 
 /*! Build the mixed boundary conditions (weak form) and dirichlet (strong form) for vessels
     @f$ M=\int_{\mathcal{E}_{MIX}} \beta~c~v~d\sigma@f$ and
-    @f$ F=\int_{\mathcal{E}_{MIX}} \beta~c0~v~d\sigma@f$
+    @f$ F=\int_{\mathcal{E}_{MIX}} \beta~c_0~v~d\sigma@f$
  */
 /*!
 	@param F        BC contribution to rhs

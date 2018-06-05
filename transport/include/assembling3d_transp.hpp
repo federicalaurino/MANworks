@@ -107,7 +107,7 @@ asm_tissue_transp
 
 /*! Build the Mixed boundary conditions (weak form) and Dirichlet (strong form) for vessels
     @f$ M=\int_{\Gamma_{MIX}} \beta~c~v~d\sigma@f$ and
-    @f$ F=\int_{\Gamma_{MIX}} \beta~c0~v~d\sigma@f$
+    @f$ F=\int_{\Gamma_{MIX}} \beta~c_0~v~d\sigma@f$
  */
 /*!
 	@param F        BC contribution to rhs
