@@ -15,15 +15,22 @@ include ../config.mk
 
 CPPFLAGS=-I. -I$(mkGetfemInc) -I$(mkBoostInc)
 CXXFLAGS+=-std=c++14 -fPIC
+
 ifeq ($(WITH_SAMG), 1)
 CXXFLAGS+=-DWITH_SAMG 
 endif
+
 ifeq ($(DEBUG),yes)
   OPTFLAGS=-g -Wall
 else
   OPTFLAGS=-O3 -march=native
   CPPFLAGS+=-DNDEBUG
 endif
+
+ifeq ($(VERBOSE),yes)
+  CPPFLAGS+=-DM3D1D_VERBOSE_
+endif
+
 LIBDIR=../lib
 LIBNAME=problem3d1d
 LIBFILE=lib$(LIBNAME).so
