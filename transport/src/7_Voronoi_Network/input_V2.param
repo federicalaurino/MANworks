@@ -1,17 +1,16 @@
-%=======================================================================================
-%           "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
-%                             Politecnico di Milano
-%                                 A.Y. 2016-2017
+%======================================================================
+%   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
+%       Course on Advanced Programming for Scientific Computing
+%                     Politecnico di Milano
+%                         A.Y. 2014-2015
 %                 
-%              Copyright (C) 2017 D. Notaro, S. Di Gregorio, L. Possenti
-%=======================================================================================
-%	FILE        :	input.param
-%  	DESCRIPTION :	List of parameters
-%	AUTHORS     :	Release 0.0.0: Domenico Notaro <domenico.not@gmail.com>    2015
-%			Release 3.0.1: Luca Possenti <luca.possenti@polimi.it>     2017
-%			Release 3.0.1: Simone Di Gregorio <simone.digre@gmail.com> 2017
-%	DATE        :	April 2017
-%=======================================================================================
+%               Copyright (C) 2016 Stefano Brambilla
+%======================================================================
+%  FILE		: input_V2.param
+%  DESCRIPTION	: List of parameters for the Voronoi network benchmark
+%  AUTHOR	: Stefano Brambilla <s.brambilla93@gmail.com> 
+%  DATE		: April 2018
+%======================================================================
 %  GENERAL FLAG
 %===================================
 % Flag to import dimensionless param
@@ -151,7 +150,7 @@ Q  = 1.0;
 % Dimensionless conductivity of the capillary bed
 Kv = 1.0;
 % Dimensionless average radius of the capillary vessels []
-RADIUS = 0.10;
+%RADIUS = 0.10;
 %Dimensionless At[]
 At=1.0;
 %Dimensionless Av[]

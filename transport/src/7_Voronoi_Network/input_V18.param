@@ -1,17 +1,16 @@
-%=======================================================================================
-%           "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
-%                             Politecnico di Milano
-%                                 A.Y. 2016-2017
+%======================================================================
+%   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
+%       Course on Advanced Programming for Scientific Computing
+%                     Politecnico di Milano
+%                         A.Y. 2014-2015
 %                 
-%              Copyright (C) 2017 D. Notaro, S. Di Gregorio, L. Possenti
-%=======================================================================================
-%	FILE        :	input.param
-%  	DESCRIPTION :	List of parameters
-%	AUTHORS     :	Release 0.0.0: Domenico Notaro <domenico.not@gmail.com>    2015
-%			Release 3.0.1: Luca Possenti <luca.possenti@polimi.it>     2017
-%			Release 3.0.1: Simone Di Gregorio <simone.digre@gmail.com> 2017
-%	DATE        :	April 2017
-%=======================================================================================
+%               Copyright (C) 2016 Stefano Brambilla
+%======================================================================
+%  FILE		: input_V18.param
+%  DESCRIPTION	: List of parameters for the Voronoi network benchmark
+%  AUTHOR	: Stefano Brambilla <s.brambilla93@gmail.com> 
+%  DATE		: April 2018
+%======================================================================
 %  GENERAL FLAG
 %===================================
 % Flag to import dimensionless param
@@ -29,7 +28,7 @@ OUTPUT          = './vtk18/';
 OutputDir       = './vtk18/';
 OutputDirectory = './vtk18/';
 % Flag to import the dimensionless radius (to do that TEST_PARAM must be equal to 0 and parameters P U d k mu must be left)
-IMPORT_RADIUS   = 0;
+IMPORT_RADIUS   = 1;
 % Flag to export radius and conductivity of network in vtk file
 EXPORT_PARAM    = 1;
 % Flag to export the absolute value of vessel fluid velocity
@@ -41,7 +40,7 @@ PRINT_RESIDUALS       = 1;
 % Flag to choose Lymphatic Drainage Curve (0 = sigmoid; 1= linear)
 LINEAR_LYMPHATIC_DRAINAGE = 1;
 % Flag to study the hematocrit distribution all over the network (0 = constant; 1= transport)
-HEMATOCRIT_TRANSPORT = 1;
+HEMATOCRIT_TRANSPORT = 0;
 
 % Flag to select a specific rhs
 TEST_RHS   = 0;
@@ -50,7 +49,7 @@ ADVECTION=1;
 %Flag to add coupling terms
 COUPLING=1;
 %Flag to take the stationary problem
-STATIONARY=0;
+STATIONARY=1;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
 
@@ -70,7 +69,7 @@ MESH_FILET = ' ';
 % Path to import the 1d list of points
 MESH_FILEV = './Voronoi3D_18.pts'
 % Path to import radius of the newtork (read if IMPORT_RADIUS=1)
-RFILE      = './radius.pts'
+RFILE      = './Radius_Voronoi_18.pts'
 % Path to import the 1d list of points for Ht
 MESH_FILEH = './Voronoi3D_18_HT.pts'
 % Path to import the curvature of the vessels
@@ -111,7 +110,7 @@ SOLVE_METHOD = 'SuperLU';
 % Maximum number of iterations for iterative solvers
 MAXITER  = 100;
 % Residual for conjugate gradient
-RESIDUAL = 1E-16;    
+RESIDUAL = 1E-8;    
 % Nb of discretisation point for 3D-1D interpolation
 NInt = 50;
 %===================================
@@ -151,7 +150,7 @@ Q  = 1.0;
 % Dimensionless conductivity of the capillary bed
 Kv = 1.0;
 % Dimensionless average radius of the capillary vessels []
-RADIUS = 0.10;
+%RADIUS = 0.10;
 %Dimensionless At[]
 At=1.0;
 %Dimensionless Av[]
@@ -163,12 +162,7 @@ Y=1.0;
 %Dimensionless Qpl[]
 Q_pl=1.0;
 
-% fluid viscosity [kg/ms]
-mu = 8.9E-04;
-% Viscosity of the blood [kg/ms]
-mu_V = 0.001; 	
-% Viscosity of the interstitial fluid [kg/ms]
-mu_T = 0.001; 
+
 %Diffusivity in the tissue [m^2/s]  
 Dt = 1.35E-09;
 %Diffusivity in the vessels [m^2/s] 
@@ -241,23 +235,23 @@ D_LF = -2*133.32;
 %===================================
 % Faces:   x=0  x=L  y=0  y=L  z=0  z=L
 % BC labels (DIR / MIX)
-BClabel = 'MIX MIX  MIX  MIX  MIX  MIX'
+BClabel = 'MIX MIX  MIX  MIX  MIX  MIX';
 % BC values
-BCvalue = '0.0 0.0  0.0  0.0  0.0  0.0'
+BCvalue = '0.0 0.0  0.0  0.0  0.0  0.0';
 % Coefficient for MIX condition
-BETA = 2.22E-6;
+BETA = 1.1E-5;
 % Outside interstitial pressure for MIX condition
 P0 = -1;
 
 % Faces:   x=0  x=L  y=0  y=L  z=0  z=L
 % BC labels (DIR / MIX)
-BClabel_transp = 'MIX  MIX  MIX  MIX  MIX  MIX'
+BClabel_transp = 'MIX  MIX  MIX  MIX  MIX  MIX';
 % BC values
-BCvalue_transp = '0.0  0.0  0.0  0.0  0.0  0.0'
+BCvalue_transp = '0.0  0.0  0.0  0.0  0.0  0.0';
 % Coefficient for MIX condition in tissue
-BETAtissue_transp = 1.0E-1
+BETAtissue_transp = 1.0E-19;
 % Coefficient for MIX condition in vessels
-BETAvessel_transp = 1.0E-1
+BETAvessel_transp = 1.0E-19;
 
 %===================================
 %  HEMATOCRIT PROBLEM
@@ -276,9 +270,9 @@ Visco_v=0;
 %  FLAG FOR FIXED POINT METHOD (FPM)
 %===================================
 % Residual for Solution of FPM
-Residual_Sol_FPM   = 1E-12;
+Residual_Sol_FPM   = 1E-5;
 % Residual for Conservation of Mass FPM
-Residual_Mass_FPM  = 1E-10;
+Residual_Mass_FPM  = 1E-5;
 % Maximum number of iterations for FPM
 Number_Iteration   = 30;
 % Under-relaxation coefficient
@@ -286,6 +280,6 @@ UNDER_RELAXATION_COEFFICIENT  = 1;
 % Number of iteration between saving progress
 Saving_Iteration   = 1;
 % Residual for Conservation of Mass FPM
-Residual_Hema_FPM  = 1E-10;
+Residual_Hema_FPM  = 1E-15;
 % Under-relaxation coefficient for Hematocrit Solution
-UNDER_RELAXATION_COEFFICIENT_HEMA  = 0.4;
+UNDER_RELAXATION_COEFFICIENT_HEMA  = 0.6;

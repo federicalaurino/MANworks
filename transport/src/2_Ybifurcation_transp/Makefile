@@ -1,15 +1,15 @@
 # ====================================================================
-#   "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+#   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
 #      Course on Advanced Programming for Scientific Computing
 #                     Politecnico di Milano
-#                         A.Y. 2014-2015
+#                         A.Y. 2015-2016
 #
-#                    Copyright D. Notaro 2015
+#                    Copyright (C) 2016 Stefano Brambilla
 # ====================================================================
 #   FILE        : Makefile
 #   DESCRIPTION : makefile for test simulations
-#   AUTHOR      : Domenico Notaro <domenico.not@gmail.com>
-#   DATE        : April 2015
+#   AUTHOR      : Stefano Brambilla <s.brambilla93@gmail.com> 
+#   DATE        : September 2016
 # ====================================================================
 
 include ../../config.mk

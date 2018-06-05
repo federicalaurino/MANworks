@@ -1,15 +1,15 @@
 %======================================================================
-%   "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+%   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
 %       Course on Advanced Programming for Scientific Computing
 %                     Politecnico di Milano
 %                         A.Y. 2014-2015
 %                 
-%               Copyright (C) 2015 Domenico Notaro
+%               Copyright (C) 2016 Stefano Brambilla
 %======================================================================
-%	FILE        : input.param
-%  DESCRIPTION : List of parameters for the uncoupled benchmark
-%	AUTHOR      : Domenico Notaro <domenico.not@gmail.com>
-%	DATE        : October 2015
+%  FILE		: input.param
+%  DESCRIPTION	: List of parameters for the network benchmark
+%  AUTHOR	: Stefano Brambilla <s.brambilla93@gmail.com> 
+%  DATE		: September 2016
 %======================================================================
 
 %  FLAGS

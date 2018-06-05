@@ -1,29 +1,29 @@
 /* -*- c++ -*- (enables emacs c++ mode) */
 /*======================================================================
-    "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+    "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
         Course on Advanced Programming for Scientific Computing
                       Politecnico di Milano
-                          A.Y. 2014-2015
+                         A.Y. 2015-2016
                   
-                Copyright (C) 2015 Domenico Notaro
+                Copyright (C) 2017 Stefano Brambilla
 ======================================================================*/
 /*! 
-  @file   main.cpp
-  @author Domenico Notaro <domenico.not@gmail.com>
-  @date   April 2015.
-  @brief  Main program for test simulations.
+  @file   main.cpp  
+  @author Stefano Brambilla <s.brambilla93@gmail.com>   
+  @date   September 2016 
+  @brief  Main program for test simulations.    
   @details
     We solve the coupled 3D/1D problem of fluid exchange between a 1D 
     network \Lambda and the 3D interstitial tissue \Omega
     
     *****************************************
-      Benchmark : single-vessel network 
+      Benchmark : complex Voronoi network 
       Mixed finite elements approximation
       Monolithic resolution by SuperLU 3.0
     *****************************************
     
 	See Section "Code verification: test-cases"
- */
+ */  
 
 #include <iostream>
 #include <getfem/bgeot_config.h> // for FE_ENABLE_EXCEPT
@@ -88,6 +88,8 @@ int main(int argc, char *argv[])
 		p.assembly_transp();    
 		//solve     
 		if (!p.solve_transp()) GMM_ASSERT1(false, "solve procedure has failed");  // the export is in the solve at each time step 
+		//check the mass balance at each junction
+		p.mass_balance();
 
 
 

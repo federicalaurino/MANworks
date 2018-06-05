@@ -1,17 +1,16 @@
-%=======================================================================================
-%           "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
-%                             Politecnico di Milano
-%                                 A.Y. 2016-2017
+%======================================================================
+%   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
+%       Course on Advanced Programming for Scientific Computing
+%                     Politecnico di Milano
+%                         A.Y. 2014-2015
 %                 
-%              Copyright (C) 2017 D. Notaro, S. Di Gregorio, L. Possenti
-%=======================================================================================
-%	FILE        :	input.param
-%  	DESCRIPTION :	List of parameters
-%	AUTHORS     :	Release 0.0.0: Domenico Notaro <domenico.not@gmail.com>    2015
-%			Release 3.0.1: Luca Possenti <luca.possenti@polimi.it>     2017
-%			Release 3.0.1: Simone Di Gregorio <simone.digre@gmail.com> 2017
-%	DATE        :	April 2017
-%=======================================================================================
+%               Copyright (C) 2016 Stefano Brambilla
+%======================================================================
+%  FILE		: input_linear.param
+%  DESCRIPTION	: List of parameters for the curved bifurcation benchmark
+%  AUTHOR	: Stefano Brambilla <s.brambilla93@gmail.com> 
+%  DATE		: April 2018
+%======================================================================
 %  GENERAL FLAG
 %===================================
 % Flag to import dimensionless param
@@ -24,12 +23,12 @@ CURVE_PROBLEM = 0;
 % If this flag is 0, the curvature is computed on the mesh
 IMPORT_CURVE = 0;
 % Output directory
-OUTPUT          = './vtk1/';
+OUTPUT          = './vtk_lin/';
 % Output directory where parameters EXPORT_PARAM=1 are saved 
-OutputDir       = './vtk1/';
-OutputDirectory = './vtk1/';
+OutputDir       = './vtk_lin/';
+OutputDirectory = './vtk_lin/';
 % Flag to import the dimensionless radius (to do that TEST_PARAM must be equal to 0 and parameters P U d k mu must be left)
-IMPORT_RADIUS   = 0;
+IMPORT_RADIUS   = 1;
 % Flag to export radius and conductivity of network in vtk file
 EXPORT_PARAM    = 1;
 % Flag to export the absolute value of vessel fluid velocity
@@ -48,7 +47,7 @@ TEST_RHS   = 0;
 %Flag to add advection terms
 ADVECTION=1;
 %Flag to add coupling terms
-COUPLING=1;
+COUPLING=0;
 %Flag to take the stationary problem
 STATIONARY=0;
 %Flag for the new formulation
@@ -63,14 +62,14 @@ TEST_GEOMETRY = 1;
 GT_T       = 'GT_PK(3,1)';
 NSUBDIV_T  = '[11,11,11]';
 ORG_T      = '[0,0,0]';
-SIZES_T    = '[0.72,0.72,0.72]';
+SIZES_T    = '[1,1,1]';
 NOISED_T   = '0';
 % Path to import the 3d mesh
 MESH_FILET = ' '; 
 % Path to import the 1d list of points
 MESH_FILEV = './bifurcation_1.pts'
 % Path to import radius of the newtork (read if IMPORT_RADIUS=1)
-RFILE      = './radius.pts'
+RFILE      = './radius_equal.pts'
 % Path to import the 1d list of points for Ht
 MESH_FILEH = './bifurcation_HT_1.pts'
 % Path to import the curvature of the vessels
@@ -122,15 +121,15 @@ k  = 1.0E-18;
 % Average interstitial pressure [Pa]
 P  = 133.32;
 % Characteristic flow speed in the capillary bed [m/s]
-U  = 100E-06;
+U  = 1E-03;
 % Characteristic l37ength of the problem [m]
-d  = 5.0E-4;
+d  = 1.0E-4;
 % Hydraulic conductivity of the capillary walls [m^2 s/kg]
-Lp = 1E-12;
+Lp = 0*1E-12;
 % Average radius of the capillary vessels [m]
 RADIUS = 4.00E-6;
 % Blood Viscosity [kg/m/s]
-mu_v = 3E-3;
+mu_v = 9.33E-3;
 % Interstial Fluid Viscosity [kg/m/s]
 mu_t = 1.2E-3;
 % Oncotic plasma pressure [Pa]
@@ -140,7 +139,7 @@ Pi_t = 2*133.32;
 % Reflection Coefficient of Starling Equation [-]
 sigma = 0.95;
 % Order of velocity profile in the vessels [-]
-Gamma = 2;
+Gamma = 2.0;
 %=================================
 %  TRANSPORT
 %=================================
@@ -151,7 +150,7 @@ Q  = 1.0;
 % Dimensionless conductivity of the capillary bed
 Kv = 1.0;
 % Dimensionless average radius of the capillary vessels []
-RADIUS = 0.10;
+%RADIUS = 0.10;
 %Dimensionless At[]
 At=1.0;
 %Dimensionless Av[]
@@ -163,27 +162,21 @@ Y=1.0;
 %Dimensionless Qpl[]
 Q_pl=1.0;
 
-% fluid viscosity [kg/ms]
-mu = 8.9E-04;
-% Viscosity of the blood [kg/ms]
-mu_V = 0.001; 	
-% Viscosity of the interstitial fluid [kg/ms]
-mu_T = 0.001; 
 %Diffusivity in the tissue [m^2/s]  
 Dt = 1.35E-09;
 %Diffusivity in the vessels [m^2/s] 
 Dv = 5E-07;
 %rate of metabolization [1/s]
-m = 8  ; %in realtà no, è una funzione di ct, non è costante
+m = 8.0645    ; %in realtà no, è una funzione di ct, non è costante
 %Permeability of the vessel wall [m/s]
 Perm = 3.5E-05;
 % surface area of lymphatic vessels per unit volume of tissue [1/m]
 SV = 1;
 
 % simulation time length [s]
-T = 3;
+T = 10;
 % time step [s]
-dt = 0.2;
+dt = 0.1;
 % initial concentration in tissue
 C0t=0;
 % initial concentration in network
@@ -243,7 +236,7 @@ BClabel = 'MIX MIX  MIX  MIX  MIX  MIX'
 % BC values
 BCvalue = '0.0 0.0  0.0  0.0  0.0  0.0'
 % Coefficient for MIX condition
-BETA = 2.22E-6;
+BETA = 1.1E-5;
 % Outside interstitial pressure for MIX condition
 P0 = -1;
 
@@ -253,9 +246,9 @@ BClabel_transp = 'MIX  MIX  MIX  MIX  MIX  MIX'
 % BC values
 BCvalue_transp = '0.0  0.0  0.0  0.0  0.0  0.0'
 % Coefficient for MIX condition in tissue
-BETAtissue_transp = 1.0E-1
+BETAtissue_transp = 1.0E-19
 % Coefficient for MIX condition in vessels
-BETAvessel_transp = 1.0E-1
+BETAvessel_transp = 1.0E-19
 
 %===================================
 %  HEMATOCRIT PROBLEM
@@ -263,7 +256,7 @@ BETAvessel_transp = 1.0E-1
 % Coefficient for MIX condition of hematocrit transport
 BETA_H=0;
 %Peclet Number for stabilization of hematocrit transport
-THETA=1;
+THETA=0;
 %Initial guess for hematocrit separation phase computation
 H_START=0.45;
 % Temperature of the blood
@@ -278,7 +271,7 @@ Residual_Sol_FPM   = 1E-12;
 % Residual for Conservation of Mass FPM
 Residual_Mass_FPM  = 1E-10;
 % Maximum number of iterations for FPM
-Number_Iteration   = 30;
+Number_Iteration   = 25;
 % Under-relaxation coefficient
 UNDER_RELAXATION_COEFFICIENT  = 1;
 % Number of iteration between saving progress

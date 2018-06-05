@@ -1,33 +1,36 @@
 # ====================================================================
-#   "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+#   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
 #      Course on Advanced Programming for Scientific Computing
 #                     Politecnico di Milano
-#                         A.Y. 2014-2015
+#                         A.Y. 2015-2016
 #
-#                    Copyright D. Notaro 2015
+#                    Copyright (C) 2016 Stefano Brambilla
 # ====================================================================
 #   FILE        : Makefile
 #   DESCRIPTION : makefile for test simulations
-#   AUTHOR      : Domenico Notaro <domenico.not@gmail.com>
-#   DATE        : April 2015
+#   AUTHOR      : Stefano Brambilla <s.brambilla93@gmail.com> 
+#   DATE        : September 2016
 # ====================================================================
 
 include ../../config.mk
 
 CPPFLAGS=-I../../include -I$(GETFEM_PREFIX)/include -I$(mkBoostInc) -I$(PROBLEM_FLUID_PREFIX)/include
-CXXFLAGS=-std=c++11 -D=M3D1D_VERBOSE_
+CXXFLAGS=-std=c++11 
+
 ifeq ($(DEBUG),yes)
   OPTFLAGS=-g -Wall
 else
   OPTFLAGS=-O3 -march=native
   CPPFLAGS+=-DNDEBUG
 endif
-LDFLAGS=-L$(GETFEM_PREFIX)/lib -L$(PROBLEM_FLUID_PREFIX)/lib -L../../lib -Wl,-rpath=../../lib -Wl,-rpath=$(PROBLEM_FLUID_PREFIX)/lib -L$(mkBoostLib)
+
+LDFLAGS=-L../../lib -L$(GETFEM_PREFIX)/lib -L$(PROBLEM_FLUID_PREFIX)/lib -L$(mkBoostLib) -Wl,-rpath=../../lib -Wl,-rpath=$(PROBLEM_FLUID_PREFIX)/lib 
 LIBRARIES=-lgetfem -lproblem3d1d -ltransport3d1d -lutil -lboost_iostreams -lboost_system -lboost_filesystem
 
 SRCS=$(wildcard *.cpp)
 OBJS=$(SRCS:.cpp=.o)
 EXEC=M3D1D
+
 
 OUTDIR=vtk
 

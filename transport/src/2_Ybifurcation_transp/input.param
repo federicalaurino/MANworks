@@ -1,15 +1,15 @@
 %======================================================================
-%   "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+%   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
 %       Course on Advanced Programming for Scientific Computing
 %                     Politecnico di Milano
 %                         A.Y. 2014-2015
 %                 
-%               Copyright (C) 2015 Domenico Notaro
+%               Copyright (C) 2016 Stefano Brambilla
 %======================================================================
-%	FILE        : input.param
-%  DESCRIPTION : List of parameters for the uncoupled benchmark
-%	AUTHOR      : Domenico Notaro <domenico.not@gmail.com>
-%	DATE        : October 2015
+%  FILE		: input.param
+%  DESCRIPTION	: List of parameters for the bifurcation benchmark
+%  AUTHOR	: Stefano Brambilla <s.brambilla93@gmail.com> 
+%  DATE		: September 2016
 %======================================================================
 
 %  FLAGS
@@ -20,6 +20,8 @@ TEST_PARAM = 0;
 TEST_RHS   = 0;
 %Flag to export parameters
 EXPORT_PARAM = 0; 
+% Flag to import the dimensionless radius (to do that TEST_PARAM must be equal to 0 and parameters P U d k mu must be left)
+IMPORT_RADIUS   = 1;
 % Flag to export results
 VTK_EXPORT = 1;
 %Flag to add advection terms
@@ -58,6 +60,8 @@ NOISED_T   = '0';
 MESH_FILET = ' '; 
 % Path to import the 1d list of points
 MESH_FILEV = './bifurcation.pts'; 
+% Path to import radius of the newtork (read if IMPORT_RADIUS=1)
+RFILE      = './radius.pts'
 % Path to import the 1d list of points for transport
 MESH_FILEV_TRANSP = './bifurcation_transp.pts';
 %===================================
@@ -219,9 +223,9 @@ BClabel_transp = 'MIX  MIX  MIX  MIX  MIX  MIX'
 % BC values
 BCvalue_transp = '0.0  0.0  0.0  0.0  0.0  0.0'
 % Coefficient for MIX condition in tissue
-BETAtissue_transp = 1.0E-1
+BETAtissue_transp = 1.0E-19
 % Coefficient for MIX condition in vessels
-BETAvessel_transp = 1.0E-1
+BETAvessel_transp = 1.0E-19
 
 %===================================
 %  FLAG FOR FIXED POINT METHOD (FPM)
