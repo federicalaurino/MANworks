@@ -1,9 +1,9 @@
 /* -*- c++ -*- (enableMbars emacs c++ mode) */
 /*======================================================================
-    "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+    "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
         Course on Advanced Programming for Scientific Computing
                       Politecnico di Milano
-                          A.Y. 2016-2017
+                          A.Y. 2015-2016
                   
                 Copyright (C) 2016 Stefano Brambilla
 ======================================================================*/
