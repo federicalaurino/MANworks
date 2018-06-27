@@ -67,7 +67,7 @@ struct descr3d1d_transp {
 		
 		FEM_TYPEV_C   = FILE_.string_value("FEM_TYPEV_C","FEM 1D vessel - concentration");
 		IM_TYPEV 	= FILE_.string_value("IM_TYPEV_TRANSP","Name of integration method");
-		SOLVE_METHOD = FILE_.string_value("SOLVE_METHOD", "Monolithic Solver"); 
+		SOLVE_METHOD = FILE_.string_value("SOLVE_METHOD_TRANSP", "Monolithic Solver"); 
 		if (SOLVE_METHOD != "SuperLU") { // iterative solver
 			MAXITER  = FILE_.int_value("MAXITER", "Max number of sub-iterations");
 			RES = FILE_.real_value("RES"); if (RES == 0.) RES = 2.0e-10;
