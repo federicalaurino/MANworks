@@ -60,6 +60,16 @@ public:
 	//! Compute residuals for mass balance at each junction
 	void mass_balance (void);	
 
+
+	//! Assemble the reduced problem (with exact solution)
+	void assembly_reduced_transp (void); 
+	//! Solve the reduced problem (with exact solution)
+	bool solve_reduced_transp (void);
+ 	//! Export the reduced problem (with exact solution)
+	void export_vtk_reduced_transp (const string & suff = ""); 
+ 	//! Compute the norm of error (with exact solution)
+	void compute_error_reduced_transp (void); 
+
 	//Aux methods for interface with problem3d1d class
 	//! Initialize the fluid problem
 	void init_fluid (int argc, char *argv[]);
@@ -141,7 +151,8 @@ protected:
 	//Aux method for solve 
 	//! Aux function for update of rhs at each time step
 	void update_transp(void);
-	
+
+
 	
 }; //end of class trasport3d1d
 
