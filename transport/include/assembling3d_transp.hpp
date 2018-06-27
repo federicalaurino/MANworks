@@ -46,8 +46,8 @@ asm_tissue_transp
 	 const mesh_im & mim,
 	 const mesh_fem & mf_c,
 	 const mesh_fem & mf_coef,
-	 const VEC & reac_data,
 	 const VEC & diff_data,
+	 const VEC & reac_data,
 	 const mesh_region & rg = mesh_region::all_convexes()
 	 ) 		
 {
