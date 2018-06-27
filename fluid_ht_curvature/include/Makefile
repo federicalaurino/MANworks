@@ -13,12 +13,9 @@
 # ==================================================================== 
 include ../config.mk
 
-CPPFLAGS=-I. -I$(mkGetfemInc) -I$(mkBoostInc)
+CPPFLAGS+=-I. -I$(mkGetfemInc) -I$(mkBoostInc)
 CXXFLAGS+=-std=c++14 -fPIC
 
-ifeq ($(WITH_SAMG), 1)
-CXXFLAGS+=-DWITH_SAMG 
-endif
 
 ifeq ($(DEBUG),yes)
   OPTFLAGS=-g -Wall

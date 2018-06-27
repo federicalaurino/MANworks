@@ -17,14 +17,6 @@ module load boost
 #export LD_LIBRARY_PATH=${mkGetfemLib}:${LD_LIBRARY_PATH}
 #export LD_LIBRARY_PATH=${mkBoostLib}:${LD_LIBRARY_PATH}
 
-export mkVtkInc=/opt/VTK/include
-export mkVtkLib=/opt/VTK/lib
-export mkVtkHome=/opt/VTK
 
-# SAMG libraries installed: optimized solver
-export SAMG=/opt/lib/samg
-export LD_LIBRARY_PATH=$SAMG:$LD_LIBRARY_PATH
-export SVD_LICENSE_FILE=@nisserver.mate.polimi.iexport SVD_LICENSE_FILE=@nisserver.mate.polimi.it
-# maximum number of threads
-export OMP_NUM_THREADS=17
-export WITH_SAMG=1
+# The SAMG libraries are not installed on this computer, non optimized solver.
+export WITH_SAMG=0

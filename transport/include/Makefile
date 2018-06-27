@@ -11,12 +11,11 @@
 #   AUTHOR      : Stefano Brambilla <s.brambilla93@gmail.com>
 #   DATE        : September 2016
 # ====================================================================
-
 include ../config.mk
 
-CPPFLAGS=-I. -I$(GETFEM_PREFIX)/include -I$(mkBoostInc) -I$(PROBLEM_FLUID_PREFIX)/include
-CXXFLAGS=-std=c++11 -Wall -fPIC
-OPTFLAGS=-O3 -DNDEBUG -march=native
+CPPFLAGS+=-I. -I$(GETFEM_PREFIX)/include -I$(mkBoostInc) -I$(PROBLEM_FLUID_PREFIX)/include
+CXXFLAGS+=-std=c++11 -Wall -fPIC
+
 
 ifeq ($(DEBUG),yes)
   OPTFLAGS=-g -Wall

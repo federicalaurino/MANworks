@@ -15,16 +15,16 @@
 include ../../config.mk
 
 CPPFLAGS=-I../../include -I$(GETFEM_PREFIX)/include -I$(mkBoostInc)
-CXXFLAGS=-std=c++11 -D=M3D1D_VERBOSE_
+CXXFLAGS=-std=c++11 
+
 ifeq ($(DEBUG),yes)
   OPTFLAGS=-g -Wall
 else
   OPTFLAGS=-O3 -march=native
   CPPFLAGS+=-DNDEBUG
 endif
-LDFLAGS=-L../../lib -L$(GETFEM_PREFIX)/lib -L$(mkBoostLib) 
-LIBRARIES=-lproblem3d1d -lgetfem -lutil -lboost_iostreams -lboost_system -lboost_filesystem
-LDFLAGS+=-Wl,-rpath=../../lib
+LDFLAGS+=-L../../lib -L$(mkGetfemLib) -L$(mkBoostLib) -Wl,-rpath=../../lib
+LIBRARIES+=-lproblem3d1d -lgetfem -lutil -lboost_iostreams -lboost_system -lboost_filesystem
 
 SRCS=$(wildcard *.cpp)
 OBJS=$(SRCS:.cpp=.o)
@@ -43,7 +43,6 @@ all: $(EXEC)
 
 $(EXEC): $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBRARIES)
-	mkdir vtk
 
 clean:
 	$(RM) $(OBJS) $(EXEC) *~ *.log

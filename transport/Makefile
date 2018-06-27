@@ -19,6 +19,10 @@ all: library
 	$(MAKE) -C src/2_Ybifurcation_transp 
 	$(MAKE) -C src/3_network_transp 
 	$(MAKE) -C src/4_curved_singlebranch 
+	$(MAKE) -C src/5_curved_bifurcation
+	$(MAKE) -C src/6_anastomosis 
+	$(MAKE) -C src/7_Voronoi_Network
+	$(MAKE) -C src/8_convergence_error
 
 library: 
 	$(MAKE) -C include
@@ -37,6 +41,10 @@ clean:
 	$(MAKE) -C src/2_Ybifurcation_transp clean
 	$(MAKE) -C src/3_network_transp clean
 	$(MAKE) -C src/4_curved_singlebranch clean
+	$(MAKE) -C src/5_curved_bifurcation clean
+	$(MAKE) -C src/6_anastomosis  clean
+	$(MAKE) -C src/7_Voronoi_Network clean
+	$(MAKE) -C src/8_convergence_error clean
 	
 distclean: clean
 	$(RM) -r doc/*
@@ -45,3 +53,7 @@ distclean: clean
 	$(MAKE) -C src/2_Ybifurcation_transp distclean
 	$(MAKE) -C src/3_network_transp distclean
 	$(MAKE) -C src/4_curved_singlebranch distclean
+	$(MAKE) -C src/5_curved_bifurcation distclean
+	$(MAKE) -C src/6_anastomosis  distclean
+	$(MAKE) -C src/7_Voronoi_Network distclean
+	$(MAKE) -C src/8_convergence_error distclean
