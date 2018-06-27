@@ -138,10 +138,10 @@ struct param3d1d {
 
 		// Check
 		//GR gmm::resize(Ri_, n_branch);
-		if (IMPORT_RADIUS)
+/*		if (IMPORT_RADIUS)
 			GMM_ASSERT1(NONDIM_PARAM == 0,
 				"try to import non constant (dimensionless) radius:" 
-				"please insert dimensional parameters");
+				"please insert dimensional parameters"); */
 		#ifdef M3D1D_VERBOSE_
 		cout << "  Assembling dimensionless radius R'... "   << endl;
 		#endif
@@ -250,7 +250,8 @@ struct param3d1d {
 			kt_.assign(dof_datat, k_/mu_t_*P_/U_/d_);
 			pi_t_ = pi_t_/P_;
 			pi_v_ = pi_v_/P_; 
-
+			kv_.clear();
+			Q_.clear();
 			for (auto r : R_){ // C++11-only!
 				kv_.emplace_back(pi/2.0/(Gamma_+2.0)/mu_v_*P_*d_/U_*r*r*r*r);
 				Q_.emplace_back(2.0*pi*Lp_*P_/U_*r);
