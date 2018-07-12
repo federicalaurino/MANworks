@@ -18,6 +18,9 @@
  #include <AMG_Interface.hpp>
  #include <cmath>
  #include "gmm/gmm_inoutput.h"
+ #include "getfem/getfem_import.h"
+
+
  namespace getfem {
 
 
@@ -78,7 +81,9 @@
 		#ifdef M3D1D_VERBOSE_
 		cout << "Importing the 3D mesh for the tissue ...  "   << endl;
 		#endif
-		 import_msh_file(descr.MESH_FILET, mesht);
+string st("gmsh:"+descr.MESH_FILET);
+getfem::import_mesh(st,mesht);
+		 //import_msh_file(descr.MESH_FILET, mesht);
 	}else{
 		#ifdef M3D1D_VERBOSE_
 		cout << "Building the regular 3D mesh for the tissue ...  "   << endl;
@@ -753,8 +758,15 @@
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling aux exchange matrices Mbar and Mlin ..." << endl;
 	#endif
+
+	if(PARAM.int_value("couple", "flag for coupling function (notaro 0, brambilla 1)"))
+	asm_exchange_aux_mat_transp(Mbar, Mlin, 
+			mimv, mf_Ct, mf_Cv, mf_coefv, param.R(), descr.NInt, nb_branches);
+
+	if(!PARAM.int_value("couple", "flag for coupling function (notaro 0, brambilla 1)"))
 	asm_exchange_aux_mat(Mbar, Mlin, 
 			mimv, mf_Ct, mf_Cv, param.R(), descr.NInt);
+
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling exchange matrices ..." << endl;
 	#endif
@@ -1482,8 +1494,13 @@ double c_exact_func(const bgeot::base_node & x){
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling aux exchange matrices Mbar and Mlin ..." << endl;
 	#endif
+	if(PARAM.int_value("couple", "flag for coupling function (notaro 0, brambilla 1)"))
 	asm_exchange_aux_mat_transp(Mbar, Mlin, 
-			mimv, mf_Ct, mf_Cv, mf_coefv, param.R(), descr.NInt);
+			mimv, mf_Ct, mf_Cv, mf_coefv, param.R(), descr.NInt, nb_branches);
+
+	if(!PARAM.int_value("couple", "flag for coupling function (notaro 0, brambilla 1)"))
+	asm_exchange_aux_mat(Mbar, Mlin, 
+			mimv, mf_Ct, mf_Cv, param.R(), descr.NInt);
 
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling exchange matrices ..." << endl;
@@ -1785,14 +1802,16 @@ else if (descr_transp.SOLVE_METHOD == "SAMG"){
 	exp_Ct_ex.write_point_data(mf_Ct_ex, c_ex, "Ct_exact");
 
 	mesh_im mimt_ex(mesht);
-	pintegration_method pim_t = int_method_descriptor(PARAM.string_value("IM_TYPET_CEX","Integration method for L2/H1 norm of exact solution"));
-	mimt_ex.set_integration_method(mesht.convex_index(), pim_t);
+	pintegration_method pim_t_ex = int_method_descriptor(PARAM.string_value("IM_TYPET_CEX","Integration method for L2/H1 norm of exact solution"));
+	mimt_ex.set_integration_method(mesht.convex_index(), pim_t_ex);
 
 
 	cout << endl<<"... time to interpolate the exact solution:  " << gmm::uclock_sec() - time << " second\n";
 
 	time = gmm::uclock_sec();
 
+if (PARAM.int_value("NORM","flag if you want to compute the norm only on a face or in the volume")==0)
+{ // compute the norm on a single face, with ch in P1, cex in P3
 std::vector<scalar_type> L2v(1);
 std::vector<scalar_type> H1v(1);
 
@@ -1836,21 +1855,156 @@ cout << endl<<"... time to compute the H1 norm:  " << gmm::uclock_sec() - time <
 	L2_norm=sqrt(L2_norm);
 	H1_norm=sqrt(H1_norm);
 	
-
+	cout <<"norm computed on a face: "<<endl;
 	cout << "L2 norm error = " << L2_norm << endl;
 	cout << "H1 norm error = " << H1_norm << endl; 
 
+}
+else if (PARAM.int_value("NORM","flag if you want to compute the norm only on a face or in the volume")==1)
+{
+// compute the norm on all volume, with ch in P1, cex in P3
+std::vector<scalar_type> L2v(1);
+std::vector<scalar_type> H1v(1);
 
+	getfem::generic_assembly
+	assemL2("Ch=data$1(#1);" "Cex=data$2(#2);"
+		"t1=comp(Base(#1).Base(#1))(i,j).Ch(i).Ch(j);"
+		"t2=comp(Base(#2).Base(#2))(i,j).Cex(i).Cex(j);"
+		"t3=comp(Base(#1).Base(#2))(i,j).Ch(i).Cex(j);"
+	"V$1() += t1 + t2 - t3-t3;");
+	assemL2.push_mi(mimt_ex);
+	assemL2.push_mf(mf_Ct);
+	assemL2.push_mf(mf_Ct_ex);
+	assemL2.push_data(UM_transp);
+	assemL2.push_data(c_ex);
+	assemL2.push_vec(L2v);
+	assemL2.assembly();   //region 0 is the face x=0			
+	
+
+cout << endl<<"... time to compute the L2 norm:  " << gmm::uclock_sec() - time << " second\n";	
+time = gmm::uclock_sec();
+
+	getfem::generic_assembly
+	assemH1("Ch=data$1(#1);" "Cex=data$2(#2);"
+		"t1=comp(Grad(#1).Grad(#1))(i,p,j,p).Ch(i).Ch(j);"
+		"t2=comp(Grad(#2).Grad(#2))(i,p,j,p).Cex(i).Cex(j);"
+		"t3=comp(Grad(#1).Grad(#2))(i,p,j,p).Ch(i).Cex(j);"
+	"V$1() += t1 + t2 - t3-t3;");
+	assemH1.push_mi(mimt_ex);
+	assemH1.push_mf(mf_Ct);
+	assemH1.push_mf(mf_Ct_ex);
+	assemH1.push_data(UM_transp);
+	assemH1.push_data(c_ex);
+	assemH1.push_vec(H1v);
+	assemH1.assembly();   //region 0 is the face x=0	
+
+cout << endl<<"... time to compute the H1 norm:  " << gmm::uclock_sec() - time << " second\n\n";	
+	scalar_type L2_norm=L2v[0];
+	scalar_type H1_norm=H1v[0];
+	H1_norm+=L2_norm;
+
+	L2_norm=sqrt(L2_norm);
+	H1_norm=sqrt(H1_norm);
+	
+	cout <<"norm computed on the volume: "<<endl;
+	cout << "L2 norm error = " << L2_norm << endl;
+	cout << "H1 norm error = " << H1_norm << endl; 
+}
+else if (PARAM.int_value("NORM","flag if you want to compute the norm only on a face or in the volume")==2)
+{
+// compute the norm on a single face, with ch in P3, cex in P3
+	vector_type c_error(mf_Ct_ex.nb_dof());
+	getfem::interpolation(mf_Ct, mf_Ct_ex, UM_transp,c_error);
+	gmm::add(c_error, gmm::scaled(c_ex, -1.0), c_error); // V1 - 1.0 * V2 --> V2	
+	
+std::vector<scalar_type> L2v(1);
+std::vector<scalar_type> H1v(1);
+
+	getfem::generic_assembly
+	assemL2("C_error=data$1(#1);"
+	"V$1() += comp(Base(#1).Base(#1))(i,j).C_error(i).C_error(j);");
+	assemL2.push_mi(mimt_ex);
+	assemL2.push_mf(mf_Ct_ex);
+	assemL2.push_data(c_error);
+	assemL2.push_vec(L2v);
+	assemL2.assembly(1);   //region 0 is the face x=0			
+	
+
+cout << endl<<"... time to compute the L2 norm:  " << gmm::uclock_sec() - time << " second\n";	
+time = gmm::uclock_sec();
+
+	getfem::generic_assembly
+	assemH1("C_error=data$1(#1);"
+	"V$1() += comp(Grad(#1).Grad(#1))(i,p,j,p).C_error(i).C_error(j);");
+	assemH1.push_mi(mimt_ex);
+	assemH1.push_mf(mf_Ct_ex);
+	assemH1.push_data(c_error);
+	assemH1.push_vec(H1v);
+	assemH1.assembly(1);   //region 0 is the face x=0	
+
+cout << endl<<"... time to compute the H1 norm:  " << gmm::uclock_sec() - time << " second\n\n";	
+	scalar_type L2_norm=L2v[0];
+	scalar_type H1_norm=H1v[0];
+	H1_norm+=L2_norm;
+
+	L2_norm=sqrt(L2_norm);
+	H1_norm=sqrt(H1_norm);
+	
+	cout <<"norm computed on a face: "<<endl;
+	cout << "L2 norm error = " << L2_norm << endl;
+	cout << "H1 norm error = " << H1_norm << endl; 
+}
+else if (PARAM.int_value("NORM","flag if you want to compute the norm only on a face or in the volume")==3)
+{
+// compute the norm on all the volume, with ch in P3, cex in P3
+	vector_type c_error(mf_Ct_ex.nb_dof());
+	getfem::interpolation(mf_Ct, mf_Ct_ex, UM_transp,c_error);
+	gmm::add(c_error, gmm::scaled(c_ex, -1.0), c_error); // V1 - 1.0 * V2 --> V2	
+	
+std::vector<scalar_type> L2v(1);
+std::vector<scalar_type> H1v(1);
+
+	getfem::generic_assembly
+	assemL2("C_error=data$1(#1);"
+	"V$1() += comp(Base(#1).Base(#1))(i,j).C_error(i).C_error(j);");
+	assemL2.push_mi(mimt_ex);
+	assemL2.push_mf(mf_Ct_ex);
+	assemL2.push_data(c_error);
+	assemL2.push_vec(L2v);
+	assemL2.assembly();   //region 0 is the face x=0			
+	
+
+cout << endl<<"... time to compute the L2 norm:  " << gmm::uclock_sec() - time << " second\n";	
+time = gmm::uclock_sec();
+
+	getfem::generic_assembly
+	assemH1("C_error=data$1(#1);"
+	"V$1() += comp(Grad(#1).Grad(#1))(i,p,j,p).C_error(i).C_error(j);");
+	assemH1.push_mi(mimt_ex);
+	assemH1.push_mf(mf_Ct_ex);
+	assemH1.push_data(c_error);
+	assemH1.push_vec(H1v);
+	assemH1.assembly();   //region 0 is the face x=0	
+
+cout << endl<<"... time to compute the H1 norm:  " << gmm::uclock_sec() - time << " second\n\n";	
+	scalar_type L2_norm=L2v[0];
+	scalar_type H1_norm=H1v[0];
+	H1_norm+=L2_norm;
+
+	L2_norm=sqrt(L2_norm);
+	H1_norm=sqrt(H1_norm);
+	
+	cout <<"norm computed on the volume: "<<endl;
+	cout << "L2 norm error = " << L2_norm << endl;
+	cout << "H1 norm error = " << H1_norm << endl; 
+}
+
+//interpolate exact function
 	vector_type c_ex_P1(mf_Ct.nb_dof());
 	interpolation_function(mf_Ct, c_ex_P1, c_exact_func );
 
-	vtk_export exp_Ct_ex_P1(descr_transp.OUTPUT+"Ct_ex_P1"+".vtk");
-	exp_Ct_ex_P1.exporting(mf_Ct);
-	exp_Ct_ex_P1.write_mesh();
-	exp_Ct_ex_P1.write_point_data(mf_Ct, c_ex_P1, "Ct_exact_P1");
-
-	gmm::add(UM_transp, gmm::scaled(c_ex_P1, -1.0), c_ex_P1); // V1 - 2.0 * V2 --> V2
-
+	gmm::add(UM_transp, gmm::scaled(c_ex_P1, -1.0), c_ex_P1); // V1 - 1.0 * V2 --> V2
+//export ch-cex
 	vtk_export exp_err(descr_transp.OUTPUT+"Ct_error"+".vtk");
 	exp_err.exporting(mf_Ct);
 	exp_err.write_mesh();
