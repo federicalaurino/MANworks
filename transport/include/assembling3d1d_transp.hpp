@@ -39,7 +39,8 @@ asm_exchange_aux_mat_transp
 	 const getfem::mesh_fem & mf_v,
 	 const getfem::mesh_fem & mf_coefv,
 	 const VEC & RAD,
-	 const size_type NInt
+	 const size_type NInt,
+	 const size_type nb_branches
 	 ) 
 {
 	gmm::clear(Mbar); gmm::clear(Mlin);
@@ -59,8 +60,14 @@ asm_exchange_aux_mat_transp
 	std::vector<scalar_type> Pbari(NInt); 
 	std::vector<scalar_type> Pt(nb_dof_t); 
 	size_type counter = 0;
-	for (size_type i = 0; i < nb_dof_v; i++){
+	size_type first_el_branch = 0; //counter for the first element of the branch
+	for (size_type b = 0; b < nb_branches; b++){
+		//mesh_region &rg_branch = mf_v.linked_mesh().region(b); // branch region
+		dal::bit_vector dofs_b= mf_v.basic_dof_on_region(b);  // list of the indexes of all the dofs in the branch b
+		first_el_branch = 0;
+	for (dal::bv_visitor i(dofs_b); !i.finished(); ++i){
 		counter++;
+		first_el_branch++;
 		if (counter*100 >= nb_dof_v) {
 			counter = 0; 
 			#ifdef M3D1D_VERBOSE_
@@ -72,7 +79,7 @@ asm_exchange_aux_mat_transp
 		// Build the list of point on the i-th circle:
 		// ... first consider an orthonormal system v0, v1, v2:
 		base_node v0;
-		if (i==0) {
+		if (first_el_branch==1) {
 			v0 = mf_v.point_of_basic_dof(i+1) - mf_v.point_of_basic_dof(i);			
 		} else {
 			v0 = mf_v.point_of_basic_dof(i) - mf_v.point_of_basic_dof(i-1);
@@ -116,8 +123,12 @@ asm_exchange_aux_mat_transp
 			(*it_nz)/= sum_row; //2*pi*RADIUS[i]:NO!!! //sum_row:notaro?  //Nint:pare quasi uguale a notaro
 		}
 
-	} /* end of outer for loop */
-	cout << endl;
+	} /* end of convexes loop */
+
+	} /* end of branch loop */
+
+
+
 
 } /* end of build_aux_matrices */
 
