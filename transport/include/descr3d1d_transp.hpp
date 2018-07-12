@@ -1,9 +1,9 @@
 /* -*- c++ -*- (enableMbars emacs c++ mode) */
 /*======================================================================
-    "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+    "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
         Course on Advanced Programming for Scientific Computing
                       Politecnico di Milano
-                          A.Y. 2016-2017
+                          A.Y. 2015-2016
                   
                 Copyright (C) 2016 Stefano Brambilla
 ======================================================================*/
@@ -17,6 +17,7 @@
 
  
 /** @defgroup input User-defined parameters  */
+
 
 #ifndef M3D1D_DESCR3D1D_TRANSP_HPP_
 #define M3D1D_DESCR3D1D_TRANSP_HPP_
@@ -67,7 +68,7 @@ struct descr3d1d_transp {
 		
 		FEM_TYPEV_C   = FILE_.string_value("FEM_TYPEV_C","FEM 1D vessel - concentration");
 		IM_TYPEV 	= FILE_.string_value("IM_TYPEV_TRANSP","Name of integration method");
-		SOLVE_METHOD = FILE_.string_value("SOLVE_METHOD", "Monolithic Solver"); 
+		SOLVE_METHOD = FILE_.string_value("SOLVE_METHOD_TRANSP", "Monolithic Solver"); 
 		if (SOLVE_METHOD != "SuperLU") { // iterative solver
 			MAXITER  = FILE_.int_value("MAXITER", "Max number of sub-iterations");
 			RES = FILE_.real_value("RES"); if (RES == 0.) RES = 2.0e-10;
