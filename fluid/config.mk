@@ -1,3 +1,8 @@
-GETFEM_PREFIX=/opt/getfem/5.0
-#$(mkGetfemInc)/../
-#/home/nico/workspace/pacs/model3d1d/lib/getfem
+#path to getfem library
+GETFEM_PREFIX=$(mkGetfemInc)/../
+#flag (yes/no) for debug: DEBUG=no for optimized installation
+DEBUG= no
+#flag (yes/no) for verbose: VERBOSE=yes prints comments at runtime
+VERBOSE = no
+
+
