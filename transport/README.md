@@ -5,10 +5,9 @@
 
 **Mailto** : <s.brambilla93@gmail.com>
 
-**Date**   : September 2016
+**Date**   : March 2018
 
-
-#### *Previous project*
+#### *Previous projects*
 
 **Author** : Domenico Notaro 
 
@@ -22,23 +21,24 @@
 ## How to install and run the program
 -------------------------------------------------------
 ## THE PACKAGE
-- `doc/`     : Code documentation
 
 - `include/` : General include files
 
 - `lib/`     : Main library (to be generated)
 
 - `src/`     : Example sources
-  - `1_uncoupled/`    : solve the uncoupled 1d and 3d problems
-  - `2_singlebranch/` : solve the coupling with single-vessel network
-  - `3_Ybifurcation/` : solve the problem with Y-shaped network
-  - `4_primalmixed/`  : compare the output of primal and mixed solvers
-  - `5_CFS/`          : simulate the flow of CSF in the brain
-  - `6_singlebranch_transport/`: solve the coupled diffusion problem on a single-vessel network
-  - `7_Ybifurcation_transport/`: solve the coupled diffusion problem on a single-vessel network
-  - `8_network_transport/`: solve the coupled diffusion problem on a single-vessel network
+  - `1_singlebranch_transp/` : solve the coupling with single-vessel network
+  - `2_Ybifurcation_transp/` : solve the problem with Y-shaped network
+  - `3_network_transp/`  : solve te problem with a small network
+  - `4_curved_singlebranch/`  : solve the problem with a curved single-vessel network
+  - `5_curved_bifurcation/`  : solve the problem with curved Y-shaped network
+  - `6_anastomosis/`  : solve the problem with anastomosis network
+  - `7_Voronoi_network/`  : solve te problem with a Voronoi network
+ 
   
-- `config.mk`: Specify the variable GETFEM_PREFIX for GetFEM++ library
+- `config.mk`: Specify some variables for compiler
+
+- `configure.sh`: Load the modules from a MOX computer
 
 - `Doxyfile` : Instruction to build the code documentation
 
@@ -51,23 +51,34 @@ You need the open source finite element library "GetFEM++"
 
 See <http://download.gna.org/getfem/html/homepage>
 
-Version >= 4.2 is preferible
-
-You must modify the path to the GetFEM library in `config.mk`:
-``` 
-GETFEM_PREFIX=/home/.../path/to/.../getfem
-``` 
-
-Alternatively, at MOX cluster use the `module.sh` file:
-``` 
-$ source module.sh
-``` 
+Version >= 5.1 is necessary
 
 BEWARE: 
 Recall to add the library path to LD_LIBRARY_PATH. Example:
 ```
 $ export LD_LIBRARY_PATH=/home/...path/to.../getfem/lib
 ```
+======================
+
+### Before installation
+
+You must modify, in `config.mk`, the path to the GetFEM library and to folder containing the fluid problem:
+``` 
+GETFEM_PREFIX=/home/.../path/to/.../getfem
+PROBLEM_FLUID_PREFIX=/home/.../path/to/.../fluid
+``` 
+In `config.mk`, you can also set the flags for optimized or debug installation, and for activating the comments at runtime:
+``` 
+DEBUG= no
+VERBOSE= yes
+``` 
+
+Finally, you need to export to LD_LIBRARY_PATH the paths to GetFEM, Boost and Qhull libraries;
+this can be done using the modules system (from a MOX computer) or setting manually the paths in the file configure.sh.
+Before compiling, call:
+``` 
+$ source configure.sh
+``` 
 
 ======================
 
@@ -76,38 +87,32 @@ Build the whole project with:
 ``` 
 $ make
 ``` 
-It first build the (static) library "libproblem3d1d" by calling
+It first build the (shared) library "libproblem3d1d" by calling
 the Makefile in `include/`:
 ``` 
 $ make -C include/
 ``` 
 Then, it calls the inner makefiles provided for all examples.
 
-It is also possible to build a single example, e.g. "1_uncoupled", with:
+It is also possible to build a single example, e.g. "1_singlebranch_transp", with:
 ``` 
 $ make library
 
-$ make -C src/1_uncoupled
+$ make -C src/1_singlebranch_transp
 ``` 
 
-BEWARE: 
-If you want non-optimized program type:
-``` 
-$ make DEBUG=yes 
-``` 
-By default DEBUG=no.
 
 The following macro are defined and exported
 ``` 
-CPPFLAGS=-I../../include -I$(GETFEM_PREFIX)/include
+CPPFLAGS=-I../../include -I$(GETFEM_PREFIX)/include -I$(mkBoostInc) -I$(PROBLEM_FLUID_PREFIX)/include
 
-CXXFLAGS=-std=c++11 -D=M3D1D_VERBOSE_
+CXXFLAGS=-std=c++11 
 
 OPTFLAGS=-O3 -DNDEBUG -march=native
 
-LDFLAGS=-L$(GETFEM_PREFIX)/lib
+LDFLAGS=-L../../lib -L$(GETFEM_PREFIX)/lib -L$(PROBLEM_FLUID_PREFIX)/lib -L$(mkBoostLib) -Wl,-rpath=../../lib -Wl,-rpath=$(PROBLEM_FLUID_PREFIX)/lib 
 
-LIBRARIES=-lgetfem
+LIBRARIES=-lgetfem -lproblem3d1d -ltransport3d1d -lutil -lboost_iostreams -lboost_system -lboost_filesystem
 ``` 
 Recall that any macro may be overrlued by specifying it when calling 
 make. Example: 
@@ -143,11 +148,12 @@ In addition the external Makefile (./Makefile) has the following options:
 -  doc       : produces the documentation (html, tex)
 -  pdf       : produces a guide in portable format
 - library    : build the library from files in include/
+- static     : build a static library from the files in include/
 
 ## RUN EXAMPLES
-To run a specif example, go to the related subdirectory
+To run a specific example, go to the related subdirectory
 ``` 
-$ cd src/3_Yshaped
+$ cd src/3_network_transp
 ``` 
 Build the program
 ``` 
@@ -189,15 +195,14 @@ Each program contains the file input.param that specifies
 
   BCvalue = '0.0  0.0  0.0  0.0  0.0  0.0'
   
-  
-BEWARE: All paths in file param must be ABSOLUTE
+ 
 
 ##  DEV ENVIRONMENT
-OS         : Ubuntu 14.04 LTS 64-bit
+OS         : CentOS Linux 7 64-bit 
 
-Processor  : Intel® Core™ i5-2410M CPU @ 2.30GHz × 4 
+Processor  : Intel® Core™ i5-2310 CPU @ 2.90GHz × 4
 
-Compiler   : g++-4.8
+Compiler   : g++-5.2.1
 
-GetFEM lib : 5.0
+GetFEM lib : 5.2
 
