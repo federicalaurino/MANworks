@@ -7,7 +7,7 @@ VERBOSE = no
 
 ifeq ($(WITH_SAMG),1)
 CXXFLAGS += -I${SAMG}/ -DWITH_SAMG
-LDFLAGS += -L/opt/lib/samg/
+LDFLAGS += -L/opt/lib/samg/ -Wl,-rpath=/opt/lib/samg/
 CXXFLAGS+= -DSAMG_UNIX_LINUX -DSAMG_LCASE_USCORE -DPYRAMID_TRIANGULAR_FACETS
 LIBRARIES += -lamg -liomp5
 endif

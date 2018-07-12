@@ -27,5 +27,5 @@ export SAMG=/opt/lib/samg
 export LD_LIBRARY_PATH=$SAMG:$LD_LIBRARY_PATH
 export SVD_LICENSE_FILE=@nisserver.mate.polimi.iexport SVD_LICENSE_FILE=@nisserver.mate.polimi.it
 # maximum number of threads
-export OMP_NUM_THREADS=17
+export OMP_NUM_THREADS=1
 export WITH_SAMG=1
