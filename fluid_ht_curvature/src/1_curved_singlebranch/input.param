@@ -41,7 +41,7 @@ PRINT_RESIDUALS       = 1;
 % Flag to choose Lymphatic Drainage Curve (0 = sigmoid; 1= linear)
 LINEAR_LYMPHATIC_DRAINAGE = 1;
 % Flag to study the hematocrit distribution all over the network (0 = constant; 1= transport)
-HEMATOCRIT_TRANSPORT = 1;
+HEMATOCRIT_TRANSPORT = 0;
 %===================================
 %  MESH
 %===================================
@@ -109,7 +109,7 @@ d  = 5.0E-4;
 % Hydraulic conductivity of the capillary walls [m^2 s/kg]
 Lp = 1E-12;
 % Average radius of the capillary vessels [m]
-RADIUS = 4.00E-6;
+%RADIUS = 4.00E-6;
 % Blood Viscosity [kg/m/s]
 mu_v = 3E-3;
 % Interstial Fluid Viscosity [kg/m/s]
@@ -143,30 +143,30 @@ D_LF = -2*133.32;
 %  DIMENSIONLESS PARAMETER
 %==============================================
 % Dimensionless conductivity of the tissue
-%Kt = 2E-5;
+Kt = 2E-5;
 % Dimensionless conductivity of the capillary wall
-%Q  = 9.6007E-7;
+Q  = 9.6007E-7;
 % Dimensionless conductivity of the capillary bed
-%Kv = 2.6759;
+Kv = 2.6759;
 % Dimensionless average radius of the capillary vessels []
-%RADIUS = 1.53E-1;
+RADIUS = 1.53E-1;
 % Dimensionless conductivity of lymphatic wall
-%Q_LF = 1;
+Q_LF = 1;
 % Coefficient of lymphatic flow modelled as a SIGMOID of equation QLF = A - B / ( 1 + exp ( ( Pt + D ) / C )
 % Dimensionless Parameter A
-%QLF_A = 1.7170E-5;
+QLF_A = 1.7170E-5;
 % Dimensionless Parameter B
-%QLF_B = 1.6485E-5;
+QLF_B = 1.6485E-5;
 % Dimensionless Parameter C
-%QLF_C = 0.6573;
+QLF_C = 0.6573;
 % Dimensionless Parameter D
-%QLF_D = -2;
+QLF_D = -2;
 % Oncotic plasma pressure [-] 
-%pi_v_adim = 27;
+pi_v_adim = 27;
 % Oncotic Interstitial pressure [-]
-%pi_t_adim = 2;
+pi_t_adim = 2;
 % Reflection Coefficient of Starling Equation [-]
-%sigma = 0.95;
+sigma = 0.95;
 %===================================
 %  BOUNDARY CONDITIONS
 %===================================
