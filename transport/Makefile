@@ -1,23 +1,24 @@
 # ====================================================================
-#   "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+#   "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
 #      Course on Advanced Programming for Scientific Computing
 #                     Politecnico di Milano
-#                         A.Y. 2014-2015
+#                         A.Y. 2016-2017
 #
-#                    Copyright D. Notaro 2015
+#                    Copyright D. Brambilla 2016
 # ====================================================================
 #   FILE        : Makefile
 #   DESCRIPTION : makefile for test simulations
-#   AUTHOR      : Domenico Notaro <domenico.not@gmail.com>
-#   DATE        : November 2015
+#   AUTHOR      : Stefano Brambilla <s.brambilla93@gmail.com>
+#   DATE        : Settembre 2016
 # ====================================================================
 
 .PHONY: all doc clean distclean library
 
 all: library
-	$(MAKE) -C src/1_singlebranch_transp 
-	$(MAKE) -C src/2_Ybifurcation_transp 
-	$(MAKE) -C src/3_network_transp 
+	$(MAKE) -C src/1_uncoupled_branch
+	$(MAKE) -C src/2_coupled_branch
+	$(MAKE) -C src/3_bifurcation 
+	$(MAKE) -C src/4_network
 
 library: 
 	$(MAKE) -C include
@@ -32,13 +33,15 @@ pdf: doc
 clean:
 	$(RM) -r *~ *.log
 	$(MAKE) -C include clean
-	$(MAKE) -C src/1_singlebranch_transp clean
-	$(MAKE) -C src/2_Ybifurcation_transp clean
-	$(MAKE) -C src/3_network_transp clean
-	
+	$(MAKE) -C src/1_uncoupled_branch clean
+	$(MAKE) -C src/2_coupled_branch clean
+	$(MAKE) -C src/3_bifurcation  clean
+	$(MAKE) -C src/4_network clean
+
 distclean: clean
 	$(RM) -r doc/*
 	$(MAKE) -C include distclean
-	$(MAKE) -C src/1_singlebranch_transp distclean
-	$(MAKE) -C src/2_Ybifurcation_transp distclean
-	$(MAKE) -C src/3_network_transp distclean
+	$(MAKE) -C src/1_uncoupled_branch distclean
+	$(MAKE) -C src/2_coupled_branch distclean
+	$(MAKE) -C src/3_bifurcation  distclean
+	$(MAKE) -C src/4_network distclean
