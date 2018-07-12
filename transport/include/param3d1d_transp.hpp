@@ -1,9 +1,9 @@
 /* -*- c++ -*- (enableMbars emacs c++ mode) */
 /*======================================================================
-    "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+    "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
         Course on Advanced Programming for Scientific Computing
                       Politecnico di Milano
-                          A.Y. 2016-2017
+                          A.Y. A.Y. 2015-2016
                   
                 Copyright (C) 2016 Stefano Brambilla
 ======================================================================*/
@@ -23,6 +23,9 @@
 namespace getfem {
 
 //! Class to handle the physical parameter of the coupled 3D/1D model
+/*!
+	\ingroup input
+ */
 struct param3d1d_transp {
 
 	// Dimensional physical parameters (microcirc applications)
@@ -52,12 +55,24 @@ struct param3d1d_transp {
 	vector_type Y_;
 	//lymphatic drainage
 	vector_type Q_pl_;
+	// Dimensionless plasma oncotic pressure
+	scalar_type pi_v_;
+	// Dimensionless interstitial oncotic pressure
+	scalar_type pi_t_;
+	// Dimensionless reflection coefficient
+	scalar_type sigma_;
 	
 	//time parameters 
 	// simulation time length
 	scalar_type T_;
 	// time step
 	scalar_type dt_;
+	// initial concentration in tissue
+	scalar_type C0t_;
+	// initial concentration in network
+	scalar_type C0v_;
+	
+	
 
 	// Utils
 	//! File .param
@@ -94,6 +109,9 @@ struct param3d1d_transp {
 			scalar_type Dalphaval = FILE_.real_value("D_alpha"); 
 			scalar_type Yval = FILE_.real_value("Y"); 
 			scalar_type Q_plval  = FILE_.real_value("Q_pl"); 
+			pi_t_ = FILE_.real_value("pi_t_adim");
+			pi_v_ = FILE_.real_value("pi_v_adim");
+			sigma_ = FILE_.real_value("sigma");
 			// Fill the data arrays
 			 At_.assign(dof_datat,  Atval);
 			 Av_.assign(dof_datav,  Avval);
@@ -102,7 +120,9 @@ struct param3d1d_transp {
 			 Q_pl_.assign(dof_datat,  Q_plval);
 
 			T_   = FILE_.real_value("T","Simulation time length [s]");
-			dt_   = FILE_.real_value("dt","Time step [s]");				
+			dt_   = FILE_.real_value("dt","Time step [s]");			
+			C0t_   = FILE_.real_value("C0t","Initial concentration in tissue []");	
+			C0v_   = FILE_.real_value("C0v","Initial concentration in network []");			
 		} 
 		else { 
 			// Import dimensional params from FILE_
@@ -110,7 +130,6 @@ struct param3d1d_transp {
 			scalar_type U_  = FILE_.real_value("U", "characteristic flow speed in the capillary bed [m/s]"); 
 			scalar_type d_  = FILE_.real_value("d", "characteristic length of the problem [m]"); 
 			scalar_type k_  = FILE_.real_value("k", "permeability of the interstitium [m^2]"); 
-			scalar_type mu_ = FILE_.real_value("mu", "fluid viscosity [kg/ms]"); 
 			scalar_type Lp_ = FILE_.real_value("Lp", "Hydraulic conductivity of the capillary walls [m^2 s/kg]"); 
 			
 			Dt_   = FILE_.real_value("Dt","Diffusivity in the tissue [m^2/s]");
@@ -119,10 +138,15 @@ struct param3d1d_transp {
 			Perm_ = FILE_.real_value("Perm","Permeability of the capillary walls [m/s]");
 			Lp_LF_ = FILE_.real_value("Lp_LF","hydraulic conductivity of the lymphatic wall [s * m^2/kg]");
 			SV_ = FILE_.real_value("SV","surface area of lymphatic vessels per unit volume of tissue [1/m]");
+			pi_t_ = FILE_.real_value("Pi_t", "interstitial oncotic pressure [Pa]"); 
+			pi_v_ = FILE_.real_value("Pi_v", "fluid oncotic pressure [Pa]"); 
+			sigma_ = FILE_.real_value("sigma", "reflection coefficient [-]"); 
 
 			T_   = FILE_.real_value("T","Simulation time length [s]");
-			dt_   = FILE_.real_value("dt","Time step [s]");						
-			// Compute the dimenless params
+			dt_   = FILE_.real_value("dt","Time step [s]");	
+			C0t_   = FILE_.real_value("C0t","Initial concentration in tissue []");	
+			C0v_   = FILE_.real_value("C0v","Initial concentration in network []");				
+			// Compute the dimentionless params
 			At_.assign(dof_datat, Dt_/d_/U_);
 			Av_.assign(dof_datav, Dv_/d_/U_);
 			Dalpha_.assign(dof_datat, m_/U_*d_);
@@ -158,12 +182,22 @@ struct param3d1d_transp {
 	inline scalar_type Q_pl  (size_type i) { return Q_pl_[i];  } const
 	//! Get the Dahmkholer number at a given dof
 	inline scalar_type Dalpha  (size_type i) { return Dalpha_[i];  } const
+	//! Get the interstitial oncotic pressure
+	inline scalar_type pi_t  (void) { return pi_t_; } const
+	//! Get the plasma oncotic pressure
+	inline scalar_type pi_v  (void) { return pi_v_; } const
+	//! Get the reflection coefficient
+	inline scalar_type sigma  (void) { return sigma_; } const
 	//! Get the leakage of the capillary bed at a given dof
 	inline scalar_type Y  (size_type i) { return Y_[i];  } const
 	//! Get the simulation time length
 	inline scalar_type T  () { return T_;  } const
 	//! Get the time step
 	inline scalar_type dt  () { return dt_;  } const
+	//! Get the sinitial concentration in tissue
+	inline scalar_type C0t  () { return C0t_;  } const
+	//! Get the sinitial concentration in network
+	inline scalar_type C0v  () { return C0v_;  } const
 	//! Get the radius at a given mesh_region
 	//scalar_type R  (const getfem::mesh_im & mim, const size_type rg) { 
 	//	return compute_radius(mim, mf_datav_, R_, rg);  
