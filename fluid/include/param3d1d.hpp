@@ -91,10 +91,10 @@ struct param3d1d {
 		bool EXPORT_PARAM  = FILE_.int_value("EXPORT_PARAM");
 
 		// Check
-		if (IMPORT_RADIUS)
+		/*if (IMPORT_RADIUS)
 			GMM_ASSERT1(NONDIM_PARAM == 0,
 				"try to import non constant (dimensionless) radius:" 
-				"please insert dimensional parameters");
+				"please insert dimensional parameters");*/
 		#ifdef M3D1D_VERBOSE_
 		cout << "  Assembling dimensionless radius R'... "   << endl;
 		#endif
@@ -125,7 +125,7 @@ struct param3d1d {
 			// Fill the data arrays
 			kt_.assign(dof_datat, ktval);
 			kv_.assign(dof_datav, kvval);
-			 Q_.assign(dof_datav,  Qval);
+			Q_.assign(dof_datav,  Qval);
                         //L2
                         Q_LF_.assign(dof_datat, QLFval);
 		} 
@@ -142,6 +142,10 @@ struct param3d1d {
 			// Compute the dimenless params
 			kt_.assign(dof_datat, k_/mu_T_*P_/U_/d_);
                         Q_LF_.assign(dof_datat, Lp_LF_*P_*d_/U_);
+ 
+			kv_.clear();
+			Q_.clear();
+
 			for (auto r : R_){ // C++11-only!
 				kv_.emplace_back(pi/8.0/mu_V_*P_*d_/U_*r*r*r*r);
 				Q_.emplace_back(2*pi*Lp_*P_/U_*r);
