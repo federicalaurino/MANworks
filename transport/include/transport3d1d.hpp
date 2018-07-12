@@ -1,67 +1,40 @@
 /* -*- c++ -*- (enableMbars emacs c++ mode) */
 /*======================================================================
-    "Mixed Finite Element Methods for Coupled 3D/1D Fluid Problems"
+    "Mixed Finite Element Methods for Coupled 3D/1D Transport Problems"
         Course on Advanced Programming for Scientific Computing
                       Politecnico di Milano
-                          A.Y. 2016-2017
+                          A.Y. A.Y. 2015-2016
                   
                 Copyright (C) 2016 Stefano Brambilla
 ======================================================================*/
 /*! 
   @file   transport3d1d.hpp
   @author Stefano Brambilla <s.brambilla93@gmail.com>
-  @date   September 2016.
+  @date   September 2016 - May 2018.
   @brief  Declaration of the main class for the 3D/1D coupled transport problem.
  */
  
 #ifndef M3D1D_TRANSPORT3D1D_HPP_
 #define M3D1D_TRANSPORT3D1D_HPP_
-#define M3D1D_VERBOSE_
+
 
 // GetFem++ libraries
-#include <getfem/getfem_assembling.h> 
-#include <getfem/getfem_import.h>
-#include <getfem/getfem_export.h>   
-#include <getfem/getfem_regular_meshes.h>
-#include <getfem/getfem_mesh.h>
-#include <getfem/getfem_derivatives.h>
-#include <getfem/getfem_superlu.h>
-#include <getfem/getfem_partial_mesh_fem.h>
-#include <getfem/getfem_interpolated_fem.h>
-#include <gmm/gmm.h>
 #include <gmm/gmm_matrix.h>
-#include <gmm/gmm_inoutput.h>
-#include <gmm/gmm_iter_solvers.h>
 #include <getfem/dal_bit_vector.h>
-// Standard libraries
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <iterator>
-#include <string>
-// Project headers
-#include <defines.hpp>
-#include <mesh3d.hpp>       
-#include <mesh1d.hpp>
-#include <utilities.hpp>
 
-#include <assembling1d.hpp>          
-#include <assembling3d.hpp>        
-#include <assembling3d1d.hpp>
-#include <node.hpp>
-#include <dof3d1d.hpp>
-#include <descr3d1d.hpp>
-#include <param3d1d.hpp>
-#include <utilities_transp.hpp>
+// Project headers
+#include <problem3d1d.hpp>
 
 #include <assembling1d_transp.hpp>          
-#include <assembling3d_transp.hpp>        
+#include <assembling3d_transp.hpp> 
+#include <assembling3d1d_transp.hpp>        
 #include <dof3d1d_transp.hpp>
 #include <descr3d1d_transp.hpp>
 #include <param3d1d_transp.hpp>
+#include <utilities_transp.hpp>
+#include <node_transp.hpp>
 
-#include <problem3d1d.hpp>
+
 
  
  namespace getfem {
@@ -85,6 +58,8 @@ public:
 	//! Export the transport solution
 	void export_vtk_transp (const string & time_suff = "",const string & suff = ""); 
 
+	//! Compute residuals for mass balance at each junction
+	void mass_balance (void);
 
 	//Aux methods for interface with problem3d1d class
 	//! Initialize the fluid problem
@@ -116,7 +91,8 @@ protected:
 	vector< node > BCv_transp;	
 	//! List of BC nodes of the tissue
 	vector< node > BCt_transp;
-
+	//! List of junction nodes of the network
+	vector< node_transp > Jv_transp;
 		
 	//! Monolithic matrix for the coupled problem
 	sparse_matrix_type AM_transp;
