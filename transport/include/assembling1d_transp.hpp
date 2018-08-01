@@ -58,10 +58,10 @@ asm_network_transp
 	VEC param(mf_data.nb_dof()); gmm::clear(param);
 	gmm::add(R, param);
 	gmm::vscale(R, param);
-	gmm::scale(param, 2*pi); //param = 2pi*R^2
+	gmm::scale(param, pi); //param = pi*R^2
 	getfem::asm_mass_matrix_param(M, mim, mf_c, mf_data, param, rg);
 	// Build the diffusion matrix Dv
-	gmm::vscale(diff, param); //param= 2pi*R^2*Av
+	gmm::vscale(diff, param); //param= pi*R^2*Av
 	getfem::asm_stiffness_matrix_for_laplacian(D,mim,mf_c,mf_data, param, rg);
 
 } //end of asm_network_transp
