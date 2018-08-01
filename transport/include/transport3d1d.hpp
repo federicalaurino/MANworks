@@ -10,7 +10,7 @@
 /*! 
   @file   transport3d1d.hpp
   @author Stefano Brambilla <s.brambilla93@gmail.com>
-  @date   September 2016 - May 2018.
+  @date   September 2016 - September 2018.
   @brief  Declaration of the main class for the 3D/1D coupled transport problem.
  */
  
@@ -43,32 +43,22 @@ class transport3d1d: public problemHT {
 
 public:
 	transport3d1d(void) : 
-		mf_Ct(mesht), mf_Cv(meshv){} 
+		mf_Ct(mesht), mf_Cv(meshv),mf_Ct_Omega(mesht),mf_Ct_Sigma(mesht){} 
 	
+	// Main methods of class: implement standard and complete transport problem
 	//! Initialize the transport problem
-	void init_transp (int argc, char *argv[]);
-	
+	void init_transp (int argc, char *argv[]);	
 	//! Assemble the transport problem
 	void assembly_transp (void);
-
 	//! Solve the transport problem
 	bool solve_transp (void);
-	
 	//! Export the transport solution
-	void export_vtk_transp (const string & time_suff = "",const string & suff = ""); 
-
+	void export_vtk_transp (const string & time_suff = "",const string & suff = "");
 	//! Compute residuals for mass balance at each junction
 	void mass_balance (void);	
 
-
-	//! Assemble the reduced problem (with exact solution)
-	void assembly_reduced_transp (void); 
-	//! Solve the reduced problem (with exact solution)
-	bool solve_reduced_transp (void);
- 	//! Export the reduced problem (with exact solution)
-	void export_vtk_reduced_transp (const string & suff = ""); 
- 	//! Compute the norm of error (with exact solution)
-	void compute_error_reduced_transp (void); 
+	//! Getter for solution
+	inline vector_type get_UM(void) {return UM_transp;};
 
 	//Aux methods for interface with problem3d1d class
 	//! Initialize the fluid problem
@@ -79,6 +69,111 @@ public:
 	bool solve_fluid (void);
 	//! Export the fluid solution
 	void export_vtk_fluid (const string & suff = "");
+
+
+	// Methods for reduced problem with exact solution (compute convergence error)
+	//! Assemble the reduced problem (with exact solution)
+	void assembly_reduced_transp (void); 
+	//! Solve the reduced problem (with exact solution)
+	bool solve_reduced_transp (void);
+ 	//! Export the reduced problem (with exact solution)
+	void export_vtk_reduced_transp (const string & suff = ""); 
+ 	//! Compute the norm of error (with exact solution)
+	void compute_error_reduced_transp (void); 
+
+
+	//Methods for reduced problems, assumption A1(compute model error with dual solution)
+	void model_error_A1(int argc, char *argv[]); 
+	//Methods for reduced problems, assumption A2(compute model error with dual solution)
+	void model_error_A2(int argc, char *argv[]); 
+	//Methods for reduced problems, assumption A3(compute model error with dual solution)
+	void model_error_A3(int argc, char *argv[]); 
+
+	//Method for reduced problem
+	void model_error(int argc, char *argv[]); 
+	//! Initialize problem U1
+	void init_model(int argc, char *argv[]);
+	//! Assemble problem U1
+	void assembly_model(const size_type ASSUMPTION);
+	//! Solve problem U1
+	bool solve_model(const size_type ASSUMPTION, const size_type VERSION);
+	//! Export problem U1
+	void export_model(const size_type ASSUMPTION, const size_type VERSION, const string & suff = "");
+	//! Assemble problem Z1
+	void assembly_dual_model(const size_type ASSUMPTION);
+
+	//Aux methods for model error
+	//! Initialize problem U1
+	void init_U1(int argc, char *argv[]);
+	//! Assemble problem U1
+	bool assembly_U1(void);
+	//! Solve problem U1
+	bool solve_U1(void);
+	//! Export problem U1
+	void export_U1(const string & suff = "");
+	//! Initialize problem Z1
+	void init_Z1(int argc, char *argv[]);
+	//! Assemble problem Z1
+	bool assembly_Z1(void);
+	//! Solve problem Z1
+	bool solve_Z1(void);
+	//! Export problem Z1
+	void export_Z1(const string & suff = "");
+	//! Compute model error of A1	
+	void compute_error_1(void);
+
+	//! Initialize problem U2
+	void init_U2(int argc, char *argv[]);
+	//! Assemble problem U2
+	bool assembly_U2(void);
+	//! Solve problem U2
+	bool solve_U2(void);
+	//! Export problem U2
+	void export_U2(const string & suff = "");
+	//! Initialize problem Z2
+	void init_Z2(int argc, char *argv[]);
+	//! Assemble problem Z2
+	bool assembly_Z2(void);
+	//! Solve problem Z2
+	bool solve_Z2(void);
+	//! Export problem Z2
+	void export_Z2(const string & suff = "");
+	//! Compute model error of A2
+	void compute_error_2(void);
+
+	//! Initialize problem U3
+	void init_U3(int argc, char *argv[]);
+	//! Assemble problem U3
+	bool assembly_U3(void);
+	//! Solve problem U3
+	bool solve_U3(void);
+	//! SoExportlve problem U3
+	void export_U3(const string & suff = "");
+	//! Initialize problem Z3
+	void init_Z3(int argc, char *argv[]);
+	//! Assemble problem Z3
+	bool assembly_Z3(void);
+	//! Solve problem Z3
+	bool solve_Z3(void);
+	//! Export problem Z3
+	void export_Z3(const string & suff = "");
+	//! Compute model error of A3
+	void compute_error_3(void);
+	
+	//! Getter for primal solution, at assumption A1
+	inline vector_type get_U1(void) {return U1;};
+	//! Getter for primal solution, at assumption A2
+	inline vector_type get_U2(void) {return U2;};
+	//! Getter for primal solution, at assumption A3
+	inline vector_type get_U3(void) {return U3;};
+
+	//! Getter for dual solution, at assumption A1
+	inline vector_type get_Z1(void) {return Z1;};
+	//! Getter for dual solution, at assumption A2
+	inline vector_type get_Z2(void) {return Z2;};
+	//! Getter for dual solution, at assumption A3
+	inline vector_type get_Z3(void) {return Z3;};
+	
 	
 protected:
 	 
@@ -87,7 +182,11 @@ protected:
 	//! Finite Element Method for the vessel concentration @f$c_v@f$
 	mesh_fem mf_Cv; 
 
-	
+	//! Finite Element Method for the tissue concentration @f$c_t@f$
+	mesh_fem mf_Ct_Omega; 
+	//! Finite Element Method for the tissue concentration @f$c_t@f$
+	mesh_fem mf_Ct_Sigma;
+
 	//! Algorithm description strings (mesh files, FEM types, solver info, ...) 
 	descr3d1d_transp descr_transp;
 	//! Physical parameters
@@ -118,8 +217,24 @@ protected:
 	vector_type        FM_temp; 
 	
 	
-	
+	// Primal Solution, assumption A1
+	vector_type U1;
+	// Primal Solution, assumption A2
+	vector_type U2;
+	// Primal Solution, assumption A3
+	vector_type U3;
 
+	// Dual Solution, assumption A1
+	vector_type Z1;
+	// Dual Solution, assumption A2
+	vector_type Z2;
+	// Dual Solution, assumption A3
+	vector_type Z3;
+
+	// Aux tissue-to-tissue exchange matrix
+	sparse_matrix_type BTT;
+
+	
 	// Aux methods for init
 	//! Import algorithm specifications
 	void import_data_transp(void);
@@ -151,6 +266,13 @@ protected:
 	//Aux method for solve 
 	//! Aux function for update of rhs at each time step
 	void update_transp(void);
+	//! Aux function for solver: contains the different solving methods and actually solve the system
+	bool solver_transp (void);	
+
+	//! Set finite elements and integration methods: mf_t should be defined only on Omega_plus
+	void set_im_and_fem_U1(void);	
+	void set_im_and_fem_model(void);
+
 
 
 	
