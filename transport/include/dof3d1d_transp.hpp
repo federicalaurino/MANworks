@@ -28,6 +28,11 @@ struct dof3d1d_transp {
 	//! Number of dof of the vessel concentration FEM mf_Pv
 	size_type Cv_;
 
+	//! Number of dof of the interstitial concentration FEM mf_Pt
+	size_type Ct_Omega_;
+	//! Number of dof of the interstitial concentration FEM mf_Pt
+	size_type Ct_Sigma_;
+
 	//! Total number of dof of the tissue problem
 	size_type tissue_;
 	//! Total number of dof of the vessel problem
@@ -37,12 +42,15 @@ struct dof3d1d_transp {
 	
 	//! Compute the number of dof of given FEM
 	void set (
-			const getfem::mesh_fem & mf_Ct,	const getfem::mesh_fem & mf_Cv
-
+			const getfem::mesh_fem & mf_Ct,	const getfem::mesh_fem & mf_Cv,
+			const getfem::mesh_fem & mf_Ct_Omega, const getfem::mesh_fem & mf_Ct_Sigma
 			)
 	{
 		Ct_ = mf_Ct.nb_dof();
 		Cv_ = mf_Cv.nb_dof();
+
+		Ct_Omega_ = mf_Ct_Omega.nb_dof();
+		Ct_Sigma_ = mf_Ct_Sigma.nb_dof();
 ;
 		
 		tissue_ = Ct_; 
@@ -50,11 +58,29 @@ struct dof3d1d_transp {
 		tot_    = tissue_+ vessel_;
 	}
 
+	void set (
+			const getfem::mesh_fem & mf_Ct,	const getfem::mesh_fem & mf_Cv
+			)
+	{
+		Ct_ = mf_Ct.nb_dof();
+		Cv_ = mf_Cv.nb_dof();
+		
+		tissue_ = Ct_; 
+		vessel_ = Cv_ ;
+		tot_    = tissue_+ vessel_;
+	}
+
+
 	//! Accessor to the number of dof of mf_Ct
 	inline size_type Ct (void) { return Ct_; } const
 
 	//! Accessor to the number of dof of mf_Cv
 	inline size_type Cv (void) { return Cv_; } const
+
+	//! Accessor to the number of dof of mf_Ct_Omega
+	inline size_type Ct_Omega (void) { return Ct_Omega_; } const
+	//! Accessor to the number of dof of mf_Ct_Sigma
+	inline size_type Ct_Sigma (void) { return Ct_Sigma_; } const
 
 	//! Accessor to the number of dof of tissue problem
 	inline size_type tissue (void) { return tissue_; } const

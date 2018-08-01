@@ -52,8 +52,22 @@ struct descr3d1d_transp {
 	size_type   MAXITER;
 	//! Mamimum residual (iterative solvers)
 	scalar_type RES; 
-	//! Number of target points for the tissue-to-vessel average
+	//! Number of target points for the tissue-to-vessel boundary average
 	size_type   NInt;
+	//! Number of target points for the tissue-to-vessel section average
+	size_type   NIntA;
+
+	//! Flag for conforming mesh
+	size_type CONFORMING;
+	//! Number of 3D region of physical vessel
+	size_type SIGMA;
+	//! Number of 3D region of tissue outside physical vessel
+	size_type OMEGA;
+	//! Number of 2D region of physical vessel wall
+	size_type GAMMA;
+	//! Number of region of the first face of the boundary of the 3d domain
+	size_type FACE;
+	
 	// Utils
 	//! File .param
 	ftool::md_param FILE_;
@@ -73,9 +87,20 @@ struct descr3d1d_transp {
 			RES = FILE_.real_value("RES"); if (RES == 0.) RES = 2.0e-10;
 		}
 		NInt = size_type(FILE_.int_value("NInt", "Node numbers on the circle for the nonlocal term"));  
+		NIntA = size_type(FILE_.int_value("NIntA", "Node numbers on the radius for the nonlocal term"));  
 		OUTPUT = FILE_.string_value("OUTPUT","Output Directory");
 		STATIONARY = size_type(FILE_.int_value("STATIONARY", "Flag to make the problem stationary")); 
 		ADVECTION = size_type(FILE_.int_value("ADVECTION", "Flag to add the advection term"));
+	
+		CONFORMING = size_type(FILE_.int_value("CONFORMING", "Flag for conforming imported mesh by gmsh")); 
+		FACE = size_type(FILE_.int_value("FACE", "NNumber of region of the first face of the boundary of the 3d domain"));
+		if(CONFORMING)
+		{
+		SIGMA = size_type(FILE_.int_value("SIGMA", "Number of 3D region of physical vessel"));
+		OMEGA = size_type(FILE_.int_value("OMEGA", "Number of 3D region of tissue outside physical vessel"));
+		GAMMA = size_type(FILE_.int_value("GAMMA", "Number of 2D region of physical vessel wall"));
+		
+		}
 	}
 
 	//! Overloading of the output operator
