@@ -455,6 +455,116 @@ asm_coupled_bc_transp
 } /* end of asm_coupled_bc_transp */
 
 
+/*!
+	Build the averaging matrix @f$\bar{\bar{\Pi}}_{tv}@f$.
+	@ingroup asm
+ */
+template<typename MAT, typename VEC>
+void 
+asm_exchange_aux_mat_bar_bar
+	(MAT & Mbarbar,
+	 const getfem::mesh_im & mim,
+	 const getfem::mesh_fem & mf_t,
+	 const getfem::mesh_fem & mf_v,
+	 const getfem::mesh_fem & mf_coefv,
+	 const VEC & RAD,
+	 const size_type NInt,
+	 const size_type NIntA,
+	 const size_type nb_branches
+	 ) 
+{
+	gmm::clear(Mbarbar);
+	// Aux params
+	const scalar_type Pi = 2*acos(0.0);
+	size_type nb_dof_t     = mf_t.nb_dof();
+	size_type nb_dof_v     = mf_v.nb_dof();
+
+	size_type Ntot= NInt*NIntA+1;
+	// Interpolate RAD from mf_coefv to mf_v
+	vector_type RADIUS(nb_dof_v);
+	getfem::interpolation(mf_coefv, mf_v, RAD,RADIUS);  
+
+	// Aux vectors for local interpolation
+	std::vector<scalar_type> Pbari(Ntot); 
+	std::vector<scalar_type> Pt(nb_dof_t); 
+	size_type counter = 0;
+	size_type first_el_branch = 0; //counter for the first element of the branch
+	for (size_type b = 0; b < nb_branches; b++){
+		//mesh_region &rg_branch = mf_v.linked_mesh().region(b); // branch region
+		dal::bit_vector dofs_b= mf_v.basic_dof_on_region(b);  // list of the indexes of all the dofs in the branch b
+		first_el_branch = 0;
+	for (dal::bv_visitor i(dofs_b); !i.finished(); ++i){
+		counter++;
+		first_el_branch++;
+		if (counter*100 >= nb_dof_v) {
+			counter = 0; 
+			#ifdef M3D1D_VERBOSE_
+			cout << "*"; cout.flush();
+			#endif
+		}
+		// We need the following interpolation tool <getfem_interpolation.h>      
+		getfem::mesh_trans_inv mti(mf_t.linked_mesh());
+		// Build the list of point on the i-th circle:
+		// ... first consider an orthonormal system v0, v1, v2:
+		base_node v0;
+		if (first_el_branch==1) {
+			v0 = mf_v.point_of_basic_dof(i+1) - mf_v.point_of_basic_dof(i);			
+		} else {
+			v0 = mf_v.point_of_basic_dof(i) - mf_v.point_of_basic_dof(i-1);
+		}
+		base_node v1(0.0, -v0[2], v0[1]);
+		base_node v2(v0[1]*v0[1] +v0[2]*v0[2], -v0[0]*v0[1], -v0[0]*v0[2]);
+		if (gmm::vect_norm2(v2) < 1.0e-8 * gmm::vect_norm2(v0)) {
+			v1[0] = -v0[1]; v1[1] = v0[0]; v1[2] = 0.0;
+			v2[0] = -v0[0]*v0[2]; v2[1] = -v0[1]*v0[2]; v2[2] = v0[0]*v0[0] +v0[1]*v0[1];
+		}
+		v1 = v1 / gmm::vect_norm2(v1);
+		v2 = v2 / gmm::vect_norm2(v2);
+		// ... then parametrize the circle:
+		mti.add_point( mf_v.point_of_basic_dof(i));
+		for (size_type j = 0; j < NInt; j++){ 
+			for (size_type k = 1; k <= NIntA; k++){ 
+				mti.add_point( mf_v.point_of_basic_dof(i) + 
+						   RADIUS[i]*k/NIntA*(cos(2*Pi*j/NInt)*v1 + sin(2*Pi*j/NInt)*v2) );
+			}
+		}
+		
+		// Get the local interpolation matrix Mbari
+		MAT Mbari(Ntot, nb_dof_t); gmm::clear(Mbari);
+		interpolation(mf_t, mti, Pt, Pbari, Mbari, 1);
+		scalar_type sum_row = 0.0;
+		for (size_type j=0; j < Ntot; ++j) {
+			typename gmm::linalg_traits<MAT>::const_sub_row_type 
+				row = mat_const_row(Mbari,j);
+			gmm::linalg_traits< gmm::rsvector<scalar_type> >::const_iterator 
+				it_nz = vect_const_begin(row);
+			gmm::linalg_traits< gmm::rsvector<scalar_type> >::const_iterator 
+				ite_nz = vect_const_end(row);
+			for (; it_nz != ite_nz ; ++it_nz) {
+				Mbarbar(i, it_nz.index()) += (*it_nz);
+				sum_row += (*it_nz);
+			}
+		}
+		typename gmm::linalg_traits<MAT>::sub_row_type 
+			row = mat_row(Mbarbar,i);
+		gmm::linalg_traits< gmm::rsvector<scalar_type> >::iterator
+			it_nz = vect_begin(row);
+		gmm::linalg_traits< gmm::rsvector<scalar_type> >::iterator
+			ite_nz = vect_end(row);
+		for (; it_nz != ite_nz ; ++it_nz) {
+			(*it_nz)/= sum_row; 
+		}
+
+	} /* end of convexes loop */
+
+	} /* end of branch loop */
+
+
+
+
+} /* end of build_aux_matrices */
+
+
 
 } /* end of namespace */
 
