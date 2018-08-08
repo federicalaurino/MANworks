@@ -20,6 +20,7 @@
 
 #include <gmm/gmm.h>
 #include <defines.hpp>
+#include "../utilities/muparser/include/muParser.h"
 
 namespace gmm {
 
@@ -162,7 +163,11 @@ return peclet;
 
 
 
+
 } /* end of getfem namespace */
+
+
+
 
 
 
