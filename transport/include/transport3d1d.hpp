@@ -34,6 +34,7 @@
 #include <param3d1d_transp.hpp>
 #include <utilities_transp.hpp>
 #include <node_transp.hpp>
+#include "../utilities/muparser/include/muParser.h"
 
 
  namespace getfem {
@@ -82,84 +83,36 @@ public:
 	void compute_error_reduced_transp (void); 
 
 
-	//Methods for reduced problems, assumption A1(compute model error with dual solution)
-	void model_error_A1(int argc, char *argv[]); 
-	//Methods for reduced problems, assumption A2(compute model error with dual solution)
-	void model_error_A2(int argc, char *argv[]); 
-	//Methods for reduced problems, assumption A3(compute model error with dual solution)
-	void model_error_A3(int argc, char *argv[]); 
-
+	// Methods for reduced problem  (compute model error with dual solution)
 	//Method for reduced problem
 	void model_error(int argc, char *argv[]); 
-	//! Initialize problem U1
+	//Method for reduced problem, assumption A0 (That is the reference all-3D problem)
+	void model_error_A0(int argc, char *argv[]); 
+	//Method for reduced problem, assumption A1
+	void model_error_A1(int argc, char *argv[]); 
+	//Method for reduced problem, assumption A2
+	void model_error_A2(int argc, char *argv[]); 
+	//Method for reduced problem, assumption A3 (That is the final 3D-1D reduced problem)
+	void model_error_A3(int argc, char *argv[]); 
+
+
+	//! Initialize reduced problem
 	void init_model(int argc, char *argv[]);
-	//! Assemble problem U1
+	//! Assemble reduced primal problem
 	void assembly_model(const size_type ASSUMPTION);
-	//! Solve problem U1
-	bool solve_model(const size_type ASSUMPTION, const size_type VERSION);
-	//! Export problem U1
-	void export_model(const size_type ASSUMPTION, const size_type VERSION, const string & suff = "");
-	//! Assemble problem Z1
+	//! Assemble reduced dual problem 
 	void assembly_dual_model(const size_type ASSUMPTION);
-
-	//Aux methods for model error
-	//! Initialize problem U1
-	void init_U1(int argc, char *argv[]);
-	//! Assemble problem U1
-	bool assembly_U1(void);
-	//! Solve problem U1
-	bool solve_U1(void);
-	//! Export problem U1
-	void export_U1(const string & suff = "");
-	//! Initialize problem Z1
-	void init_Z1(int argc, char *argv[]);
-	//! Assemble problem Z1
-	bool assembly_Z1(void);
-	//! Solve problem Z1
-	bool solve_Z1(void);
-	//! Export problem Z1
-	void export_Z1(const string & suff = "");
+	//! Solve reduced problem 
+	bool solve_model(const size_type ASSUMPTION, const size_type VERSION);
+	//! Export reduced problem
+	void export_model(const size_type ASSUMPTION, const size_type VERSION, const string & suff = "");
 	//! Compute model error of A1	
-	void compute_error_1(void);
+	void compute_model_error_1(void);
+	//! Compute model error of A2	
+	void compute_model_error_2(void);
+	//! Compute model error of A3	
+	void compute_model_error_3(void);
 
-	//! Initialize problem U2
-	void init_U2(int argc, char *argv[]);
-	//! Assemble problem U2
-	bool assembly_U2(void);
-	//! Solve problem U2
-	bool solve_U2(void);
-	//! Export problem U2
-	void export_U2(const string & suff = "");
-	//! Initialize problem Z2
-	void init_Z2(int argc, char *argv[]);
-	//! Assemble problem Z2
-	bool assembly_Z2(void);
-	//! Solve problem Z2
-	bool solve_Z2(void);
-	//! Export problem Z2
-	void export_Z2(const string & suff = "");
-	//! Compute model error of A2
-	void compute_error_2(void);
-
-	//! Initialize problem U3
-	void init_U3(int argc, char *argv[]);
-	//! Assemble problem U3
-	bool assembly_U3(void);
-	//! Solve problem U3
-	bool solve_U3(void);
-	//! SoExportlve problem U3
-	void export_U3(const string & suff = "");
-	//! Initialize problem Z3
-	void init_Z3(int argc, char *argv[]);
-	//! Assemble problem Z3
-	bool assembly_Z3(void);
-	//! Solve problem Z3
-	bool solve_Z3(void);
-	//! Export problem Z3
-	void export_Z3(const string & suff = "");
-	//! Compute model error of A3
-	void compute_error_3(void);
-	
 	//! Getter for primal solution, at assumption A1
 	inline vector_type get_U1(void) {return U1;};
 	//! Getter for primal solution, at assumption A2
@@ -216,7 +169,8 @@ protected:
 	//! Monolithic temporary right hand side for update
 	vector_type        FM_temp; 
 	
-	
+	// Primal Solution, reference problem
+	vector_type U0;	
 	// Primal Solution, assumption A1
 	vector_type U1;
 	// Primal Solution, assumption A2
@@ -224,6 +178,9 @@ protected:
 	// Primal Solution, assumption A3
 	vector_type U3;
 
+	
+	// Dual Solution, reference problem
+	vector_type Z0;
 	// Dual Solution, assumption A1
 	vector_type Z1;
 	// Dual Solution, assumption A2
@@ -231,9 +188,17 @@ protected:
 	// Dual Solution, assumption A3
 	vector_type Z3;
 
+
 	// Aux tissue-to-tissue exchange matrix
 	sparse_matrix_type BTT;
-
+	// Aux tissue-to-tissue exchange matrix
+	sparse_matrix_type BVT_Omega;
+	// Aux tissue-to-vessel interpolation matrix
+	sparse_matrix_type MLIN;
+	// Aux tissue-to-vessel average matrix (circumsference)
+	sparse_matrix_type MBAR;
+	// Aux tissue-to-vessel average matrix (section) 
+	sparse_matrix_type MBARBAR;
 	
 	// Aux methods for init
 	//! Import algorithm specifications
@@ -277,6 +242,7 @@ protected:
 
 	
 }; //end of class trasport3d1d
+
 
 }  //end of namespace
 

@@ -524,8 +524,11 @@ asm_exchange_aux_mat_bar_bar
 		mti.add_point( mf_v.point_of_basic_dof(i));
 		for (size_type j = 0; j < NInt; j++){ 
 			for (size_type k = 1; k <= NIntA; k++){ 
+				scalar_type partial_Radius = RADIUS[i]*k/NIntA;
+				scalar_type partial_Angle = 2*Pi*j/NInt;				
+	//if (j==3 && k==4) cout <<"j==3, k==4 : partial_radius = "<<partial_Radius <<"; partial_Angle = "<<partial_Angle<<endl;
 				mti.add_point( mf_v.point_of_basic_dof(i) + 
-						   RADIUS[i]*k/NIntA*(cos(2*Pi*j/NInt)*v1 + sin(2*Pi*j/NInt)*v2) );
+						   partial_Radius*(cos(partial_Angle)*v1 + sin(partial_Angle)*v2) );
 			}
 		}
 		
@@ -542,9 +545,11 @@ asm_exchange_aux_mat_bar_bar
 				ite_nz = vect_const_end(row);
 			for (; it_nz != ite_nz ; ++it_nz) {
 				Mbarbar(i, it_nz.index()) += (*it_nz);
+				//cout <<"riga i="<<i<<",colonna j="<<j<<"; it_nz = "<<(*it_nz)<<endl;
 				sum_row += (*it_nz);
 			}
 		}
+		//cout <<"riga i = "<< i <<": sum_row = "<<sum_row<<endl;
 		typename gmm::linalg_traits<MAT>::sub_row_type 
 			row = mat_row(Mbarbar,i);
 		gmm::linalg_traits< gmm::rsvector<scalar_type> >::iterator

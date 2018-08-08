@@ -24,7 +24,9 @@
  namespace getfem {
 
 
+ 
 
+	// Initialize the transport problem
  	void transport3d1d::init_transp (int argc, char *argv[]) 
  	{
  	#ifdef M3D1D_VERBOSE_
@@ -295,33 +297,119 @@
 	GMM_ASSERT1(mesht.has_region(omega), "File .msh does not contain region OMEGA! Check .msh and .param!!");
 
 	// GAMMA is the boundary of the vessel SIGMA:
-	outer_faces_of_mesh(mesht, mesht.region(sigma), mesht.region(gamma));
+	
+	mesh_region gamma_region;
+	outer_faces_of_mesh(mesht, mesht.region(omega), gamma_region);
+
+	for (mr_visitor i(gamma_region); !i.finished(); ++i) {
+
+		assert(i.is_face());
+
+		     if (!(mesht.region(face+0).is_in(i.cv(),i.f()))&&!(mesht.region(face+1).is_in(i.cv(),i.f()))
+				&&!(mesht.region(face+2).is_in(i.cv(),i.f()))&&!(mesht.region(face+3).is_in(i.cv(),i.f()))
+				&&!(mesht.region(face+4).is_in(i.cv(),i.f()))&&!(mesht.region(face+5).is_in(i.cv(),i.f()))) 	// back
+			mesht.region(gamma).add(i.cv(), i.f());
+			mesht.region(gamma+1).add(i.cv(), i.f());
+				
+		} 
+
+	mesh_region gamma_region2;
+	outer_faces_of_mesh(mesht, mesht.region(sigma), gamma_region2);
+
+	for (mr_visitor i(gamma_region2); !i.finished(); ++i) {
+
+		assert(i.is_face());
+
+		     if (!(mesht.region(face+0).is_in(i.cv(),i.f()))&&!(mesht.region(face+1).is_in(i.cv(),i.f()))
+				&&!(mesht.region(face+2).is_in(i.cv(),i.f()))&&!(mesht.region(face+3).is_in(i.cv(),i.f()))
+				&&!(mesht.region(face+4).is_in(i.cv(),i.f()))&&!(mesht.region(face+5).is_in(i.cv(),i.f()))) 	// back
+			mesht.region(gamma+1).add(i.cv(), i.f());				
+		}
+
+	//outer_faces_of_mesh(mesht, mesht.region(sigma), mesht.region(gamma));
 	GMM_ASSERT1(mesht.has_region(gamma), "Something wrong happened: I couldn't build the region GAMMA");
+
+	outer_faces_of_mesh(mesht, mesht.region(omega), mesht.region(gamma+1));
+	GMM_ASSERT1(mesht.has_region(gamma), "Something wrong happened: I couldn't build the region GAMMA+1");
 
 
 	#ifdef M3D1D_VERBOSE_
 	cout << "...Check complete! All 3D regions are correctly defined!" << endl;
 	#endif		
 
-#ifdef M3D1D_VERBOSE_
-dal::bit_vector nn = mesht.convex_index();
-bgeot::size_type i;
-size_type cont_sigma=0;
-size_type cont_omega=0;
-size_type cont_gamma=0;
 
-for (i << nn; i != bgeot::size_type(-1); i << nn) {
-bgeot::pconvex_structure cvs = mesht.structure_of_convex(i);
-if(mesht.region(sigma).is_in(i)) cont_sigma++;
-if(mesht.region(omega).is_in(i)) cont_omega++;
+	#ifdef M3D1D_VERBOSE_
+	dal::bit_vector nn = mesht.convex_index();
+	bgeot::size_type i;
+	size_type cont_sigma=0;
+	size_type cont_omega=0;
+	size_type cont_gamma=0;
+	size_type cont_gamma2=0;
+	size_type cont_gamma_sigma=0;	
+	size_type cont_gamma_omega=0;	
+	size_type cont_sigma_omega=0;
+	size_type cont_sigma_face=0;
+	size_type cont_omega_face=0;
+	size_type cont_gamma_sigma_face=0;	
+	size_type cont_gamma_omega_face=0;
+	size_type cont_gamma2_omega_face=0;
+	size_type cont_gamma2_omega_face_ext=0;
+	size_type cont_gamma_gamma2=0;
 
-for (bgeot::short_type f = 0; f < cvs->nb_faces(); ++f) {
-if(mesht.region(gamma).is_in(i,f)) cont_gamma++;
-	}
+
+	for (i << nn; i != bgeot::size_type(-1); i << nn) {
+		bgeot::pconvex_structure cvs = mesht.structure_of_convex(i);
+		if(mesht.region(sigma).is_in(i)) cont_sigma++;
+		if(mesht.region(omega).is_in(i)) cont_omega++;
+
+		for (bgeot::short_type f = 0; f < cvs->nb_faces(); ++f) {
+			if(mesht.region(gamma).is_in(i,f)) cont_gamma++;
+			if(mesht.region(gamma+1).is_in(i,f)) cont_gamma2++;
+			if(mesht.region(sigma).is_in(i,f)) cont_sigma_face++;
+			if(mesht.region(omega).is_in(i,f)) cont_omega_face++;
+			if( (mesht.region(gamma).is_in(i,f)) && (mesht.region(sigma).is_in(i,f)) ) cont_gamma_sigma++;
+			if( (mesht.region(gamma).is_in(i,f)) && (mesht.region(omega).is_in(i,f)) ) cont_gamma_omega++;
+			if( (mesht.region(sigma).is_in(i,f)) && (mesht.region(omega).is_in(i,f)) ) cont_sigma_omega++;
+			if( (mesht.region(gamma).is_in(i,f)) && (mesht.region(sigma).is_in(i)) 
+				&&!(mesht.region(face+0).is_in(i,f))&&!(mesht.region(face+1).is_in(i,f))
+				&&!(mesht.region(face+2).is_in(i,f))&&!(mesht.region(face+3).is_in(i,f))
+				&&!(mesht.region(face+4).is_in(i,f))&&!(mesht.region(face+5).is_in(i,f))) {				
+				cont_gamma_sigma_face++;
+//				cout<<"Element "<<i<<" is in Sigma with face "<<f<<" on gamma"<<endl;
 }
-cout <<"Number of element in Sigma: "<<cont_sigma<<endl;
-cout <<"Number of element in Omega: "<<cont_omega<<endl;
-cout <<"Number of faces in Gamma: "<<cont_gamma<<endl;
+			if( (mesht.region(gamma).is_in(i,f)) && (mesht.region(omega).is_in(i)) ) {
+				cont_gamma_omega_face++;
+//				cout<<"Element "<<i<<" is in Omega with face "<<f<<" on gamma"<<endl;
+}
+			if( (mesht.region(gamma+1).is_in(i,f)) && (mesht.region(omega).is_in(i)) ) {
+				cont_gamma2_omega_face_ext++;
+//				cout<<"Element "<<i<<" is in Omega2 with face "<<f<<" on gamma"<<endl;
+}	
+			if( (mesht.region(gamma+1).is_in(i,f)) && (mesht.region(omega).is_in(i))
+			 	&&!(mesht.region(face+0).is_in(i,f))&&!(mesht.region(face+1).is_in(i,f))
+				&&!(mesht.region(face+2).is_in(i,f))&&!(mesht.region(face+3).is_in(i,f))
+				&&!(mesht.region(face+4).is_in(i,f))&&!(mesht.region(face+5).is_in(i,f)) ) {
+				cont_gamma2_omega_face++;
+//				cout<<"Element "<<i<<" is in Omega2 with face "<<f<<" on gamma (no exterior)"<<endl;
+}	
+			if( (mesht.region(gamma).is_in(i,f)) && (mesht.region(gamma+1).is_in(i,f)) ) cont_gamma_gamma2++;
+		}
+	}
+	cout <<"Number of element in Sigma: "<<cont_sigma<<endl;
+	cout <<"Number of element in Omega: "<<cont_omega<<endl;
+	cout <<"Number of faces in Gamma: "<<cont_gamma<<endl;
+	cout <<"Number of faces in Gamma2 (including exterior faces): "<<cont_gamma2<<endl;
+	cout <<"Number of faces both in Gamma and Sigma: "<<cont_gamma_sigma<<endl;
+	cout <<"Number of faces both in Gamma and Omega: "<<cont_gamma_omega<<endl;
+	cout <<"Number of faces both in Omega and Sigma: "<<cont_sigma_omega<<endl;
+	cout <<"Number of faces both in Gamma and Gamma2: "<<cont_gamma_gamma2<<endl;
+	cout <<"Number of faces in Sigma: "<<cont_sigma_face<<endl;
+	cout <<"Number of faces in Omega: "<<cont_omega_face<<endl;
+	cout <<"Number of elements in Sigma with faces in Gamma: "<<cont_gamma_sigma_face<<endl;
+	cout <<"Number of elements in Omega with faces in Gamma2: "<<cont_gamma2_omega_face_ext<<endl;
+	cout <<"Number of elements in Omega with faces in Gamma2(no exterior): "<<cont_gamma2_omega_face<<endl;
+	cout <<"Number of elements in Omega with faces in Gamma: "<<cont_gamma_omega_face<<endl;
+
 	#endif
 
 }
