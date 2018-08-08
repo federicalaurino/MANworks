@@ -27,15 +27,28 @@
    /* Reduced model: analysis of convergence error and model error
       Use an exact solution! */
 
-//! Exact concentration
+
+// If you look for declaration of c_exact_function
+// (That is the exact solution used for convergence)
+// you'll find it in utilities_transp.hpp
+///////////////////////////////////////////
+// Function declaration for exact solution, source terms, etc
+///////////////////////////////////////////
+// declaration of some useful parameters for exact solution, source terms, etc
 double C=1.0, k=1.0, R=1.0;
+
+/////////////////////////////////////////////////////
+
+
+// Used in convergence_error:
+//! Exact concentration
 double c_exact_func(const bgeot::base_node & x){
 	if( sqrt((x[1]-0)*(x[1]-0)+(x[2]-0)*(x[2]-0)) <= R){
 	return C*k/(1+k);}
 	else{
 	return C*k/(1+k)*(1-R*log(1/R*sqrt((x[1]-0)*(x[1]-0)+(x[2]-0)*(x[2]-0))));}
-
 }
+
 
 
 	//Assemble the reduced problem (with exact solution)
@@ -133,7 +146,7 @@ double c_exact_func(const bgeot::base_node & x){
 	#endif
 	scalar_type beta_t  = PARAM.real_value("BETAtissue_transp", "Coefficient for mixed BC for transport problem in tissue");
 	vector_type c_ex(dof_transp.Ct());
-	interpolation_function(mf_Ct, c_ex, c_exact_func );
+	interpolation_function(mf_Ct, c_ex, c_exact_func ); // utilities_transp.hpp
 
 
 		for (size_type bc=0; bc < BCt_transp.size(); ++bc) {
@@ -384,7 +397,7 @@ else if (descr_transp.SOLVE_METHOD == "SAMG"){
 	mf_Ct_ex.set_finite_element(mesht.convex_index(), pf_Ct_ex);
 
 	vector_type c_ex(mf_Ct_ex.nb_dof());
-	interpolation_function(mf_Ct_ex, c_ex, c_exact_func );
+	interpolation_function(mf_Ct_ex, c_ex, c_exact_func ); // utilities_transp.hpp
 
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Exporting Cv ..." << endl;
