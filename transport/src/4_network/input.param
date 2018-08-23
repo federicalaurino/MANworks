@@ -27,7 +27,7 @@ ADVECTION=1;
 %Flag to add coupling terms
 COUPLING=0;
 %Flag to take the stationary problem
-STATIONARY=1;
+STATIONARY=0;
 %Flag for the new formulation
 NEW_FORMULATION = 1;
 % Flag to import the dimensionless radius (to do that TEST_PARAM must be equal to 0 and parameters P U d k mu must be left)
@@ -47,7 +47,7 @@ NOISED_T   = '0';
 % Path to import the 3d mesh (if TEST_GEOMETRY=0)
 MESH_FILET = ' '; 
 % Path to import radius of the newtork (read if IMPORT_RADIUS=1)
-RFILE      = './radius/radius_equal.pts'
+RFILE      = ''; 
 % Path to import the 1d list of points (fluid BCs)
 MESH_FILEV = './mesh1D/mini_network.pts'; 
 % Path to import the 1d list of points (transport BCs)
