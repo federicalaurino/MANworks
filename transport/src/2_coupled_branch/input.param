@@ -40,7 +40,7 @@ OUTPUT   = './vtk/';
 % Flags to build a regular 3d mesh
 TEST_GEOMETRY = 1;
 GT_T       = 'GT_PK(3,1)'; 
-NSUBDIV_T  = '[21,21,21]';  
+NSUBDIV_T  = '[15,15,15]';  
 ORG_T      = '[0,0,0]'; 
 SIZES_T    = '[1,1,1]';  
 NOISED_T   = '0';
