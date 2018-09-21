@@ -233,9 +233,6 @@
 	} 
 	
 
-
-
-
 	// Build mesht regions
 	size_type xx=0, yy=1, zz=2;
 
@@ -287,9 +284,9 @@
 	GMM_ASSERT1(gamma!=omega, "GAMMA=OMEGA: check the .param file");
 	
 	for(int i=0; i<5; i++){
-	GMM_ASSERT1((face+i)!=gamma, "SIGMA=GAMMA: check the .param file");
-	GMM_ASSERT1((face+i)!=sigma, "OMEGA=SIGMA: check the .param file");
-	GMM_ASSERT1((face+i)!=omega, "GAMMA=OMEGA: check the .param file");
+	GMM_ASSERT1((face+i)!=gamma, "FACE=GAMMA: check the .param file");
+	GMM_ASSERT1((face+i)!=sigma, "FACE=SIGMA: check the .param file");
+	GMM_ASSERT1((face+i)!=omega, "FACE=OMEGA: check the .param file");
 }
 
 	//Check if sigma and omega are defined in the msh file
@@ -323,7 +320,9 @@
 		     if (!(mesht.region(face+0).is_in(i.cv(),i.f()))&&!(mesht.region(face+1).is_in(i.cv(),i.f()))
 				&&!(mesht.region(face+2).is_in(i.cv(),i.f()))&&!(mesht.region(face+3).is_in(i.cv(),i.f()))
 				&&!(mesht.region(face+4).is_in(i.cv(),i.f()))&&!(mesht.region(face+5).is_in(i.cv(),i.f()))) 	// back
-			mesht.region(gamma+1).add(i.cv(), i.f());				
+			mesht.region(gamma).add(i.cv(), i.f());	
+			mesht.region(gamma+2).add(i.cv(), i.f());
+			//mesht.region(gamma+1).add(i.cv(), i.f());					
 		}
 
 	//outer_faces_of_mesh(mesht, mesht.region(sigma), mesht.region(gamma));
@@ -1145,7 +1144,11 @@
 	// Aux function for solver:
 	// contains the list of different methods for solving (SuperLU, SAMG,GMRES, etc)
 	// Always passes through the temporary matrixes AM_temp and FM_temp 
-	bool transport3d1d::solver_transp (void){
+	bool transport3d1d::solver (const size_type dof1, 
+					   const size_type dof2,
+					   const size_type dof3,
+					   const size_type dof4){
+
 	gmm::csc_matrix<scalar_type> A_transp;
 	gmm::clean(AM_transp, 1E-12);
 	gmm::copy(AM_temp, A_transp);
@@ -1155,7 +1158,7 @@
 	gmm::copy(FM_temp, F_transp);
 	
 		
-	if ( descr_transp.SOLVE_METHOD == "SuperLU" ) { // direct solver //
+	if ( descr_transp.SOLVE_METHOD == "SuperLU" || descr_transp.SOLVE_METHOD == "SUPERLU" ) { // direct solver //
 		#ifdef M3D1D_VERBOSE_
 		cout << "  Applying the SuperLU method ... " << endl;
 		#endif
@@ -1179,7 +1182,7 @@
 	gmm::clean(AM_temp, 1E-12);
 
 
-	int dim_matrix=dof_transp.Ct()+dof_transp.Cv();
+	int dim_matrix=dof1+dof2+dof3+dof4;
 	gmm::copy(gmm::sub_matrix(AM_temp,
 			gmm::sub_interval(0 , dim_matrix),
 			gmm::sub_interval(0 , dim_matrix)), A_csr);
@@ -1200,7 +1203,7 @@
 
 
 	AMG amg("3d1d");
-	amg.set_dof(dof_transp.Ct(),dof_transp.Cv(),0,0);
+	amg.set_dof(dof1,dof2,dof3,dof4);
 
 	
 	amg.convert_matrix(A_csr);
@@ -1326,7 +1329,7 @@
 	update_transp();
 	
 	// Solve the system on AM_temp, UM_transp, FM_temp
-	bool solved = solver_transp();
+	bool solved = solver(dof_transp.Ct(),dof_transp.Cv(),0,0);
 	if (!solved) return false;
 	
 	//export solution
@@ -1513,7 +1516,7 @@
 
  
 
- void transport3d1d::export_vtk_transp (const string & time_suff,const string & suff)
+ const void transport3d1d::export_vtk_transp (const string & time_suff,const string & suff)
  {
 
   if (PARAM.int_value("VTK_EXPORT"))
@@ -1571,7 +1574,7 @@
 
 /*	use this method to export a matrix 
 
-	gmm::MatrixMarket_IO::write(descr_transp.OUTPUT+"SM.mm" , SM);
+	gmm::MatrixMarket_IO::write("SM.mm" , SM);
 */
 
   }
@@ -1598,7 +1601,7 @@
 	return problem3d1d::solve();
 	};	
 	//! Export the solution
-	void transport3d1d::export_vtk_fluid (const string & suff)
+	const void transport3d1d::export_vtk_fluid (const string & suff)
 	{ 
 	problem3d1d::export_vtk(suff);
 	};
