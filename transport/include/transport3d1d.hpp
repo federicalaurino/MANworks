@@ -54,7 +54,7 @@ public:
 	//! Solve the transport problem
 	bool solve_transp (void);
 	//! Export the transport solution
-	void export_vtk_transp (const string & time_suff = "",const string & suff = "");
+	const void export_vtk_transp (const string & time_suff = "",const string & suff = "");
 	//! Compute residuals for mass balance at each junction
 	void mass_balance (void);	
 
@@ -69,7 +69,7 @@ public:
 	//! Solve the fluid problem
 	bool solve_fluid (void);
 	//! Export the fluid solution
-	void export_vtk_fluid (const string & suff = "");
+	const void export_vtk_fluid (const string & suff = "");
 
 
 	// Methods for reduced problem with exact solution (compute convergence error)
@@ -86,6 +86,7 @@ public:
 	// Methods for reduced problem  (compute model error with dual solution)
 	//Method for reduced problem
 	void model_error(int argc, char *argv[]); 
+	void model_error_old(int argc, char *argv[]); 
 	//Method for reduced problem, assumption A0 (That is the reference all-3D problem)
 	void model_error_A0(int argc, char *argv[]); 
 	//Method for reduced problem, assumption A1
@@ -99,8 +100,9 @@ public:
 	//! Initialize reduced problem
 	void init_model(int argc, char *argv[]);
 	//! Assemble reduced primal problem
-	void assembly_model(const size_type ASSUMPTION);
+	void assembly_model(const size_type ASSUMPTION, const size_type VERSION);
 	//! Assemble reduced dual problem 
+	void assembly_dual_model_old(const size_type ASSUMPTION);
 	void assembly_dual_model(const size_type ASSUMPTION);
 	//! Solve reduced problem 
 	bool solve_model(const size_type ASSUMPTION, const size_type VERSION);
@@ -113,6 +115,15 @@ public:
 	//! Compute model error of A3	
 	void compute_model_error_3(void);
 
+	//! Compute model error of A1	
+	void compute_model_error_1_old(void);
+	//! Compute model error of A2	
+	void compute_model_error_2_old(void);
+	//! Compute model error of A3	
+	void compute_model_error_3_old(void);
+
+	//! Getter for primal solution, at assumption A0
+	inline vector_type get_U0(void) {return U0;};
 	//! Getter for primal solution, at assumption A1
 	inline vector_type get_U1(void) {return U1;};
 	//! Getter for primal solution, at assumption A2
@@ -120,6 +131,8 @@ public:
 	//! Getter for primal solution, at assumption A3
 	inline vector_type get_U3(void) {return U3;};
 
+	//! Getter for dual solution, at assumption A0
+	inline vector_type get_Z0(void) {return Z0;};
 	//! Getter for dual solution, at assumption A1
 	inline vector_type get_Z1(void) {return Z1;};
 	//! Getter for dual solution, at assumption A2
@@ -232,7 +245,10 @@ protected:
 	//! Aux function for update of rhs at each time step
 	void update_transp(void);
 	//! Aux function for solver: contains the different solving methods and actually solve the system
-	bool solver_transp (void);	
+	bool solver (	const size_type dof1=0, 
+			const size_type dof2=0, 
+			const size_type dof3=0,
+			const size_type dof4=0);	
 
 	//! Set finite elements and integration methods: mf_t should be defined only on Omega_plus
 	void set_im_and_fem_U1(void);	
