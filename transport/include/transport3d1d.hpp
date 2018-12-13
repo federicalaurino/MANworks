@@ -86,8 +86,7 @@ public:
 	// Methods for reduced problem  (compute model error with dual solution)
 	//Method for reduced problem
 	void model_error(int argc, char *argv[]); 
-	void model_error_old(int argc, char *argv[]); 
-	//Method for reduced problem, assumption A0 (That is the reference all-3D problem)
+	//Method for reference problem, assumption A0 (That is the initial 3D-3D reference problem)
 	void model_error_A0(int argc, char *argv[]); 
 	//Method for reduced problem, assumption A1
 	void model_error_A1(int argc, char *argv[]); 
@@ -101,45 +100,19 @@ public:
 	void init_model(int argc, char *argv[]);
 	//! Assemble reduced primal problem
 	void assembly_model(const size_type ASSUMPTION, const size_type VERSION);
-	//! Assemble reduced dual problem 
-	void assembly_dual_model_old(const size_type ASSUMPTION);
-	void assembly_dual_model(const size_type ASSUMPTION);
 	//! Solve reduced problem 
 	bool solve_model(const size_type ASSUMPTION, const size_type VERSION);
 	//! Export reduced problem
 	void export_model(const size_type ASSUMPTION, const size_type VERSION, const string & suff = "");
-	//! Compute model error of A1	
-	void compute_model_error_1(void);
-	//! Compute model error of A2	
-	void compute_model_error_2(void);
-	//! Compute model error of A3	
-	void compute_model_error_3(void);
 
 	//! Compute model error of A1	
-	void compute_model_error_1_old(void);
+	void compute_model_error_1(const size_type DUALMODEL);
 	//! Compute model error of A2	
-	void compute_model_error_2_old(void);
+	void compute_model_error_2(const size_type DUALMODEL);
 	//! Compute model error of A3	
-	void compute_model_error_3_old(void);
+	void compute_model_error_3(const size_type DUALMODEL);
 
-	//! Getter for primal solution, at assumption A0
-	inline vector_type get_U0(void) {return U0;};
-	//! Getter for primal solution, at assumption A1
-	inline vector_type get_U1(void) {return U1;};
-	//! Getter for primal solution, at assumption A2
-	inline vector_type get_U2(void) {return U2;};
-	//! Getter for primal solution, at assumption A3
-	inline vector_type get_U3(void) {return U3;};
 
-	//! Getter for dual solution, at assumption A0
-	inline vector_type get_Z0(void) {return Z0;};
-	//! Getter for dual solution, at assumption A1
-	inline vector_type get_Z1(void) {return Z1;};
-	//! Getter for dual solution, at assumption A2
-	inline vector_type get_Z2(void) {return Z2;};
-	//! Getter for dual solution, at assumption A3
-	inline vector_type get_Z3(void) {return Z3;};
-	
 	
 protected:
 	 
@@ -201,18 +174,19 @@ protected:
 	// Dual Solution, assumption A3
 	vector_type Z3;
 
+	// Global residuals
+	vector_type ETA_RESIDUAL;
+	// Global estimator
+	vector_type ETA;
 
-	// Aux tissue-to-tissue exchange matrix
-	sparse_matrix_type BTT;
-	// Aux tissue-to-tissue exchange matrix
-	sparse_matrix_type BVT_Omega;
 	// Aux tissue-to-vessel interpolation matrix
 	sparse_matrix_type MLIN;
 	// Aux tissue-to-vessel average matrix (circumsference)
 	sparse_matrix_type MBAR;
 	// Aux tissue-to-vessel average matrix (section) 
 	sparse_matrix_type MBARBAR;
-	
+
+
 	// Aux methods for init
 	//! Import algorithm specifications
 	void import_data_transp(void);
@@ -250,8 +224,7 @@ protected:
 			const size_type dof3=0,
 			const size_type dof4=0);	
 
-	//! Set finite elements and integration methods: mf_t should be defined only on Omega_plus
-	void set_im_and_fem_U1(void);	
+	//! Set finite elements and integration methods: mf_t should be defined only on Omega_plus	
 	void set_im_and_fem_model(void);
 
 

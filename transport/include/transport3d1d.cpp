@@ -24,8 +24,6 @@
  namespace getfem {
 
 
- 
-
 	// Initialize the transport problem
  	void transport3d1d::init_transp (int argc, char *argv[]) 
  	{
@@ -268,7 +266,10 @@
 	GMM_ASSERT1(!(PARAM.int_value("TEST_GEOMETRY") && descr_transp.CONFORMING), "Test 3D mesh cannot be conforming! Check the .param file!!!");
 	
 	if(descr_transp.CONFORMING){
-
+	/*! \todo Regions SIGMA and GAMMA are described in .msh file from GMESH (using PhysicalVolume). 
+                  Build directly those regions ("if(dist(element, meshv)>0){OMEGA.add(element)}") 
+		  or build the indicator functions and rescale all the integrals by those functions.
+	*/
 	#ifdef M3D1D_VERBOSE_
 	cout << "The mesh is conforming with respect to the vessel!" << endl;
 	cout << "Checking the regions..." << endl;
@@ -336,7 +337,32 @@
 	cout << "...Check complete! All 3D regions are correctly defined!" << endl;
 	#endif		
 
+/*! \todo Check the elements of Gamma.
+Using gmesh, one can easily build the parallelepiped Omega, on which are defined two regions,
+Sigma and Omega_plus, that are the physical vessel and the tissue surrounding it. (use Physical_volume(rg))
+Nevertheless, GetFEM goes banana if you use a mesh composed of both thetrahedra AND triangles: 
+so you cannot use Physical_surface(rg) to build the surface Gamma, that is the vessel wall, made of the triangles
+(faces) in common between Sigma and Omega_plus.
+The problem is that in GetFEM the faces have not a general index, as a matter of fact only the elements (tetrahedra)
+has an index for storage. For example, a mesh of 1000 tetrahedra has an index going from 0 to 999. Every tetrahedron
+has his 4 faces numbered from 0 to three.
+If tetrahedron 15 has a face in common with tetrahedron 347, those are, maybe, faces 2 of element 15 and
+face 1 of element 347. GetFEM doesn't know they are the same face; furthermore, they do not share the same basises!!
+Integral on those two faces (for GetFEM are different faces!) they result in different values.
+For out interest, the "rightest" thing to do seemed to create a region Gamma disposing of both the version of each face (coming from the inner and the outer tetrahedron). This might be incorrect, though. The following code builds different integrals using different definitions of the surface Gamma; those results convinced us that it was better considering both inner and outer faces. (@s.brambilla93@gmail.com)
+EDIT: the phenomenon described before arises when integrating only on Sigma, only on Omega_plus, or on the whole Omega.
+If we define Gamma to be the faces of the elements of Sigma, the integrals on Sigma and on Omega coincides, but 
+all the integrals on Omega_plus are nulls.
+Viceversa, if we define Gamma to be the faces of the elements of Omega_plus, the integrals on Omega_plus and on Omega coincides, but all the integrals on Sigma are nulls.
+Finally, defining Gamma to be both the faces of elements in Sigma and Omega_t, give correct results on integrals on Sigma and Omega_t, but the integrals on the whole Omega are exactly* doubled. Therefore, as the following test validate, it is correct the definition of Gamma with both the surfaces, multiplying for 0.5 every matrix coming from
+the integral on Gamma from the whole Omega domain. 
 
+*Altough "exactly" seems a strong word, looking at F2b_ and F2c_ in check=2, we can be sure enough of this assumption.
+
+*/
+
+
+/*	//The following are some tests for the different regions
 	#ifdef M3D1D_VERBOSE_
 	dal::bit_vector nn = mesht.convex_index();
 	bgeot::size_type i;
@@ -410,6 +436,7 @@
 	cout <<"Number of elements in Omega with faces in Gamma: "<<cont_gamma_omega_face<<endl;
 
 	#endif
+*/
 
 }
 
