@@ -48,7 +48,7 @@ OutputDirectory = './vtk/';
 %  MESH
 %===================================
 % Flags to build a regular 3d mesh
-TEST_GEOMETRY =1;
+TEST_GEOMETRY =0;
 GT_T       = 'GT_PK(3,1)'; 
 NSUBDIV_T  = '[32,32,32]';  %20,20,20  %40,40,40  %60,60,60  %80,80,80   %5,10,10   %10,20,20   %20,40,40
 
@@ -64,13 +64,13 @@ NOISED_T   = '0';
 
 
 % Path to import the 3d mesh
-MESH_FILET = '/u/archive/laureandi/brambilla/mesh3D/conforming_mesh8.msh'; 
+MESH_FILET = '/u/archive/laureandi/brambilla/mesh3D/quasi_uniform_mesh16.msh'; 
 % Path to import the 1d list of points
-MESH_FILEV = '/u/archive/laureandi/brambilla/mesh1D/segment10.pts';
+MESH_FILEV = '/u/archive/laureandi/brambilla/mesh1D/segment2560.pts';
 % Path to import the 1d list of points for transport
-MESH_FILEV_TRANSP = '/u/archive/laureandi/brambilla/mesh1D/segment1280_transp.pts';
+MESH_FILEV_TRANSP = '/u/archive/laureandi/brambilla/mesh1D/segment2560_transp.pts';
 % Nb of discretisation point for 3D-1D interpolation
-NInt = 80;
+NInt = 120;
 kk=0.1;
 Cv=1;
 % Dimensionless average radius of the capillary vessels []
