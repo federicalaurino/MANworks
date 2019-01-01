@@ -4,12 +4,12 @@
 %                     Politecnico di Milano
 %                         A.Y. 2014-2015
 %                 
-%               Copyright (C) 2016 Stefano Brambilla
+%               Copyright (C) 2018 Stefano Brambilla
 %======================================================================
 %  FILE		: input.param
-%  DESCRIPTION	: List of parameters for the single branch 
+%  DESCRIPTION	: List of parameters for the convergence error test
 %  AUTHOR	: Stefano Brambilla <s.brambilla93@gmail.com> 
-%  DATE		: September 2016
+%  DATE		: September 2018
 %======================================================================
 
 %  FLAGS
@@ -70,13 +70,16 @@ MESH_FILEV = '/u/archive/laureandi/brambilla/mesh1D/segment2560.pts';
 % Path to import the 1d list of points for transport
 MESH_FILEV_TRANSP = '/u/archive/laureandi/brambilla/mesh1D/segment2560_transp.pts';
 % Nb of discretisation point for 3D-1D interpolation
-NInt = 120;
+NInt = 120; %%%% For convergence error test use high enough Nint, but focus especially on the dofs of the vessel Lambda (higher as possible)
+
+%Permeability of the membrane (adimensional)
 kk=0.1;
+%Concentration in the vessel (one-dimensional source for 3D equation)
 Cv=1;
 % Dimensionless average radius of the capillary vessels []
 RADIUS = 0.25;
 
-% GetFem type for the 3D Integration Method
+% GetFem type for the 3D Finite Element and Integration Method used for the EXACT SOLUTION
 FEM_TYPET_CEX = 'FEM_PK(3,3)';
 IM_TYPET_CEX    = 'IM_TETRAHEDRON(6)';
 % select how to compute the norm:
@@ -84,9 +87,21 @@ IM_TYPET_CEX    = 'IM_TETRAHEDRON(6)';
 % NORM = 1, ch is P1, volume integral
 % NORM = 2, ch is same as c_ex, single face integral
 % NORM = 3, ch is same as c_ex,volume integral
-NORM=3;
-SOLVE_METHOD_TRANSP = 'SAMG';
-couple = 1;
+NORM=3;         %%%%%% questa flag è rimasta dopo la fase di testing (non si era sicuri dei tassi di convergenza a seconda di come si calcola la norma) Si può anche eliminare dal codice
+
+%flag for coupling function (0: use notaro matrix,1: use brambilla matrix)
+couple = 1;     %%%%%% questa flag è rimasta dopo la fase di testing (non si era sicuri dei tassi di convergenza a seconda della matrice) Si può anche eliminare dal codice
+
+%Flag for conforming mesh: if =1, it requires OMEGA, SIGMA and GAMMA to be defined
+CONFORMING=0;
+%Number of region of the first face of the boundary of the 3d domain
+FACE=0;
+%Number of 3D region of tissue outside physical vessel
+%OMEGA=6;
+%Number of 3D region of physical vessel
+%SIGMA=7;
+%number of 2D region of physical vessel wall
+%GAMMA=8;
 %===================================
 %  GETFEM DESCRIPTORS
 %===================================
@@ -110,16 +125,20 @@ IM_TYPET    = 'IM_TETRAHEDRON(6)';
 IM_TYPEV    = 'IM_GAUSS1D(6)'; 
 % GetFem type for the 1D Integration Method
 IM_TYPEV_TRANSP    = 'IM_GAUSS1D(6)'; 
-% Solver for the monolithic 3D/1D linear system
+% Solver for the monolithic 3D/1D linear system (fluid and transport problems)
 % direct:    'SuperLU'
 % iterative: 'CG','BiCGstab','GMRES','QMR','LSCG'
+% SAMG library: 'SAMG'   //It needs the SAMG license!
 SOLVE_METHOD = 'SuperLU';
+SOLVE_METHOD_TRANSP = 'SAMG';
 % Maximum number of iterations for iterative solvers
 MAXITER  = 100;
 % Residu for conjugate gradient
 RESIDUAL = 1E-16;    
-
-
+% Nb of discretisation point for 3D-1D interpolation (Circumference)
+%NInt = 50;
+% Nb of discretisation point for 3D-1D interpolation (Section)
+NIntA = 10;
 %===========================================
 %  DIMENSIONAL PARAMETERS FOR FLUID PROBLEM
 %===========================================

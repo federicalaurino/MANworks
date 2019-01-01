@@ -44,10 +44,10 @@ LINEAR_LYMPHATIC_DRAINAGE = 1;
 %OutputDir       = './vtk/';
 %OutputDirectory = './vtk/';
 
-OUTPUT   	= '/u/archive/laureandi/brambilla/thesis_simulations/model_error/scenarioE_32_R025_f1g1_k1_jflux_RED/';
+OUTPUT   	= '/u/archive/.../model_error/scenarioE_32_R025_f1g1_k1_jflux_RED/';
 % Output directory where parameters EXPORT_PARAM=1 are saved 
-OutputDir       = '/u/archive/laureandi/brambilla/thesis_simulations/model_error/scenarioE_32_R025_f1g1_k1_jflux_RED/';
-OutputDirectory = '/u/archive/laureandi/brambilla/thesis_simulations/model_error/scenarioE_32_R025_f1g1_k1_jflux_RED/';
+OutputDir       = '/u/archive/.../model_error/scenarioE_32_R025_f1g1_k1_jflux_RED/';
+OutputDirectory = '/u/archive/.../model_error/scenarioE_32_R025_f1g1_k1_jflux_RED/';
 
 %===================================
 %  MESH
@@ -55,55 +55,50 @@ OutputDirectory = '/u/archive/laureandi/brambilla/thesis_simulations/model_error
 % Flags to build a regular 3d mesh
 TEST_GEOMETRY =0;
 GT_T       = 'GT_PK(3,1)'; 
-NSUBDIV_T  = '[32,32,32]';  %20,20,20  %40,40,40  %60,60,60  %80,80,80   %5,10,10   %10,20,20   %20,40,40
-
-% 2,4,4    5,8,8    10,16,16     20,32,32    40,64,64
-% 4,4,4    8,8,8    16,16,16	 32,32,32
+NSUBDIV_T  = '[32,32,32]'; 
 ORG_T      = '[-0.25,-1,-1]'; 
 SIZES_T    = '[0.5,2,2]';  
 NOISED_T   = '0';
-
-%ORG_T      = '[-0.25,0,0]'; 
-%SIZES_T    = '[0.5,1,1]';  
-%NOISED_T   = '0';
-
-
 % Path to import the 3d mesh
-MESH_FILET = '/u/archive/laureandi/brambilla/mesh3D/conforming_mesh32_051.msh'; %_R025_adaptR01
+MESH_FILET = './mesh3D/conforming_mesh32_051.msh'; %_R025_adaptR01
 % Path to import the 1d list of points
-MESH_FILEV = '/u/archive/laureandi/brambilla/mesh1D/segment10.pts';
+MESH_FILEV = './mesh1D/segment10.pts';
 % Path to import the 1d list of points for transport
-MESH_FILEV_TRANSP = '/u/archive/laureandi/brambilla/mesh1D/segment1280_transp.pts';
-% Nb of discretisation point for 3D-1D interpolation
-NInt = 100;
-NIntA= 10;
-kk=1;
-Cv=1;
+MESH_FILEV_TRANSP = './mesh1D/segment1280_transp.pts';
 
-G_CONSTANT=0;
+%Flag for conforming mesh: if =1, it requires OMEGA, SIGMA and GAMMA to be defined
+CONFORMING=1;
+%Number of region of the first face of the boundary of the 3d domain
+FACE=0;
+%Number of 3D region of tissue outside physical vessel
+OMEGA=6;
+%Number of 3D region of physical vessel
+SIGMA=7;
+%number of 2D region of physical vessel wall
+GAMMA=8;
+
+%Permeability of the membrane (adimensional)
+kk=1;
+%Concentration in the vessel (one-dimensional source for 3D equation)
+Cv=1;
+% Dimensionless average radius of the capillary vessels []
+RADIUS = 0.25;
+  
+% Expression for the function f, source term in the 3d equation (Must respect Muparser sintax!!!)
 F_EXPR='1';
-G_EXPR='1';
+% Expression for the function g, source term in the 1d equation (Must respect Muparser sintax!!!)
+G_EXPR=' 1';
+%Flag for the function g: if G_CONSTANT=1 then g is considered constant and the code does not build the matrix Mbarbar (average in the section)
+G_CONSTANT=0;
 
 % Type of functional of error for dual problem
 % Possible values: 'MEAN_VALUE', 'GAMMA_FLUX'
 FUNCTIONAL = 'GAMMA_FLUX';
+
 % Choose which dual solution use (if the reference one or reduced one)
 % Possible values: 'REFERENCE' for Z1,z2,z3, or 'REDUCED' for Z and z, or 'BOTH' for both estimators
 DUALMODEL = 'REDUCED';  
-% Dimensionless average radius of the capillary vessels []
-RADIUS = 0.25;
 
-% GetFem type for the 3D Integration Method
-FEM_TYPET_CEX = 'FEM_PK(3,3)';
-IM_TYPET_CEX    = 'IM_TETRAHEDRON(6)';
-% select how to compute the norm:
-% NORM = 0, ch is P1, single face integral
-% NORM = 1, ch is P1, volume integral
-% NORM = 2, ch is same as c_ex, single face integral
-% NORM = 3, ch is same as c_ex,volume integral
-NORM=3;
-SOLVE_METHOD_TRANSP = 'SAMG';
-couple = 1;
 %===================================
 %  GETFEM DESCRIPTORS
 %===================================
@@ -127,25 +122,21 @@ IM_TYPET    = 'IM_TETRAHEDRON(6)';
 IM_TYPEV    = 'IM_GAUSS1D(6)'; 
 % GetFem type for the 1D Integration Method
 IM_TYPEV_TRANSP    = 'IM_GAUSS1D(6)'; 
-% Solver for the monolithic 3D/1D linear system
+% Solver for the monolithic 3D/1D linear system (fluid and transport problems)
 % direct:    'SuperLU'
 % iterative: 'CG','BiCGstab','GMRES','QMR','LSCG'
+% SAMG library: 'SAMG'   //It needs the SAMG license!
 SOLVE_METHOD = 'SuperLU';
+SOLVE_METHOD_TRANSP = 'SAMG';
 % Maximum number of iterations for iterative solvers
 MAXITER  = 100;
 % Residu for conjugate gradient
 RESIDUAL = 1E-16;    
+% Nb of discretisation point for 3D-1D interpolation (Circumference)
+%NInt = 100;
+% Nb of discretisation point for 3D-1D interpolation (Section)
+NIntA = 10;
 
-%Flag for conforming mesh
-CONFORMING=1;
-%Number of region of the first face of the boundary of the 3d domain
-FACE=0;
-%Number of 3D region of tissue outside physical vessel
-OMEGA=6;
-%Number of 3D region of physical vessel
-SIGMA=7;
-%number of 2D region of physical vessel wall
-GAMMA=8;
 
 %===========================================
 %  DIMENSIONAL PARAMETERS FOR FLUID PROBLEM

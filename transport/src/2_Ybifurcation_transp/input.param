@@ -64,6 +64,17 @@ MESH_FILEV = './bifurcation.pts';
 RFILE      = './radius.pts'
 % Path to import the 1d list of points for transport
 MESH_FILEV_TRANSP = './bifurcation_transp.pts';
+
+%Flag for conforming mesh: if =1, it requires OMEGA, SIGMA and GAMMA to be defined
+CONFORMING=0;
+%Number of region of the first face of the boundary of the 3d domain
+FACE=0;
+%Number of 3D region of tissue outside physical vessel
+%OMEGA=6;
+%Number of 3D region of physical vessel
+%SIGMA=7;
+%number of 2D region of physical vessel wall
+%GAMMA=8;
 %===================================
 %  GETFEM DESCRIPTORS
 %===================================
@@ -87,17 +98,20 @@ IM_TYPET    = 'IM_TETRAHEDRON(8)';
 IM_TYPEV    = 'IM_GAUSS1D(6)'; 
 % GetFem type for the 1D Integration Method
 IM_TYPEV_TRANSP    = 'IM_GAUSS1D(6)'; 
-% Solver for the monolithic 3D/1D linear system
+% Solver for the monolithic 3D/1D linear system (fluid and transport problems)
 % direct:    'SuperLU'
 % iterative: 'CG','BiCGstab','GMRES','QMR','LSCG'
+% SAMG library: 'SAMG'   //It needs the SAMG license!
 SOLVE_METHOD = 'SuperLU';
 SOLVE_METHOD_TRANSP = 'SuperLU';
 % Maximum number of iterations for iterative solvers
 MAXITER  = 100;
 % Residu for conjugate gradient
 RESIDUAL = 1E-16;    
-% Nb of discretisation point for 3D-1D interpolation
+% Nb of discretisation point for 3D-1D interpolation (Circumference)
 NInt = 50;
+% Nb of discretisation point for 3D-1D interpolation (Section)
+NIntA = 10;
 %===========================================
 %  DIMENSIONAL PARAMETERS FOR FLUID PROBLEM
 %===========================================
