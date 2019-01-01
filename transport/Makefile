@@ -23,6 +23,7 @@ all: library
 	$(MAKE) -C src/6_anastomosis 
 	$(MAKE) -C src/7_Voronoi_Network
 	$(MAKE) -C src/8_convergence_error
+	$(MAKE) -C src/9_model_error
 
 library: 
 	$(MAKE) -C include
@@ -45,6 +46,7 @@ clean:
 	$(MAKE) -C src/6_anastomosis  clean
 	$(MAKE) -C src/7_Voronoi_Network clean
 	$(MAKE) -C src/8_convergence_error clean
+	$(MAKE) -C src/9_model_error clean
 	
 distclean: clean
 	$(RM) -r doc/*
@@ -57,3 +59,4 @@ distclean: clean
 	$(MAKE) -C src/6_anastomosis  distclean
 	$(MAKE) -C src/7_Voronoi_Network distclean
 	$(MAKE) -C src/8_convergence_error distclean
+	$(MAKE) -C src/9_model_error distclean
