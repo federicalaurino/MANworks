@@ -128,6 +128,8 @@ RESIDUAL = 1E-16;
 NInt = 50;
 % Nb of discretisation point for 3D-1D interpolation (Section)
 NIntA = 10;
+%flag for coupling function (0: use notaro matrix,1: use brambilla matrix)
+couple = 1;     %%%%%% questa flag è rimasta dopo la fase di testing. Si può anche eliminare dal codice
 %===================================
 %  DIMENSIONAL MODEL PARAMETERS (taken if TEST_PARAM = 0)
 %===================================
