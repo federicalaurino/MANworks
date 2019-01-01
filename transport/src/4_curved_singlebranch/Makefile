@@ -25,7 +25,10 @@ else
 endif
 
 LDFLAGS+=-L../../lib -L$(GETFEM_PREFIX)/lib -L$(PROBLEM_FLUID_PREFIX)/lib -L$(mkBoostLib) -Wl,-rpath=../../lib -Wl,-rpath=$(PROBLEM_FLUID_PREFIX)/lib 
-LIBRARIES+=-lgetfem -lproblem3d1d -ltransport3d1d -lutil -lboost_iostreams -lboost_system -lboost_filesystem 
+LDFLAGS+=-L../../utilities/muparser/lib -Wl,-rpath=../../utilities/muparser/lib 
+#LDFLAGS += -L/opt/lib/samg/
+LIBRARIES+=-lgetfem -lproblem3d1d -ltransport3d1d -lutil -lboost_iostreams -lboost_system -lboost_filesystem -lmuparser
+#LIBRARIES += -lamg -liomp5 
 
 
 SRCS=$(wildcard *.cpp)
