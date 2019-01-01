@@ -129,7 +129,7 @@ MAXITER  = 100;
 % Residu for conjugate gradient
 RESIDUAL = 1E-16;    
 % Nb of discretisation point for 3D-1D interpolation (Circumference)
-%NInt = 100;
+NInt = 100;
 % Nb of discretisation point for 3D-1D interpolation (Section)
 NIntA = 10;
 %===========================================
