@@ -132,6 +132,8 @@ RESIDUAL = 1E-16;
 NInt = 100;
 % Nb of discretisation point for 3D-1D interpolation (Section)
 NIntA = 10;
+% flag for reading the matrixes Mlin and Mbar (instead of assembling from scratch)
+READ_ITERPOLATOR = 0;
 %===========================================
 %  DIMENSIONAL PARAMETERS FOR FLUID PROBLEM
 %===========================================

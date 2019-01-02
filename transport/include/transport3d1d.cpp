@@ -941,19 +941,50 @@ the integral on Gamma from the whole Omega domain.
 	bool COUPLING = PARAM.int_value("COUPLING", "flag for coupling-exchange term ");
 	if(COUPLING==0)  { cout<< "Uncoupled problem: no exchange between tissue and vessels"<<endl; }
 	else{
-
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling aux exchange matrices Mbar and Mlin ..." << endl;
 	#endif
 
-	if(PARAM.int_value("couple", "flag for coupling function (notaro 0, brambilla 1)"))
-	asm_exchange_aux_mat_transp(Mbar, Mlin, 
+	if(PARAM.int_value("couple", "flag for coupling function (notaro 0, brambilla 1)")){
+   		bool READ_ITERPOLATOR = PARAM.int_value("READ_ITERPOLATOR", "flag for read interpolator from file ");
+    	if (!READ_ITERPOLATOR){
+		asm_exchange_aux_mat_transp(Mbar, Mlin, 
 			mimv, mf_Ct, mf_Cv, mf_coefv, param.R(), descr.NInt, nb_branches);
-
-	if(!PARAM.int_value("couple", "flag for coupling function (notaro 0, brambilla 1)"))
-	asm_exchange_aux_mat(Mbar, Mlin, 
-			mimv, mf_Ct, mf_Cv, param.R(), descr.NInt);
-
+      	std::ostringstream mbar_name,mlin_name;
+      	mbar_name << descr_transp.OUTPUT+"Mbar_transp";
+      	mlin_name << descr_transp.OUTPUT+"Mlin_transp";
+      	gmm::MatrixMarket_IO::write(mbar_name.str().c_str(), Mbar);
+      	gmm::MatrixMarket_IO::write(mlin_name.str().c_str(), Mlin);
+    	}
+    	else
+    	{
+      	std::ostringstream mbar_name,mlin_name;
+      	mbar_name << descr_transp.OUTPUT+"Mbar_transp";
+      	mlin_name << descr_transp.OUTPUT+"Mlin_transp";
+      	gmm::MatrixMarket_load(mbar_name.str().c_str(), Mbar);
+      	gmm::MatrixMarket_load(mlin_name.str().c_str(), Mlin);
+    	}
+	}
+	if(!PARAM.int_value("couple", "flag for coupling function (notaro 0, brambilla 1)")){
+   		bool READ_ITERPOLATOR = PARAM.int_value("READ_ITERPOLATOR", "flag for read interpolator from file ");
+    	if (!READ_ITERPOLATOR){
+			asm_exchange_aux_mat(Mbar, Mlin, 
+				mimv, mf_Ct, mf_Cv, param.R(), descr.NInt);
+      	std::ostringstream mbar_name,mlin_name;
+      	mbar_name << "./vtk/Mbar";
+      	mlin_name << "./vtk/Mlin";
+      	gmm::MatrixMarket_IO::write(mbar_name.str().c_str(), Mbar);
+      	gmm::MatrixMarket_IO::write(mlin_name.str().c_str(), Mlin);
+    	}
+    	else
+    	{
+      	std::ostringstream mbar_name,mlin_name;
+      	mbar_name << "./vtk/Mbar";
+      	mlin_name << "./vtk/Mlin";
+      	gmm::MatrixMarket_load(mbar_name.str().c_str(), Mbar);
+      	gmm::MatrixMarket_load(mlin_name.str().c_str(), Mlin);
+    	}
+	}
 	#ifdef M3D1D_VERBOSE_
 	cout << "  Assembling exchange matrices ..." << endl;
 	#endif

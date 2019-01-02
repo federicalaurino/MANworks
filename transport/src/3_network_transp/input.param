@@ -110,6 +110,8 @@ NInt = 50;
 NIntA = 10;
 %flag for coupling function (0: use notaro matrix,1: use brambilla matrix)
 couple = 1;     %%%%%% questa flag è rimasta dopo la fase di testing. Si può anche eliminare dal codice
+% flag for reading the matrixes Mlin and Mbar (instead of assembling from scratch)
+READ_ITERPOLATOR = 0;
 %===========================================
 %  DIMENSIONAL PARAMETERS FOR FLUID PROBLEM
 %===========================================
